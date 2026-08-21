@@ -18,7 +18,7 @@ RUN dotnet restore src/Gym.Api/Gym.Api.csproj
 COPY src/ src/
 RUN dotnet publish src/Gym.Api/Gym.Api.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
