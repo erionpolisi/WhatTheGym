@@ -1,0 +1,60 @@
+name: whatthegym
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-whatthegym}
+      POSTGRES_USER: ${POSTGRES_USER:-wtg}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wtg_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wtg} -d ${POSTGRES_DB:-whatthegym}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-whatthegym};Username=${POSTGRES_USER:-wtg};Password=${POSTGRES_PASSWORD:-wtg_dev_password}"
+      Database__MigrateOnStartup: "true"
+      Seed__SeedCatalog: "true"
+      Seed__SeedDemoData: ${SEED_DEMO_DATA:-true}
+      Auth__EnableDevLogin: ${ENABLE_DEV_LOGIN:-true}
+      Auth__BootstrapAdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.invalid}
+      Auth__GoogleClientId: ${GOOGLE_CLIENT_ID:-}
+      Auth__GoogleClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      Mail__ResendApiKey: ${RESEND_API_KEY:-}
+      Mail__PublicBaseUrl: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      Analytics__HashSecret: ${ANALYTICS_HASH_SECRET:-local-dev-analytics-secret}
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
+    ports:
+      - "7001:8080"
+
+  # Optional database UI: docker compose --profile tools up
+  pgadmin:
+    image: dpage/pgadmin4:8
+    profiles: ["tools"]
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+volumes:
+  postgres-data:

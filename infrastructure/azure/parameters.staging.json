@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": { "value": "staging" },
+    "apiImage": { "value": "REGISTRY_TO_BE_CONFIGURED.azurecr.io/whatthegym-api:latest" },
+    "deployPostgres": { "value": false },
+    "externalPostgresConnectionString": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
+    "frontendOrigin": { "value": "https://staging.whatthegym.at" }
+  }
+}

@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+artifacts/
+TestResults/
+coverage/
+*.trx
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pfx
+
+# Local-only CA certificates for corporate TLS interception (never commit)
+backend/certs/*.crt
+
+# OS / editor
+.DS_Store
+Thumbs.db
