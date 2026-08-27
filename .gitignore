@@ -28,3 +28,4 @@ backend/certs/*.crt
 # OS / editor
 .DS_Store
 Thumbs.db
+.idea/
