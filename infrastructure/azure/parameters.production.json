@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "environmentName": { "value": "production" },
-    "apiImage": { "value": "REGISTRY_TO_BE_CONFIGURED.azurecr.io/whatthegym-api:RELEASE_TAG" },
+    "apiImage": { "value": "ghcr.io/OWNER_TO_BE_CONFIGURED/whatthegym-api:RELEASE_TAG" },
     "deployPostgres": { "value": false },
     "externalPostgresConnectionString": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
     "frontendOrigin": { "value": "https://whatthegym.at" },

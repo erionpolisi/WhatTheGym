@@ -10,7 +10,7 @@ param environmentName string
 
 param location string = resourceGroup().location
 
-@description('Container image for the API, e.g. <registry>.azurecr.io/whatthegym-api:tag')
+@description('Container image for the API, e.g. ghcr.io/<owner>/whatthegym-api:<tag> (ADR 0008 addendum: ghcr.io, no ACR)')
 param apiImage string
 
 @description('Deploy Azure Database for PostgreSQL Flexible Server. When false, an external PostgreSQL (e.g. free tier provider) is used via the connection string secret.')
@@ -98,8 +98,8 @@ resource postgresConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01'
   name: 'postgres-connection-string'
   properties: {
     // ARM's if() only evaluates the selected branch, so the reference is safe when deployPostgres = false.
-    #disable-next-line BCP318
     value: deployPostgres
+      #disable-next-line BCP318
       ? 'Host=${postgres.properties.fullyQualifiedDomainName};Port=5432;Database=whatthegym;Username=wtgadmin;Password=${postgresAdminPassword};Ssl Mode=Require'
       : externalPostgresConnectionString
   }
