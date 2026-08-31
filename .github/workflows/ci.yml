@@ -109,7 +109,7 @@ jobs:
         run: docker build -t whatthegym-api:ci backend
 
       - name: Trivy image scan (high/critical block)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: whatthegym-api:ci
           format: table
@@ -118,7 +118,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Trivy filesystem scan (report low/medium, non-blocking)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
