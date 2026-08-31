@@ -1,6 +1,7 @@
 using Gym.Application.Abstractions;
 using Gym.Application.Common;
 using Gym.Application.Contracts;
+using Gym.Application.Features.Gyms;
 using Gym.Domain.Common;
 using Gym.Domain.Entities;
 
@@ -24,6 +25,11 @@ public sealed class CreateChainCommandHandler(
         if (string.IsNullOrWhiteSpace(command.Name) || command.Name.Trim().Length > 200)
         {
             return Result.Failure<Guid>(Error.Validation("chain.name", "Name ist erforderlich (max. 200 Zeichen)."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.Website) && !CreateGymCommandValidator.BeAbsoluteHttpUrl(command.Website))
+        {
+            return Result.Failure<Guid>(Error.Validation("chain.website", "Die Website muss eine absolute http(s)-URL sein."));
         }
 
         var slug = await SlugUniquifier.EnsureUniqueAsync(
@@ -53,6 +59,11 @@ public sealed class UpdateChainCommandHandler(
         if (string.IsNullOrWhiteSpace(command.Name) || command.Name.Trim().Length > 200)
         {
             return Result.Failure(Error.Validation("chain.name", "Name ist erforderlich (max. 200 Zeichen)."));
+        }
+
+        if (!string.IsNullOrWhiteSpace(command.Website) && !CreateGymCommandValidator.BeAbsoluteHttpUrl(command.Website))
+        {
+            return Result.Failure(Error.Validation("chain.website", "Die Website muss eine absolute http(s)-URL sein."));
         }
 
         chain.Update(command.Name, command.Website, clock.UtcNow);
