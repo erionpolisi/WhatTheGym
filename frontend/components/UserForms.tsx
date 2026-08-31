@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { API_BASE, type Me } from "@/lib/api";
+import { API_BASE, CSRF_HEADER, type Me } from "@/lib/api";
 import { sendEvent } from "@/components/Analytics";
 
 export function ContactForm({ gymSlug }: { gymSlug?: string }) {
@@ -15,7 +15,7 @@ export function ContactForm({ gymSlug }: { gymSlug?: string }) {
     setError(null);
     const response = await fetch(`${API_BASE}/api/v1/contact-requests`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...CSRF_HEADER },
       body: JSON.stringify({ ...state, gymSlug: gymSlug ?? null, website: honeypot }),
     });
     if (response.ok) {
@@ -146,7 +146,11 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
           type="button"
           className="secondary"
           onClick={async () => {
-            await fetch(`${API_BASE}/api/v1/auth/logout`, { method: "POST", credentials: "include" });
+            await fetch(`${API_BASE}/api/v1/auth/logout`, {
+              method: "POST",
+              credentials: "include",
+              headers: CSRF_HEADER,
+            });
             reload();
           }}
         >
@@ -162,7 +166,7 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
     const response = await fetch(`${API_BASE}/api/v1/auth/dev-login`, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...CSRF_HEADER },
       body: JSON.stringify({ email: devEmail, displayName: devName || devEmail }),
     });
     if (response.ok) {

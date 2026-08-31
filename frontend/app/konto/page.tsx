@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { API_BASE, categoryLabels } from "@/lib/api";
+import { API_BASE, CSRF_HEADER, categoryLabels } from "@/lib/api";
 import { LoginPanel, useMe } from "@/components/UserForms";
 
 interface OwnReview {
@@ -27,7 +27,11 @@ export default function AccountPage() {
   }
 
   async function deleteReview(reviewId: string) {
-    await fetch(`${API_BASE}/api/v1/reviews/${reviewId}`, { method: "DELETE", credentials: "include" });
+    await fetch(`${API_BASE}/api/v1/reviews/${reviewId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: CSRF_HEADER,
+    });
     await loadReviews();
   }
 
@@ -50,7 +54,11 @@ export default function AccountPage() {
     if (!window.confirm("Konto endgueltig loeschen? Deine Bewertungen werden entfernt und dein Konto anonymisiert.")) {
       return;
     }
-    const response = await fetch(`${API_BASE}/api/v1/me`, { method: "DELETE", credentials: "include" });
+    const response = await fetch(`${API_BASE}/api/v1/me`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: CSRF_HEADER,
+    });
     if (response.ok) {
       setMessage("Dein Konto wurde geloescht.");
       reload();

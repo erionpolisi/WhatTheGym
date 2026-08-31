@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, CSRF_HEADER } from "@/lib/api";
 
 export default function AppealPage() {
   const params = useParams<{ caseNumber: string }>();
@@ -18,7 +18,7 @@ export default function AppealPage() {
     setError(null);
     const response = await fetch(`${API_BASE}/api/v1/legal/cases/${encodeURIComponent(params.caseNumber)}/appeal`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...CSRF_HEADER },
       body: JSON.stringify({ token, text, website: honeypot }),
     });
     if (response.status === 201 || response.status === 202) {

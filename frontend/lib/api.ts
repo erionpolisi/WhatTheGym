@@ -6,6 +6,9 @@ export const API_BASE =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+// Cookie-authenticated state-changing requests must carry this header (CSRF defense in depth).
+export const CSRF_HEADER = { "X-CSRF": "1" } as const;
+
 export interface PagedResult<T> {
   items: T[];
   page: number;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { API_BASE, categoryLabels, membershipCategoryLabels, studioCategoryLabels, type Ratings } from "@/lib/api";
+import { API_BASE, CSRF_HEADER, categoryLabels, membershipCategoryLabels, studioCategoryLabels, type Ratings } from "@/lib/api";
 import { sendEvent } from "@/components/Analytics";
 
 function RatingSelect({
@@ -51,7 +51,7 @@ export function ReviewForm({ gymSlug }: { gymSlug: string }) {
       const response = await fetch(`${API_BASE}/api/v1/gyms/${gymSlug}/reviews`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...CSRF_HEADER },
         body: JSON.stringify({ ratings: ratings as Ratings, text: text.trim() === "" ? null : text.trim() }),
       });
       if (response.status === 401) {
@@ -137,7 +137,7 @@ export function ReportForm({ reviewId }: { reviewId: string }) {
     setError(null);
     const response = await fetch(`${API_BASE}/api/v1/reviews/${reviewId}/report`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...CSRF_HEADER },
       body: JSON.stringify({ ...state, website: honeypot }),
     });
     if (response.status === 201) {

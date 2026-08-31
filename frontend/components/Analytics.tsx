@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, CSRF_HEADER } from "@/lib/api";
 
 // PII-free analytics: random per-tab session id (not a credential), no IP, no fingerprinting.
 function getSessionId(): string {
@@ -19,7 +19,7 @@ export function sendEvent(eventType: string, path?: string): void {
   try {
     void fetch(`${API_BASE}/api/v1/analytics/events`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...CSRF_HEADER },
       body: JSON.stringify({ eventType, path: path ?? window.location.pathname, sessionId: getSessionId() }),
       keepalive: true,
     });
