@@ -155,7 +155,7 @@ public class LegalFlowTests(WtgApiFactory factory)
     [Fact]
     public async Task Case_can_be_closed_and_exported_and_transparency_counts()
     {
-        const string slug = "clever-fit-wien-donaustadt";
+        const string slug = "clever-fit-wien-stadlau";
         var (reviewId, _) = await CreateReviewAsync(slug, "author-closed@example.invalid");
         var anonymous = factory.CreateClient();
         var (_, _, caseId) = await ReportAsync(anonymous, reviewId);

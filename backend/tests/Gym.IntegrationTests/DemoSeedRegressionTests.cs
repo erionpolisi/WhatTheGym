@@ -60,8 +60,9 @@ public sealed class DemoSeedRegressionTests(DemoSeedApiFactory factory) : IClass
     {
         var client = factory.CreateClient();
 
-        // Find a demo-seeded published review.
-        var gyms = (await client.GetFromJsonAsync<JsonNode>("/api/v1/gyms?sort=name&pageSize=50"))!;
+        // Find a demo-seeded published review (demo reviews sit on the first gyms by slug;
+        // page size must cover the whole catalog).
+        var gyms = (await client.GetFromJsonAsync<JsonNode>("/api/v1/gyms?sort=name&pageSize=200"))!;
         var reviewedGym = gyms["items"]!.AsArray()
             .First(g => g!["reviewCount"]!.GetValue<int>() > 0);
         var reviews = (await client.GetFromJsonAsync<JsonNode>(

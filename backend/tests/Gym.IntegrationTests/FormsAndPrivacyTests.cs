@@ -62,7 +62,7 @@ public class FormsAndPrivacyTests(WtgApiFactory factory)
         (await client.PostAsJsonAsync("/api/v1/analytics/events", new
         {
             eventType = "page_view",
-            path = "/studios/fitinn-favoritenstrasse?utm_source=x",
+            path = "/studios/fitinn-wien-favoritenstrasse?utm_source=x",
             sessionId = "client-session-abc",
         })).StatusCode.Should().Be(HttpStatusCode.Accepted);
 

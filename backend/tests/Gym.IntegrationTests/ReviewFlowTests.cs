@@ -9,7 +9,7 @@ namespace Gym.IntegrationTests;
 [Collection("api")]
 public class ReviewFlowTests(WtgApiFactory factory)
 {
-    private const string GymSlug = "fitinn-favoritenstrasse";
+    private const string GymSlug = "fitinn-wien-favoritenstrasse";
 
     private static object Ratings(int? priceValue = null, int? equipment = null, int? cleanliness = null) => new
     {
@@ -96,7 +96,7 @@ public class ReviewFlowTests(WtgApiFactory factory)
     {
         var client = await factory.LoginAsync("unverified@example.invalid", "Unverifiziert", emailVerified: false);
 
-        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-thaliastrasse/reviews", new
+        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-wien-kendlerstrasse/reviews", new
         {
             ratings = new { equipment = 3 },
         });
@@ -109,7 +109,7 @@ public class ReviewFlowTests(WtgApiFactory factory)
     {
         var client = factory.CreateClient();
 
-        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-thaliastrasse/reviews", new
+        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-wien-kendlerstrasse/reviews", new
         {
             ratings = new { equipment = 3 },
         });
@@ -122,7 +122,7 @@ public class ReviewFlowTests(WtgApiFactory factory)
     {
         var client = await factory.LoginAsync("reviewer2@example.invalid", "Zweite");
 
-        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-thaliastrasse/reviews", new
+        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-wien-kendlerstrasse/reviews", new
         {
             ratings = new { },
             text = "Nur Text ohne Bewertung.",
@@ -134,7 +134,7 @@ public class ReviewFlowTests(WtgApiFactory factory)
     [Fact]
     public async Task Account_deletion_anonymizes_and_removes_reviews_from_public()
     {
-        const string slug = "fitinn-bruenner-strasse";
+        const string slug = "fitinn-wien-floridsdorf";
         var client = await factory.LoginAsync("deleteme@example.invalid", "Bald Geloescht");
         (await client.PostAsJsonAsync($"/api/v1/gyms/{slug}/reviews", new { ratings = new { staff = 4 } }))
             .StatusCode.Should().Be(HttpStatusCode.Created);

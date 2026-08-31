@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Gym.Infrastructure.Persistence;
@@ -59,7 +59,7 @@ public sealed class HardeningTests(WtgApiFactory factory)
         var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/analytics/events", new
         {
             eventType,
-            path = "/studios/fitinn-favoritenstrasse?secret=must-be-stripped",
+            path = "/studios/fitinn-wien-favoritenstrasse?secret=must-be-stripped",
             sessionId = IntegrationTestSupport.UniqueEmail("analytics-session"),
         });
 

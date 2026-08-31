@@ -144,7 +144,7 @@ public sealed class SearchFilterMatrixTests(WtgApiFactory factory)
     [InlineData("favoriten", "Favoriten")]
     [InlineData("Favoritenstrasse", "Favoriten")]
     [InlineData("donaustadt", "Donaustadt")]
-    [InlineData("bruenner", "Bruenner")]
+    [InlineData("gasometer", "Gasometer")]
     [InlineData("mcfit", "McFIT")]
     [InlineData("kieser", "Kieser")]
     [InlineData("clever", "Clever")]

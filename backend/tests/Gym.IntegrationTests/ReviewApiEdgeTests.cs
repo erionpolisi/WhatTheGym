@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Xunit;
@@ -86,7 +86,7 @@ public sealed class ReviewApiEdgeTests(WtgApiFactory factory)
     {
         var client = await factory.LoginAsync(IntegrationTestSupport.UniqueEmail("invalid-rating"), "Invalid");
 
-        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-favoritenstrasse/reviews", new
+        var response = await client.PostAsJsonAsync("/api/v1/gyms/fitinn-wien-favoritenstrasse/reviews", new
         {
             ratings = new Dictionary<string, int?> { [category] = value },
         });
@@ -111,11 +111,11 @@ public sealed class ReviewApiEdgeTests(WtgApiFactory factory)
 
         (string Path, object Payload, HttpStatusCode Expected) request = scenario switch
         {
-            "empty-ratings" => ("/api/v1/gyms/fitinn-favoritenstrasse/reviews", new { ratings = new { }, text = "Nur Text ohne Bewertung." }, HttpStatusCode.BadRequest),
-            "too-many-links" => ("/api/v1/gyms/fitinn-favoritenstrasse/reviews", new { ratings = new { equipment = 3 }, text = "http://a.test http://b.test http://c.test http://d.test" }, HttpStatusCode.BadRequest),
-            "too-long-text" => ("/api/v1/gyms/fitinn-favoritenstrasse/reviews", new { ratings = new { equipment = 3 }, text = new string('a', 4001) }, HttpStatusCode.BadRequest),
+            "empty-ratings" => ("/api/v1/gyms/fitinn-wien-favoritenstrasse/reviews", new { ratings = new { }, text = "Nur Text ohne Bewertung." }, HttpStatusCode.BadRequest),
+            "too-many-links" => ("/api/v1/gyms/fitinn-wien-favoritenstrasse/reviews", new { ratings = new { equipment = 3 }, text = "http://a.test http://b.test http://c.test http://d.test" }, HttpStatusCode.BadRequest),
+            "too-long-text" => ("/api/v1/gyms/fitinn-wien-favoritenstrasse/reviews", new { ratings = new { equipment = 3 }, text = new string('a', 4001) }, HttpStatusCode.BadRequest),
             "missing-gym" => ("/api/v1/gyms/does-not-exist/reviews", new { ratings = new { equipment = 3 }, text = "Gueltige Bewertung fuer fehlendes Studio." }, HttpStatusCode.NotFound),
-            _ => ("/api/v1/gyms/fitinn-favoritenstrasse/reviews", new { ratings = new { equipment = 3 }, text = "Nicht angemeldet." }, HttpStatusCode.Unauthorized),
+            _ => ("/api/v1/gyms/fitinn-wien-favoritenstrasse/reviews", new { ratings = new { equipment = 3 }, text = "Nicht angemeldet." }, HttpStatusCode.Unauthorized),
         };
 
         var response = await client.PostAsJsonAsync(request.Path, request.Payload);

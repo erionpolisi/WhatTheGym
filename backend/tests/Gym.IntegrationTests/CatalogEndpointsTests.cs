@@ -81,9 +81,9 @@ public class CatalogEndpointsTests(WtgApiFactory factory)
     {
         var client = factory.CreateClient();
 
-        var json = await client.GetJsonAsync("/api/v1/gyms/kieser-training-wien-innere-stadt");
+        var json = await client.GetJsonAsync("/api/v1/gyms/holmes-place-boerseplatz");
 
-        json["slug"]!.GetValue<string>().Should().Be("kieser-training-wien-innere-stadt");
+        json["slug"]!.GetValue<string>().Should().Be("holmes-place-boerseplatz");
         json["district"]!.GetValue<int>().Should().Be(1);
         json["score"]!["scoreBasis"]!.GetValue<string>().Should().Be("none");
         json["score"]!["totalScore"].Should().BeNull();

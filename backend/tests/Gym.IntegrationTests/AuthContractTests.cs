@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
@@ -158,14 +158,14 @@ public sealed class AuthContractTests(WtgApiFactory factory)
     {
         var unverifiedEmail = IntegrationTestSupport.UniqueEmail("unverified-badge");
         var unverified = await factory.LoginAsync(unverifiedEmail, "Badge Test", emailVerified: false);
-        (await unverified.PostAsJsonAsync("/api/v1/gyms/fitinn-thaliastrasse/reviews", new { ratings = new { equipment = 3 } }))
+        (await unverified.PostAsJsonAsync("/api/v1/gyms/fitinn-wien-kendlerstrasse/reviews", new { ratings = new { equipment = 3 } }))
             .StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         var verified = await factory.LoginAsync(IntegrationTestSupport.UniqueEmail("verified-badge"), "Badge Test Verified");
-        var create = await verified.PostAsJsonAsync("/api/v1/gyms/fitinn-thaliastrasse/reviews", new { ratings = new { equipment = 3 } });
+        var create = await verified.PostAsJsonAsync("/api/v1/gyms/fitinn-wien-kendlerstrasse/reviews", new { ratings = new { equipment = 3 } });
         create.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var list = await verified.GetJsonAsync("/api/v1/gyms/fitinn-thaliastrasse/reviews");
+        var list = await verified.GetJsonAsync("/api/v1/gyms/fitinn-wien-kendlerstrasse/reviews");
         list["items"]!.AsArray().Should().Contain(i => i!["author"]!["verifiedViaGoogle"]!.GetValue<bool>());
     }
 
