@@ -32,6 +32,9 @@ internal static class CaseEvents
 
 public static class LegalLinks
 {
+    /// <summary>Placeholder for confidential tokens in audit-trail copies of notification texts.</summary>
+    public const string MaskedToken = "***";
+
     public static string CaseStatusUrl(string baseUrl, string caseNumber, string token) =>
         $"{baseUrl.TrimEnd('/')}/rechtliches/fall/{Uri.EscapeDataString(caseNumber)}?token={Uri.EscapeDataString(token)}";
 
@@ -108,8 +111,12 @@ public sealed class ReportReviewCommandHandler(
         var (subject, body) = LegalMailTexts.ReportReceived(caseNumber, statusUrl);
         outbox.Enqueue(OutboxEmail.Enqueue(legalCase.ReporterEmail, subject, body, "legal.reportReceived", legalCase.Id, clock.UtcNow));
 
+        // Audit trail stores the exact notice text but with the confidential token masked:
+        // events are readable by staff and must never leak usable secrets.
+        var (_, auditBody) = LegalMailTexts.ReportReceived(
+            caseNumber, LegalLinks.CaseStatusUrl(mailOptions.Value.PublicBaseUrl, caseNumber, LegalLinks.MaskedToken));
         await CaseEvents.AppendAsync(cases, clock, legalCase.Id, LegalCaseEventType.NotificationQueued, LegalActorType.System, null,
-            new { to = "reporter", subject, body }, cancellationToken);
+            new { to = "reporter", subject, body = auditBody }, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return new ReportReviewResultDto(caseNumber, statusToken);
@@ -189,6 +196,32 @@ public sealed class ClassifyCaseCommandHandler(
                     outbox.Enqueue(OutboxEmail.Enqueue(author.Email, subject, body, "legal.contentHidden", legalCase.Id, clock.UtcNow));
                     await CaseEvents.AppendAsync(cases, clock, legalCase.Id, LegalCaseEventType.NotificationQueued, LegalActorType.System, null,
                         new { to = "author", subject, body }, cancellationToken);
+                }
+            }
+        }
+        else if (classification == LegalCaseClassification.Normal)
+        {
+            // Correcting a fast-track misclassification puts the content back online
+            // (normal reports keep content visible until the decision), unless another
+            // open fast-track case still requires it to stay hidden.
+            var review = await reviews.GetByIdAsync(legalCase.ReviewId, cancellationToken);
+            if (review is not null && review.Status == ReviewStatus.UnderReview)
+            {
+                var otherOpenFastTrack = (await cases.ListForReviewAsync(review.Id, cancellationToken))
+                    .Any(c => c.Id != legalCase.Id
+                        && c.Classification == LegalCaseClassification.FastTrackObviouslyIllegal
+                        && c.Status is LegalCaseStatus.Received or LegalCaseStatus.UnderReview);
+                if (!otherOpenFastTrack)
+                {
+                    var releaseResult = review.ReleaseFromLegalReview(clock.UtcNow);
+                    if (releaseResult.IsFailure)
+                    {
+                        return releaseResult;
+                    }
+
+                    await scoreUpdater.RecalculateAsync(review.GymId, cancellationToken);
+                    await CaseEvents.AppendAsync(cases, clock, legalCase.Id, LegalCaseEventType.ContentRestored, LegalActorType.System, null,
+                        new { reviewId = review.Id }, cancellationToken);
                 }
             }
         }
@@ -289,13 +322,16 @@ public sealed class DecideCaseCommandHandler(
         legalCase.SetAppealTokenHash(appealTokenHash, clock.UtcNow);
         var baseUrl = mailOptions.Value.PublicBaseUrl;
         var appealUrl = LegalLinks.AppealUrl(baseUrl, legalCase.CaseNumber, appealToken);
-        var statusUrl = LegalLinks.CaseStatusUrl(baseUrl, legalCase.CaseNumber, "***");
+        var appealUrlMasked = LegalLinks.AppealUrl(baseUrl, legalCase.CaseNumber, LegalLinks.MaskedToken);
+        var statusUrl = LegalLinks.CaseStatusUrl(baseUrl, legalCase.CaseNumber, LegalLinks.MaskedToken);
 
         var (reporterSubject, reporterBody) = LegalMailTexts.DecisionToReporter(
             legalCase.CaseNumber, removed, statusUrl, removed ? null : appealUrl);
         outbox.Enqueue(OutboxEmail.Enqueue(legalCase.ReporterEmail, reporterSubject, reporterBody, "legal.decision.reporter", legalCase.Id, clock.UtcNow));
+        var (_, reporterAuditBody) = LegalMailTexts.DecisionToReporter(
+            legalCase.CaseNumber, removed, statusUrl, removed ? null : appealUrlMasked);
         await CaseEvents.AppendAsync(cases, clock, legalCase.Id, LegalCaseEventType.NotificationQueued, LegalActorType.System, null,
-            new { to = "reporter", subject = reporterSubject, body = reporterBody }, cancellationToken);
+            new { to = "reporter", subject = reporterSubject, body = reporterAuditBody }, cancellationToken);
 
         var author = await users.GetByIdAsync(review.UserId, cancellationToken);
         if (author is not null && author.Status == UserStatus.Active)
@@ -303,8 +339,10 @@ public sealed class DecideCaseCommandHandler(
             var (authorSubject, authorBody) = LegalMailTexts.DecisionToAuthor(
                 legalCase.CaseNumber, removed, removed ? appealUrl : null);
             outbox.Enqueue(OutboxEmail.Enqueue(author.Email, authorSubject, authorBody, "legal.decision.author", legalCase.Id, clock.UtcNow));
+            var (_, authorAuditBody) = LegalMailTexts.DecisionToAuthor(
+                legalCase.CaseNumber, removed, removed ? appealUrlMasked : null);
             await CaseEvents.AppendAsync(cases, clock, legalCase.Id, LegalCaseEventType.NotificationQueued, LegalActorType.System, null,
-                new { to = "author", subject = authorSubject, body = authorBody }, cancellationToken);
+                new { to = "author", subject = authorSubject, body = authorAuditBody }, cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

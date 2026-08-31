@@ -100,6 +100,7 @@ public enum LegalCaseEventType
     Classified,
     ReviewStarted,
     ContentHidden,
+    ContentRestored,
     Decided,
     NotificationQueued,
     AppealSubmitted,
