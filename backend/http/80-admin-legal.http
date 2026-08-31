@@ -48,6 +48,7 @@ Content-Type: application/json
 
 ### Start the review of a case (Received -> UnderReview)
 POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/start-review
+X-CSRF: 1
 
 ### Decide: KeepOnline (content stays; reporter is notified with this text)
 # The rationale is stored verbatim in the audit trail and notification.
@@ -90,6 +91,7 @@ Content-Type: application/json
 
 ### Close a case (final state; starts the 7-year audit retention clock)
 POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/close
+X-CSRF: 1
 
 ### Apply a legal hold (pauses retention deletion for the linked records)
 # Provide at least one of legalCaseId / reviewId / userId.
@@ -111,6 +113,7 @@ Content-Type: application/json
 
 ### Release a legal hold (retention resumes)
 POST {{host}}/api/v1/admin/legal-holds/{{holdId}}/release
+X-CSRF: 1
 
 ### Create a new legal document version (draft until published)
 # Types: imprint | privacyPolicy | termsOfUse. Keep the ENTWURF marker until
@@ -132,7 +135,9 @@ Content-Type: application/json
 
 ### Publish a legal document version (becomes the active public version)
 POST {{host}}/api/v1/admin/legal-documents/{{legalDocumentId}}/publish
+X-CSRF: 1
 
 ### Admin legal as Moderator variant
 # EXPECT: 403 - decide/classify/close/holds/documents are Admin-only.
 POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/close
+X-CSRF: 1

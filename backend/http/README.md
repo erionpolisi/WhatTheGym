@@ -20,6 +20,11 @@ request just works. `client.global.set(...)` response handlers capture ids
 and tokens (`reviewId`, `caseNumber`, `statusToken`, ...) so chained flows
 run without copy-pasting.
 
+CSRF note: authenticated state-changing requests must send `X-CSRF: 1` or a
+JSON content type. JSON requests in this suite pass automatically; body-less
+writes (refresh, logout, restore, close, publish, deletes, ...) carry the
+header explicitly.
+
 ## Files
 
 | File | Scope | Auth |

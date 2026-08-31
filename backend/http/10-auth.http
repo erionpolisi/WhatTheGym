@@ -53,10 +53,13 @@ GET {{host}}/api/v1/auth/login-failed
 ### Refresh the session (rotates the hashed refresh token server-side)
 # WHY: verify rotation + reuse detection; run twice in a row - the second
 # call must still succeed because Rider stores the rotated cookie.
+# NOTE: body-less writes with a session need the X-CSRF header (BFF CSRF check).
 POST {{host}}/api/v1/auth/refresh
+X-CSRF: 1
 
 ### Logout (revokes the refresh-token family and clears cookies)
 POST {{host}}/api/v1/auth/logout
+X-CSRF: 1
 
 ### Who am I (requires session cookie; 401 after logout)
 GET {{host}}/api/v1/me
@@ -87,6 +90,7 @@ GET {{host}}/api/v1/me/reviews
 ### Delete my account (GDPR) - anonymizes profile, soft-deletes reviews
 # CAREFUL: irreversible for the test user; retention/legal holds still apply.
 DELETE {{host}}/api/v1/me
+X-CSRF: 1
 
 ### /me without a session - unauthorized variant
 # EXPECT: 401. Run after "Logout" above.

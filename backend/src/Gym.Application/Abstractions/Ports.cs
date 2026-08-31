@@ -15,6 +15,13 @@ public interface IUnitOfWork
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
 
+/// <summary>Raised by the unit of work when a database uniqueness constraint is violated (mapped to HTTP 409).</summary>
+public sealed class UniqueConstraintViolationException(string constraintName, Exception innerException)
+    : Exception($"Unique constraint '{constraintName}' violated.", innerException)
+{
+    public string ConstraintName { get; } = constraintName;
+}
+
 /// <summary>Creates a random secret token and its server-side hash (tokens are never stored in plain text).</summary>
 public interface ISecureTokenService
 {

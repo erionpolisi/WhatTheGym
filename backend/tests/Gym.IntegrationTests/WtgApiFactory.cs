@@ -46,6 +46,13 @@ public sealed class WtgApiFactory : WebApplicationFactory<Program>, IAsyncLifeti
         builder.UseSetting("RateLimits:AuthPerMinute", "1000");
         builder.UseSetting("RateLimits:AnalyticsPerMinute", "1000");
     }
+
+    // Session-authenticated writes require the CSRF header; set it as a client default.
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.DefaultRequestHeaders.Add(Gym.Api.Middleware.CsrfHeaderMiddleware.HeaderName, "1");
+    }
 }
 
 [CollectionDefinition("api")]

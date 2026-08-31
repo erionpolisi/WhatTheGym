@@ -94,6 +94,9 @@ public sealed class SessionService(
         var user = await users.GetByIdAsync(stored.UserId, httpContext.RequestAborted);
         if (user is null || user.Status != UserStatus.Active)
         {
+            stored.Revoke(clock.UtcNow);
+            await unitOfWork.SaveChangesAsync(httpContext.RequestAborted);
+            ClearRefreshCookie(httpContext);
             return Result.Failure<MeDto>(Error.Unauthorized("auth.userInactive", "Das Konto ist nicht aktiv."));
         }
 

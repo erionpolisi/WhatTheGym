@@ -40,6 +40,7 @@ Content-Type: application/json
 ### Restore a removed review (Admin only)
 # EXPECT: 403 when logged in as Moderator - verifies the policy boundary.
 POST {{host}}/api/v1/moderation/reviews/{{reviewId}}/restore
+X-CSRF: 1
 
 ### Moderation as anonymous variant
 # EXPECT: 401. Run 10-auth "Logout" first.

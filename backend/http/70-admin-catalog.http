@@ -112,6 +112,7 @@ Content-Type: application/json
 
 ### Delete chain (fails while gyms still reference it)
 DELETE {{host}}/api/v1/admin/chains/{{adminChainId}}
+X-CSRF: 1
 
 ### Create amenity
 POST {{host}}/api/v1/admin/amenities
@@ -137,11 +138,13 @@ Content-Type: application/json
 
 ### Delete amenity
 DELETE {{host}}/api/v1/admin/amenities/{{adminAmenityId}}
+X-CSRF: 1
 
 ### Rebuild all materialized score summaries
 # WHEN: after scoring changes, data imports, or suspected drift.
 # Returns the number of rebuilt gym summaries.
 POST {{host}}/api/v1/admin/summaries/rebuild
+X-CSRF: 1
 
 ### Admin catalogue as non-admin variant
 # EXPECT: 403 as Moderator/User, 401 anonymous.

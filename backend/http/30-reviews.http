@@ -105,6 +105,7 @@ Content-Type: application/json
 
 ### Delete own review (reversible soft delete; drops out of scores instantly)
 DELETE {{host}}/api/v1/reviews/{{reviewId}}
+X-CSRF: 1
 
 ### Report a review (public!) - creates a LegalCase
 # Returns caseNumber + one-time status token; both captured for

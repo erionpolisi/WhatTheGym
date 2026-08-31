@@ -8,12 +8,14 @@ using Gym.Application.Abstractions;
 using Gym.Application.Common;
 using Gym.Application.Contracts;
 using Gym.Application.Features.Users;
+using Gym.Domain.Enums;
 using Gym.Infrastructure;
 using Gym.Infrastructure.Persistence;
 using Gym.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -56,6 +58,19 @@ builder.Services.AddProblemDetails(options =>
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+// Behind a TLS-terminating ingress (Azure Container Apps) client IP and scheme arrive via
+// X-Forwarded-*. Only enable where the app is reachable exclusively through that ingress,
+// because all proxies are trusted (KnownNetworks/KnownProxies cleared).
+if (builder.Configuration.GetValue<bool>("ForwardedHeaders:Enabled"))
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
+
 // Authentication: cookie BFF session + optional Google OIDC (code flow with PKCE).
 var authOptions = builder.Configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
 var googleConfigured = !string.IsNullOrWhiteSpace(authOptions.GoogleClientId)
@@ -84,6 +99,40 @@ var authenticationBuilder = builder.Services
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
+        };
+        // Revalidate every cookie session against the user store so role changes,
+        // account deletion and server-side revocation take effect immediately.
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var userId = context.Principal?.GetUserId();
+            if (userId is null)
+            {
+                context.RejectPrincipal();
+                return;
+            }
+
+            var users = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
+            var user = await users.GetByIdAsync(userId.Value, context.HttpContext.RequestAborted);
+            if (user is null || user.Status != UserStatus.Active)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return;
+            }
+
+            var principal = context.Principal!;
+            var staleClaims = !string.Equals(principal.FindFirstValue(ClaimTypes.Role), user.Role.ToString(), StringComparison.Ordinal)
+                || !string.Equals(principal.FindFirstValue(ClaimTypes.Email), user.Email, StringComparison.Ordinal)
+                || !string.Equals(
+                    principal.FindFirstValue("email_verified"),
+                    user.EmailVerified ? "true" : "false",
+                    StringComparison.Ordinal);
+            if (staleClaims)
+            {
+                context.ReplacePrincipal(SessionService.BuildPrincipal(
+                    new MeDto(user.Id, user.Email, user.EmailVerified, user.DisplayName, user.Role.ToString())));
+                context.ShouldRenew = true;
+            }
         };
     });
 
@@ -199,16 +248,23 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseCors("frontend");
 app.UseRateLimiter();
 app.UseAuthentication();
+app.UseMiddleware<CsrfHeaderMiddleware>();
 app.UseAuthorization();
 
 app.UseSwagger();
-app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "WhatTheGym API v1"));
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "WhatTheGym API v1");
+    // Swagger doubles as the admin UI; inject the CSRF header for state-changing calls.
+    options.UseRequestInterceptor("(req) => { req.headers['X-CSRF'] = '1'; return req; }");
+});
 
 app.MapControllers();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });

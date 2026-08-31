@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Gym.Application.Abstractions;
 using Gym.Domain.Common;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -33,10 +34,69 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next)
     }
 }
 
+/// <summary>
+/// Defense-in-depth CSRF check for the cookie BFF: state-changing requests from an
+/// authenticated session must either carry the custom X-CSRF header or declare a JSON
+/// content type - neither can be produced by a cross-site HTML form, and cross-site
+/// fetch with JSON triggers a CORS preflight. Anonymous requests are unaffected.
+/// </summary>
+public sealed class CsrfHeaderMiddleware(RequestDelegate next)
+{
+    public const string HeaderName = "X-CSRF";
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        if (IsStateChanging(context.Request.Method)
+            && context.User.Identity?.IsAuthenticated == true
+            && !context.Request.Headers.ContainsKey(HeaderName)
+            && !HasJsonContentType(context.Request))
+        {
+            var problem = new ProblemDetails
+            {
+                Status = StatusCodes.Status403Forbidden,
+                Title = "Forbidden",
+                Detail = $"Schreibende Anfragen mit Sitzung erfordern den Header '{HeaderName}' oder Content-Type application/json.",
+            };
+            problem.Extensions["code"] = "auth.csrf";
+            problem.Extensions["correlationId"] = context.Items[CorrelationIdMiddleware.HeaderName];
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsJsonAsync(problem, context.RequestAborted);
+            return;
+        }
+
+        await next(context);
+    }
+
+    private static bool IsStateChanging(string method) =>
+        method is "POST" or "PUT" or "PATCH" or "DELETE";
+
+    private static bool HasJsonContentType(HttpRequest request) =>
+        request.ContentType is { } contentType
+        && contentType.StartsWith("application/json", StringComparison.OrdinalIgnoreCase);
+}
+
 public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
+        // Concurrent inserts racing a unique constraint (e.g. one active review per user
+        // and gym) surface as a regular conflict instead of an internal error.
+        if (exception is UniqueConstraintViolationException)
+        {
+            var conflict = new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "Konflikt",
+                Detail = "Die Anfrage kollidiert mit einem bereits vorhandenen Datensatz.",
+                Type = "https://httpstatuses.io/409",
+            };
+            conflict.Extensions["code"] = "conflict.unique";
+            conflict.Extensions["correlationId"] = httpContext.Items[CorrelationIdMiddleware.HeaderName];
+            httpContext.Response.StatusCode = conflict.Status.Value;
+            await httpContext.Response.WriteAsJsonAsync(conflict, cancellationToken);
+            return true;
+        }
+
         logger.LogError(exception, "Unhandled exception for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
 
         var problem = new ProblemDetails
