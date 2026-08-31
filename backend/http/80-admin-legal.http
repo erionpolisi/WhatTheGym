@@ -1,0 +1,138 @@
+# ---------------------------------------------------------------------------
+# Admin/staff legal-case handling: the complete LegalCase state machine,
+# legal holds, and versioned legal documents.
+# WHEN:  Processing a real report end-to-end; after changes to the case
+#        state machine, audit events, retention, or notifications.
+#        Full walk-through: report (30-reviews) -> classify -> start-review
+#        -> decide -> appeal (40-legal-public) -> decide appeal -> close.
+# WHY:   Decisions are legally relevant: every step writes append-only audit
+#        events, and FullyRemoved flips the review to RemovedLegal.
+# WHERE: Local for testing; on production every action here is a real,
+#        documented legal decision - rationale text is stored permanently.
+# AUTH:  List/detail need Moderator; everything else Admin (10-auth.http).
+# IDS:   caseId is the GUID from the case list (NOT the WTG- case number).
+# ---------------------------------------------------------------------------
+
+### Case list (Moderator+): status Received | UnderReview | Decided | Closed
+GET {{host}}/api/v1/admin/legal-cases?status=Received&page=1&pageSize=20
+
+> {%
+  if (response.status === 200 && response.body.items && response.body.items.length > 0) {
+    client.global.set("caseId", response.body.items[0].id);
+  }
+%}
+
+### Case detail incl. append-only audit trail and appeals (Moderator+)
+GET {{host}}/api/v1/admin/legal-cases/{{caseId}}
+
+### Case export as JSON download (Admin) - for lawyers/authorities
+GET {{host}}/api/v1/admin/legal-cases/{{caseId}}/export
+
+### Classify case: Normal | FastTrackObviouslyIllegal (Admin)
+# Fast-track is the ONLY path that hides content before a decision.
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/classify
+Content-Type: application/json
+
+{
+  "classification": "Normal"
+}
+
+### Classify - fast-track variant (immediately hides the review)
+# Use ONLY for obviously illegal content; the hide is audited.
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/classify
+Content-Type: application/json
+
+{
+  "classification": "FastTrackObviouslyIllegal"
+}
+
+### Start the review of a case (Received -> UnderReview)
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/start-review
+
+### Decide: KeepOnline (content stays; reporter is notified with this text)
+# The rationale is stored verbatim in the audit trail and notification.
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/decide
+Content-Type: application/json
+
+{
+  "decision": "KeepOnline",
+  "rationale": "Die Bewertung ist eine zulaessige Meinungsaeusserung; die beanstandete Aussage ist als subjektive Erfahrung erkennbar."
+}
+
+### Decide: FullyRemoved (review -> RemovedLegal, author notified)
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/decide
+Content-Type: application/json
+
+{
+  "decision": "FullyRemoved",
+  "rationale": "Die Bewertung enthaelt eine erwiesen falsche Tatsachenbehauptung und wird vollstaendig entfernt."
+}
+
+### Decide - invalid transition variant
+# EXPECT: 409/400 - deciding a case that is not UnderReview must fail.
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/decide
+Content-Type: application/json
+
+{
+  "decision": "KeepOnline",
+  "rationale": "Diese Entscheidung darf im aktuellen Status nicht moeglich sein."
+}
+
+### Decide an appeal: DecisionUpheld | DecisionReversed (Admin)
+# DecisionReversed reinstates a removed review. appealId from case detail.
+POST {{host}}/api/v1/admin/legal-cases/appeals/REPLACE_WITH_APPEAL_ID/decide
+Content-Type: application/json
+
+{
+  "outcome": "DecisionReversed",
+  "rationale": "Die im Einspruch vorgelegten Belege stuetzen die Tatsachenbehauptung; die Entfernung wird aufgehoben."
+}
+
+### Close a case (final state; starts the 7-year audit retention clock)
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/close
+
+### Apply a legal hold (pauses retention deletion for the linked records)
+# Provide at least one of legalCaseId / reviewId / userId.
+POST {{host}}/api/v1/admin/legal-holds
+Content-Type: application/json
+
+{
+  "reason": "Anwaltliche Aufforderung: Beweissicherung bis Verfahrensende.",
+  "legalCaseId": "{{caseId}}",
+  "reviewId": null,
+  "userId": null
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("holdId", response.body.id);
+  }
+%}
+
+### Release a legal hold (retention resumes)
+POST {{host}}/api/v1/admin/legal-holds/{{holdId}}/release
+
+### Create a new legal document version (draft until published)
+# Types: imprint | privacyPolicy | termsOfUse. Keep the ENTWURF marker until
+# a lawyer has approved the text.
+POST {{host}}/api/v1/admin/legal-documents
+Content-Type: application/json
+
+{
+  "type": "privacyPolicy",
+  "title": "Datenschutzerklaerung",
+  "contentMarkdown": "ENTWURF - anwaltlich pruefen lassen\n\n# Datenschutzerklaerung\n\nAktualisierte Fassung ..."
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("legalDocumentId", response.body.id);
+  }
+%}
+
+### Publish a legal document version (becomes the active public version)
+POST {{host}}/api/v1/admin/legal-documents/{{legalDocumentId}}/publish
+
+### Admin legal as Moderator variant
+# EXPECT: 403 - decide/classify/close/holds/documents are Admin-only.
+POST {{host}}/api/v1/admin/legal-cases/{{caseId}}/close

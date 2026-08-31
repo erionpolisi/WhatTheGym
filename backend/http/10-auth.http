@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------------------
+# Authentication (Google BFF) and the /me account endpoints.
+# WHEN:  At the start of every manual test session that needs a logged-in
+#        user; /me endpoints whenever account behavior changes.
+# WHY:   The API uses HttpOnly session cookies (BFF pattern) - Rider stores
+#        the cookie from a login response automatically and sends it on all
+#        following requests against the same host.
+# WHERE: Local: use dev-login (Development-only endpoint, returns the session
+#        cookie without Google). Staging/production: dev-login returns 404;
+#        run the Google flow in a browser instead (google/start).
+# AUTH:  dev-login/google create the session; the rest requires the cookie.
+# ---------------------------------------------------------------------------
+
+### Dev login as regular user (LOCAL ONLY - 404 outside Development)
+# Creates/updates the user, sets the session + refresh cookies in Rider's jar.
+POST {{host}}/api/v1/auth/dev-login
+Content-Type: application/json
+
+{
+  "email": "{{devUserEmail}}",
+  "displayName": "Test User",
+  "emailVerified": true
+}
+
+### Dev login as bootstrap Admin (email must match Auth:BootstrapAdminEmail)
+POST {{host}}/api/v1/auth/dev-login
+Content-Type: application/json
+
+{
+  "email": "{{devAdminEmail}}",
+  "displayName": "Local Admin",
+  "emailVerified": true
+}
+
+### Dev login as unverified account (gets NO "Verifiziert ueber Google" badge)
+POST {{host}}/api/v1/auth/dev-login
+Content-Type: application/json
+
+{
+  "email": "unverified@example.invalid",
+  "displayName": "Unverified User",
+  "emailVerified": false
+}
+
+### Google login start (opens the real OAuth flow - use a browser, not Rider)
+# WHEN: only against staging/production once Google OAuth credentials exist.
+GET {{host}}/api/v1/auth/google/start?returnUrl={{site}}/konto
+
+### Login-failed landing (what the callback redirects to on OAuth errors)
+# EXPECT: 403 ProblemDetails.
+GET {{host}}/api/v1/auth/login-failed
+
+### Refresh the session (rotates the hashed refresh token server-side)
+# WHY: verify rotation + reuse detection; run twice in a row - the second
+# call must still succeed because Rider stores the rotated cookie.
+POST {{host}}/api/v1/auth/refresh
+
+### Logout (revokes the refresh-token family and clears cookies)
+POST {{host}}/api/v1/auth/logout
+
+### Who am I (requires session cookie; 401 after logout)
+GET {{host}}/api/v1/me
+
+### Update my display name (validation: bounded length, not empty)
+PUT {{host}}/api/v1/me
+Content-Type: application/json
+
+{
+  "displayName": "Neuer Anzeigename"
+}
+
+### Update profile - validation error variant
+# EXPECT: 400 ProblemDetails with German message (empty display name).
+PUT {{host}}/api/v1/me
+Content-Type: application/json
+
+{
+  "displayName": ""
+}
+
+### My personal data export (GDPR Art. 20) - JSON download
+GET {{host}}/api/v1/me/export
+
+### My own reviews (all statuses, including soft-deleted)
+GET {{host}}/api/v1/me/reviews
+
+### Delete my account (GDPR) - anonymizes profile, soft-deletes reviews
+# CAREFUL: irreversible for the test user; retention/legal holds still apply.
+DELETE {{host}}/api/v1/me
+
+### /me without a session - unauthorized variant
+# EXPECT: 401. Run after "Logout" above.
+GET {{host}}/api/v1/me

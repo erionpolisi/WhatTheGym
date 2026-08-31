@@ -1,0 +1,148 @@
+# ---------------------------------------------------------------------------
+# Admin catalogue management: gyms, chains, amenities, summary rebuild.
+# WHEN:  Onboarding new studios (from verified official data or approved
+#        ContactRequests), correcting data, retiring studios; rebuild after
+#        any manual data surgery or scoring code change.
+# WHY:   Only Admins create gyms (public users go through contact requests);
+#        gym status controls visibility (Draft hidden, closed = no reviews).
+# WHERE: Local freely; staging/production only for real, verified data.
+# AUTH:  Admin session cookie (10-auth.http, dev-login as {{devAdminEmail}}).
+# ---------------------------------------------------------------------------
+
+### Admin gym search (includes Drafts and closed gyms, unlike the public list)
+GET {{host}}/api/v1/admin/gyms?term=&district=&page=1&pageSize=20
+
+### Create gym - full example (slug is derived automatically and stays stable)
+# District 1-23; opening hours optional, from official sources only.
+POST {{host}}/api/v1/admin/gyms
+Content-Type: application/json
+
+{
+  "name": "PowerGym Favoriten",
+  "chainId": null,
+  "district": 10,
+  "addressLine": "Favoritenstrasse 99",
+  "postalCode": "1100",
+  "website": "https://powergym.example",
+  "phone": "+43 1 2345678",
+  "description": "Krafttraining auf zwei Etagen.",
+  "status": "Draft",
+  "amenityIds": [],
+  "openingHours": [
+    { "isoDayOfWeek": 1, "opensAt": "06:00", "closesAt": "23:00" },
+    { "isoDayOfWeek": 6, "opensAt": "08:00", "closesAt": "20:00" }
+  ]
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("adminGymId", response.body.id);
+  }
+%}
+
+### Create gym - validation error variant (invalid district)
+# EXPECT: 400 ProblemDetails.
+POST {{host}}/api/v1/admin/gyms
+Content-Type: application/json
+
+{
+  "name": "Falscher Bezirk",
+  "chainId": null,
+  "district": 42,
+  "addressLine": "Nirgendwo 1",
+  "postalCode": "9999",
+  "website": null,
+  "phone": null,
+  "description": null,
+  "status": "Draft",
+  "amenityIds": [],
+  "openingHours": []
+}
+
+### Update gym (same body shape; slug remains stable on rename)
+PUT {{host}}/api/v1/admin/gyms/{{adminGymId}}
+Content-Type: application/json
+
+{
+  "name": "PowerGym Favoriten",
+  "chainId": null,
+  "district": 10,
+  "addressLine": "Favoritenstrasse 101",
+  "postalCode": "1100",
+  "website": "https://powergym.example",
+  "phone": null,
+  "description": "Krafttraining auf zwei Etagen, neu renoviert.",
+  "status": "Active",
+  "amenityIds": [],
+  "openingHours": []
+}
+
+### Change gym status: Draft | Active | TemporarilyClosed | PermanentlyClosed
+# Draft = hidden from public; closed gyms accept no new reviews.
+PATCH {{host}}/api/v1/admin/gyms/{{adminGymId}}/status
+Content-Type: application/json
+
+{
+  "status": "Active"
+}
+
+### Create chain
+POST {{host}}/api/v1/admin/chains
+Content-Type: application/json
+
+{
+  "name": "PowerGym",
+  "website": "https://powergym.example"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("adminChainId", response.body.id);
+  }
+%}
+
+### Update chain
+PUT {{host}}/api/v1/admin/chains/{{adminChainId}}
+Content-Type: application/json
+
+{
+  "name": "PowerGym Austria",
+  "website": "https://powergym.example"
+}
+
+### Delete chain (fails while gyms still reference it)
+DELETE {{host}}/api/v1/admin/chains/{{adminChainId}}
+
+### Create amenity
+POST {{host}}/api/v1/admin/amenities
+Content-Type: application/json
+
+{
+  "name": "Kletterwand"
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("adminAmenityId", response.body.id);
+  }
+%}
+
+### Rename amenity
+PUT {{host}}/api/v1/admin/amenities/{{adminAmenityId}}
+Content-Type: application/json
+
+{
+  "name": "Boulderwand"
+}
+
+### Delete amenity
+DELETE {{host}}/api/v1/admin/amenities/{{adminAmenityId}}
+
+### Rebuild all materialized score summaries
+# WHEN: after scoring changes, data imports, or suspected drift.
+# Returns the number of rebuilt gym summaries.
+POST {{host}}/api/v1/admin/summaries/rebuild
+
+### Admin catalogue as non-admin variant
+# EXPECT: 403 as Moderator/User, 401 anonymous.
+GET {{host}}/api/v1/admin/gyms

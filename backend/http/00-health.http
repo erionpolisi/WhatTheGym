@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------------------
+# Health and readiness probes.
+# WHEN:  First thing after `docker compose up` or `dotnet run`, before any
+#        other request; also what Azure/monitoring will poll in production.
+# WHY:   /health/live proves the process runs; /health/ready additionally
+#        proves the database connection and applied migrations.
+# WHERE: Sent to the API host selected via the Rider environment dropdown
+#        (local-docker, local-dotnet, staging, production).
+# AUTH:  None.
+# ---------------------------------------------------------------------------
+
+### Liveness: process is up (200 even when the database is down)
+GET {{host}}/health/live
+
+### Readiness: database reachable and schema ready (503 while db is starting)
+GET {{host}}/health/ready
+
+### Swagger UI (open in browser) - the admin interface of the MVP
+# Development only; not exposed in production.
+GET {{host}}/swagger/index.html
+
+### OpenAPI document - use to diff the contract after API changes
+GET {{host}}/swagger/v1/swagger.json

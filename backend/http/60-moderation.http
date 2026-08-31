@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------------------
+# Moderation and admin user/contact administration.
+# WHEN:  After role/policy changes, moderation workflow changes, or when
+#        processing real reports/suggestions (Swagger/this file IS the
+#        admin UI of the MVP).
+# WHY:   Moderators may remove reviews (reason required, soft delete);
+#        restore and role management are Admin-only - verify both policies.
+# WHERE: Local with dev-login (moderator/admin); staging/production only as
+#        a real staff member via Google session.
+# AUTH:  Session cookie. Log in via 10-auth.http first:
+#        - moderator requests: dev-login as {{devModeratorEmail}} (an Admin
+#          must first assign the Moderator role via "Set user role" below)
+#        - admin requests: dev-login as {{devAdminEmail}} (bootstrap admin)
+# ---------------------------------------------------------------------------
+
+### Moderation queue - reviews under review (default)
+GET {{host}}/api/v1/moderation/reviews
+
+### Moderation queue - other statuses: Published | SoftDeleted | UnderReview | RemovedLegal
+GET {{host}}/api/v1/moderation/reviews?status=Published&page=1&pageSize=20
+
+### Remove a review as Moderator (reason is mandatory, soft delete)
+# reviewId is captured by 30-reviews.http or taken from the queue above.
+POST {{host}}/api/v1/moderation/reviews/{{reviewId}}/remove
+Content-Type: application/json
+
+{
+  "reason": "Verstoss gegen die Nutzungsbedingungen: beleidigender Inhalt."
+}
+
+### Remove - missing reason variant
+# EXPECT: 400 ProblemDetails.
+POST {{host}}/api/v1/moderation/reviews/{{reviewId}}/remove
+Content-Type: application/json
+
+{
+  "reason": ""
+}
+
+### Restore a removed review (Admin only)
+# EXPECT: 403 when logged in as Moderator - verifies the policy boundary.
+POST {{host}}/api/v1/moderation/reviews/{{reviewId}}/restore
+
+### Moderation as anonymous variant
+# EXPECT: 401. Run 10-auth "Logout" first.
+GET {{host}}/api/v1/moderation/reviews
+
+### List users (Admin) - paged
+GET {{host}}/api/v1/admin/users?page=1&pageSize=20
+
+### Set user role (Admin): User | Moderator | Admin
+# Copy the target userId from the list above.
+PUT {{host}}/api/v1/admin/users/REPLACE_WITH_USER_ID/role
+Content-Type: application/json
+
+{
+  "role": "Moderator"
+}
+
+### Set user role - invalid role variant
+# EXPECT: 400 ProblemDetails.
+PUT {{host}}/api/v1/admin/users/REPLACE_WITH_USER_ID/role
+Content-Type: application/json
+
+{
+  "role": "Superuser"
+}
+
+### Contact-request queue (Admin): status New | InProgress | Resolved
+GET {{host}}/api/v1/admin/contact-requests?status=New&page=1&pageSize=20
+
+### Update contact-request status (Admin workflow: New -> InProgress -> Resolved)
+PUT {{host}}/api/v1/admin/contact-requests/REPLACE_WITH_REQUEST_ID/status
+Content-Type: application/json
+
+{
+  "status": "InProgress"
+}

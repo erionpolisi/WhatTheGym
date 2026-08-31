@@ -1,0 +1,167 @@
+# ---------------------------------------------------------------------------
+# Review lifecycle: create, edit, delete own reviews; public review report.
+# WHEN:  After changes to review validation, scoring, revisions, or the
+#        report/LegalCase entry point; the report request starts the legal
+#        flow continued in 40-legal-public.http and 80-admin-legal.http.
+# WHY:   Reviews are the core domain; the report endpoint is the single
+#        public entry that creates a LegalCase (no separate ReviewReport).
+# WHERE: Local with dev-login. Do NOT create noise reviews on production.
+# AUTH:  Create/edit/delete require a session cookie (run 10-auth first);
+#        the report is anonymous-but-identified (name + email required).
+# ---------------------------------------------------------------------------
+
+### Create review - full example (all 11 categories + text)
+# Requires login. One active review per user and gym.
+# Captures the id for the update/delete/report requests below.
+POST {{host}}/api/v1/gyms/{{gymSlug}}/reviews
+Content-Type: application/json
+
+{
+  "ratings": {
+    "priceValue": 5,
+    "contractTerms": 4,
+    "billing": 4,
+    "cancellationExperience": 3,
+    "equipment": 4,
+    "cleanliness": 3,
+    "staff": 5,
+    "crowding": 2,
+    "changingRoom": 3,
+    "showers": 3,
+    "atmosphere": 4
+  },
+  "text": "Faires Studio, freundliches Personal. Stosszeiten sind voll."
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("reviewId", response.body.id);
+  }
+%}
+
+### Create review - minimal valid example (a single direct rating suffices)
+POST {{host}}/api/v1/gyms/{{gymSlug}}/reviews
+Content-Type: application/json
+
+{
+  "ratings": {
+    "priceValue": 4
+  },
+  "text": null
+}
+
+### Create review - invariant violation
+# EXPECT: 400 - at least one direct 1-5 rating is required.
+POST {{host}}/api/v1/gyms/{{gymSlug}}/reviews
+Content-Type: application/json
+
+{
+  "ratings": {},
+  "text": "Nur Text ohne Bewertung ist unzulaessig."
+}
+
+### Create review - rating out of range
+# EXPECT: 400 ProblemDetails (values must be 1-5).
+POST {{host}}/api/v1/gyms/{{gymSlug}}/reviews
+Content-Type: application/json
+
+{
+  "ratings": {
+    "priceValue": 6
+  }
+}
+
+### Create review - link spam rejected by content checks
+# EXPECT: 400 (server-side anti-abuse filter).
+POST {{host}}/api/v1/gyms/{{gymSlug}}/reviews
+Content-Type: application/json
+
+{
+  "ratings": { "equipment": 3 },
+  "text": "http://spam.example http://spam2.example http://spam3.example http://spam4.example"
+}
+
+### Create review - unauthenticated variant
+# EXPECT: 401. Run 10-auth "Logout" first.
+POST {{host}}/api/v1/gyms/{{gymSlug}}/reviews
+Content-Type: application/json
+
+{
+  "ratings": { "priceValue": 3 }
+}
+
+### Update own review (creates a ReviewRevision, bumps editCount)
+PUT {{host}}/api/v1/reviews/{{reviewId}}
+Content-Type: application/json
+
+{
+  "ratings": {
+    "priceValue": 4,
+    "equipment": 4,
+    "cleanliness": 4
+  },
+  "text": "Update nach drei Monaten: Sauberkeit hat sich verbessert."
+}
+
+### Delete own review (reversible soft delete; drops out of scores instantly)
+DELETE {{host}}/api/v1/reviews/{{reviewId}}
+
+### Report a review (public!) - creates a LegalCase
+# Returns caseNumber + one-time status token; both captured for
+# 40-legal-public.http. Rate-limited (public-write).
+POST {{host}}/api/v1/reviews/{{reviewId}}/report
+Content-Type: application/json
+
+{
+  "category": "Defamation",
+  "reporterName": "Max Mustermann",
+  "reporterEmail": "reporter@example.invalid",
+  "description": "Diese Bewertung enthaelt eine kreditschaedigende falsche Behauptung ueber unser Studio.",
+  "website": ""
+}
+
+> {%
+  if (response.status === 201) {
+    client.global.set("caseNumber", response.body.caseNumber);
+    client.global.set("statusToken", response.body.statusToken);
+  }
+%}
+
+### Report - honeypot variant (bot fills the hidden "website" field)
+# EXPECT: 202 generic acknowledgement, NO case is created.
+POST {{host}}/api/v1/reviews/{{reviewId}}/report
+Content-Type: application/json
+
+{
+  "category": "Insult",
+  "reporterName": "Bot",
+  "reporterEmail": "bot@example.invalid",
+  "description": "Automatisierter Spam, der still verworfen werden soll.",
+  "website": "https://spam.example"
+}
+
+### Report - validation error variant (description too short)
+# EXPECT: 400 ProblemDetails.
+POST {{host}}/api/v1/reviews/{{reviewId}}/report
+Content-Type: application/json
+
+{
+  "category": "Other",
+  "reporterName": "Max Mustermann",
+  "reporterEmail": "reporter@example.invalid",
+  "description": "zu kurz",
+  "website": ""
+}
+
+### Rate-limit probe (public-write): re-send any write here rapidly
+# EXPECT: 429 with Retry-After once the per-client budget is exhausted.
+POST {{host}}/api/v1/reviews/{{reviewId}}/report
+Content-Type: application/json
+
+{
+  "category": "Other",
+  "reporterName": "Limit Tester",
+  "reporterEmail": "limit@example.invalid",
+  "description": "Diese Anfrage dient nur dem Test des Rate-Limits fuer Schreibzugriffe.",
+  "website": ""
+}

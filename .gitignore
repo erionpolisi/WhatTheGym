@@ -22,6 +22,9 @@ npm-debug.log*
 .env.*.local
 *.pfx
 
+# Rider HTTP client private environment (real tokens/secrets)
+http-client.private.env.json
+
 # Local-only CA certificates for corporate TLS interception (never commit)
 backend/certs/*.crt
 

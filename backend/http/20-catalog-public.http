@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------------------
+# Public gym catalogue: search, detail, score summary, review list, lookups.
+# WHEN:  After seeding (local) or content changes; after any change to search,
+#        filters, scoring, pagination, or caching (ETags).
+# WHY:   These are the highest-traffic public endpoints the frontend renders
+#        from; they must work anonymously and be cache-friendly.
+# WHERE: Any environment; read-only and safe against production.
+# AUTH:  None (POST review lives in 30-reviews.http).
+# ---------------------------------------------------------------------------
+
+### Search - default (Active gyms, first page, sorted by name)
+GET {{host}}/api/v1/gyms
+
+### Search - full-text term (PostgreSQL FTS + trigram, e.g. typo-tolerant)
+GET {{host}}/api/v1/gyms?term=mcfit
+
+### Search - district filter (1-23)
+GET {{host}}/api/v1/gyms?district=7
+
+### Search - chain filter (slug from /chains)
+GET {{host}}/api/v1/gyms?chain=fitinn
+
+### Search - minimum total score
+GET {{host}}/api/v1/gyms?minTotalScore=4
+
+### Search - minimum area scores (membership / studio separately)
+GET {{host}}/api/v1/gyms?minMembershipScore=3.5&minStudioScore=3
+
+### Search - sorted by best score, custom page size
+GET {{host}}/api/v1/gyms?sort=score&page=1&pageSize=5
+
+### Search - sorted by newest
+GET {{host}}/api/v1/gyms?sort=newest
+
+### Search - combined filters (what the frontend filter bar sends)
+GET {{host}}/api/v1/gyms?term=fit&district=15&minTotalScore=3&sort=score&page=1&pageSize=20
+
+### Search - validation error variant
+# EXPECT: 400 ProblemDetails (district out of range).
+GET {{host}}/api/v1/gyms?district=99
+
+### Gym detail by SEO slug (includes chain, amenities, opening hours, score)
+GET {{host}}/api/v1/gyms/{{gymSlug}}
+
+### Gym detail - not found variant
+# EXPECT: 404 ProblemDetails (RFC 7807).
+GET {{host}}/api/v1/gyms/does-not-exist
+
+### Gym detail - ETag caching variant
+# Run "Gym detail" first, copy the ETag response header into If-None-Match.
+# EXPECT: 304 Not Modified without a body.
+GET {{host}}/api/v1/gyms/{{gymSlug}}
+If-None-Match: "REPLACE_WITH_ETAG_FROM_PREVIOUS_RESPONSE"
+
+### Score summary only (total, both areas, all 11 categories, review count)
+# WHY: cheaper than full detail; what score widgets should consume.
+GET {{host}}/api/v1/gyms/{{gymSlug}}/summary
+
+### Published reviews for a gym (paged; soft-deleted/under-review excluded)
+GET {{host}}/api/v1/gyms/{{gymSlug}}/reviews?page=1&pageSize=20
+
+### All chains (for the filter dropdown)
+GET {{host}}/api/v1/chains
+
+### All amenities
+GET {{host}}/api/v1/amenities

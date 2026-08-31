@@ -1,0 +1,121 @@
+# ---------------------------------------------------------------------------
+# Public contact requests and PII-free analytics ingestion.
+# WHEN:  After changes to public forms, honeypots, rate limiting, or the
+#        analytics allowlist; contact requests feed the admin queue in
+#        60-moderation.http (gym suggestions/corrections flow).
+# WHY:   Contact is the only public path to suggest gyms/corrections (only
+#        Admins create gyms); analytics must stay allowlisted and PII-free.
+# WHERE: Local/staging. Avoid submitting test noise on production.
+# AUTH:  None; abuse is limited by rate limits + honeypot + server checks.
+# ---------------------------------------------------------------------------
+
+### Contact - general inquiry (types: General | GymSuggestion | DataCorrection)
+POST {{host}}/api/v1/contact-requests
+Content-Type: application/json
+
+{
+  "type": "General",
+  "name": "Max Mustermann",
+  "email": "max@example.invalid",
+  "message": "Hallo! Wie kann ich eine Kette als Betreiber beanspruchen?",
+  "gymSlug": null,
+  "website": ""
+}
+
+### Contact - suggest a new gym (admin reviews it, then creates the gym)
+POST {{host}}/api/v1/contact-requests
+Content-Type: application/json
+
+{
+  "type": "GymSuggestion",
+  "name": "Maria Musterfrau",
+  "email": "maria@example.invalid",
+  "message": "Bitte 'PowerGym Favoriten' aufnehmen: Favoritenstrasse 99, 1100 Wien, https://powergym.example",
+  "gymSlug": null,
+  "website": ""
+}
+
+### Contact - data correction for an existing gym (references the slug)
+POST {{host}}/api/v1/contact-requests
+Content-Type: application/json
+
+{
+  "type": "DataCorrection",
+  "name": "Max Mustermann",
+  "email": "max@example.invalid",
+  "message": "Die Oeffnungszeiten am Sonntag sind falsch: laut offizieller Website 08:00-20:00.",
+  "gymSlug": "{{gymSlug}}",
+  "website": ""
+}
+
+### Contact - honeypot variant (hidden "website" field filled by a bot)
+# EXPECT: 202 generic acknowledgement, request silently dropped.
+POST {{host}}/api/v1/contact-requests
+Content-Type: application/json
+
+{
+  "type": "General",
+  "name": "Bot",
+  "email": "bot@example.invalid",
+  "message": "Spam-Nachricht, die nicht gespeichert werden darf.",
+  "gymSlug": null,
+  "website": "https://spam.example"
+}
+
+### Contact - validation error variant (message too short)
+# EXPECT: 400 ProblemDetails with German field errors.
+POST {{host}}/api/v1/contact-requests
+Content-Type: application/json
+
+{
+  "type": "General",
+  "name": "Max",
+  "email": "not-an-email",
+  "message": "kurz",
+  "gymSlug": null,
+  "website": ""
+}
+
+### Analytics - allowlisted page view (no IP, no fingerprint, hashed bucket)
+# sessionId is an opaque client-generated value; the server hashes and
+# rotates it - do not send anything identifying.
+POST {{host}}/api/v1/analytics/events
+Content-Type: application/json
+
+{
+  "eventType": "page_view",
+  "path": "/studios/{{gymSlug}}",
+  "sessionId": "manual-test-session-1"
+}
+
+### Analytics - allowlisted custom event (see allowlist in configuration)
+POST {{host}}/api/v1/analytics/events
+Content-Type: application/json
+
+{
+  "eventType": "review_created",
+  "path": null,
+  "sessionId": "manual-test-session-1"
+}
+
+### Analytics - non-allowlisted event variant
+# EXPECT: 400 - unknown event types are rejected, nothing is stored.
+POST {{host}}/api/v1/analytics/events
+Content-Type: application/json
+
+{
+  "eventType": "totally_made_up_event",
+  "path": "/",
+  "sessionId": "manual-test-session-1"
+}
+
+### Analytics - rate-limit probe (dedicated "analytics" limiter)
+# Re-send rapidly; EXPECT eventual 429.
+POST {{host}}/api/v1/analytics/events
+Content-Type: application/json
+
+{
+  "eventType": "page_view",
+  "path": "/",
+  "sessionId": "manual-test-session-1"
+}

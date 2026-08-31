@@ -1,0 +1,79 @@
+# ---------------------------------------------------------------------------
+# Public legal and privacy endpoints: documents, processing activities,
+# transparency report, tokenized case status, tokenized appeal.
+# WHEN:  After legal-document versioning changes; after every LegalCase state
+#        change (use with 80-admin-legal.http to walk the full flow);
+#        transparency after decisions to see aggregates move.
+# WHY:   These endpoints are legally required surfaces (GDPR/e-commerce);
+#        the token endpoints must never leak data without the exact token.
+# WHERE: Any environment (read endpoints are safe); appeals only where a
+#        real decided case + appeal token exists.
+# AUTH:  None - security is via unguessable hashed tokens.
+# TOKENS: caseNumber/statusToken are auto-captured by 30-reviews.http;
+#        appealToken arrives via (outbox) mail - copy it into
+#        http-client.private.env.json.
+# ---------------------------------------------------------------------------
+
+### Active Impressum (types: imprint | privacyPolicy | termsOfUse)
+GET {{host}}/api/v1/legal/documents/imprint
+
+### Active Datenschutzerklaerung
+GET {{host}}/api/v1/legal/documents/privacyPolicy
+
+### Active Nutzungsbedingungen
+GET {{host}}/api/v1/legal/documents/termsOfUse
+
+### Unknown document type variant
+# EXPECT: 400/404 ProblemDetails.
+GET {{host}}/api/v1/legal/documents/doesNotExist
+
+### All published versions of a document (version history transparency)
+GET {{host}}/api/v1/legal/documents/privacyPolicy/versions
+
+### Processing-activities record (GDPR Art. 30) - generated and test-covered
+GET {{host}}/api/v1/legal/processing-activities
+
+### Transparency report for a year (aggregates only, no personal data)
+GET {{host}}/api/v1/legal/transparency-report?year=2026
+
+### Case status by confidential token (what the reporter link opens)
+# Uses values captured by "Report a review" in 30-reviews.http.
+GET {{host}}/api/v1/legal/cases/{{caseNumber}}/status?token={{statusToken}}
+
+### Case status - wrong token variant
+# EXPECT: 404 (no information leak about case existence).
+GET {{host}}/api/v1/legal/cases/{{caseNumber}}/status?token=wrong-token
+
+### Submit an appeal (token from the decision notification mail)
+# Only valid on a decided case, within the >= 6 month appeal window.
+# "website" is the honeypot again.
+POST {{host}}/api/v1/legal/cases/{{caseNumber}}/appeal
+Content-Type: application/json
+
+{
+  "token": "{{appealToken}}",
+  "text": "Ich lege Einspruch ein: Die Tatsachenbehauptung in der Bewertung ist durch Belege gedeckt und daher zulaessig.",
+  "website": ""
+}
+
+### Appeal - honeypot variant
+# EXPECT: 202 generic acknowledgement, nothing stored.
+POST {{host}}/api/v1/legal/cases/{{caseNumber}}/appeal
+Content-Type: application/json
+
+{
+  "token": "{{appealToken}}",
+  "text": "Automatisierter Einspruch-Spam mit ausgefuelltem Honeypot-Feld.",
+  "website": "https://spam.example"
+}
+
+### Appeal - invalid token variant
+# EXPECT: 404 ProblemDetails.
+POST {{host}}/api/v1/legal/cases/{{caseNumber}}/appeal
+Content-Type: application/json
+
+{
+  "token": "invalid-token",
+  "text": "Dieser Einspruch darf mangels gueltigem Token nicht angenommen werden.",
+  "website": ""
+}
