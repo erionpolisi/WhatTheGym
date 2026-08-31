@@ -33,3 +33,13 @@ credentials.
 - Logout and account deletion revoke all refresh tokens.
 - The dev-login is an accepted, documented local-only risk; integration tests
   cover login, refresh rotation, logout revocation and role enforcement.
+
+## Amendment (2026-08-31): cookie Secure policy hardened
+
+Both the session cookie and the refresh cookie previously derived their
+`Secure` flag from the inbound request scheme (`SameAsRequest` /
+`Request.IsHttps`). Behind a TLS-terminating proxy with missing forwarded
+headers this could emit non-Secure auth cookies. Decision: outside the
+Development environment the `Secure` flag is now unconditional
+(`CookieSecurePolicy.Always` and the equivalent for the refresh cookie);
+Development keeps scheme-dependent behavior so plain-HTTP Docker login works.

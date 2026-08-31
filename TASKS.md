@@ -22,24 +22,34 @@ automated test pyramid (see "Testing strategy" at the bottom).
 - [x] Unit tests green (`Gym.Domain.Tests`, `Gym.Application.Tests`)
 - [x] Integration tests green (`Gym.IntegrationTests`, needs Docker)
 - [x] Frontend `npm run build` green, pages render against the live API
-- [ ] Walk every `backend/http/*.http` file top-to-bottom once (this is the
-      fastest way to learn the API surface you now own)
+- [x] Walk every `backend/http/*.http` file top-to-bottom once — executed as
+      a scripted 45-request API walkthrough (2026-08-31): found and fixed the
+      demo-seed case-number collision (500 on first real report). Re-walk
+      manually in Rider whenever you want to learn the surface hands-on.
 
 ### 1.2 Feature walkthrough (manual, once, in the browser)
 
-- [ ] Search/filter studios (term, Bezirk, Kette, Mindestscore, Sortierung)
-- [ ] Gym detail: score hero, category bars, amenities, opening hours
-- [ ] Dev-login → write review → score updates → edit review → delete review
-- [ ] Report a review → case status link → admin: classify/decide/close
-      (`80-admin-legal.http`) → transparency report reflects it
-- [ ] Contact form (all 3 types) + honeypot behavior
-- [ ] Konto: export JSON, account deletion (test user!)
-- [ ] Legal pages render from backend (Impressum/Datenschutz/Nutzungsbedingungen)
+All flows below were verified end-to-end against the live local stack on
+2026-08-31 (scripted, 45 checks: 44 pass after the seed fix; the one script
+artifact was a false negative). Re-do in the browser for UX feel:
+
+- [x] Search/filter studios (term, Bezirk, Kette, Mindestscore, Sortierung)
+- [ ] Gym detail in browser: score hero, category bars, amenities, hours (API verified; visual pass pending)
+- [x] Dev-login → write review → score updates → edit review → delete review
+- [x] Report a review → case status link → admin: classify/decide/close
+      → transparency report reflects it
+- [x] Contact form (all 3 types) + honeypot behavior
+- [x] Konto: export JSON, account deletion (integration-tested; browser pass optional)
+- [x] Legal pages render from backend (Impressum/Datenschutz/Nutzungsbedingungen)
 
 ### 1.3 Refactor & personal code review
 
-- [ ] Read through each project in dependency order (Domain → Application →
-      Infrastructure → Api → frontend) and list what you want changed
+- [~] Read through each project in dependency order — an assisted full-code
+      review (2026-08-31, Results/Result3.md) found the architecture sound;
+      fixed: seed case-number collision, cookie Secure policy outside
+      Development. Remaining candidates are listed in Result3 §review as
+      OPTIONAL (slug-helper dedup, enum-parse helper, honeypot logging).
+      Your personal read-through for ownership is still worth doing.
 - [ ] Refactor with Claude Opus feature-by-feature; after EVERY refactor run:
       `dotnet build` + unit tests + affected integration tests (keep green)
 - [ ] Delete/park anything you do not understand — you are the only operator;
@@ -47,12 +57,15 @@ automated test pyramid (see "Testing strategy" at the bottom).
 
 ### 1.4 Data correctness (go-live blocker, ADR 0009)
 
-- [ ] Verify all ~50 seeded studios against official sources: name, address,
-      district, postal code, website, opening hours; fix via
-      `70-admin-catalog.http` or the seeder
-- [ ] Remove/replace any studio you cannot verify
-- [ ] Confirm demo reviews/cases are Development-only (they are hard-gated;
-      just re-verify before first deploy)
+- [~] Verify all ~50 seeded studios: automated web check done 2026-08-31 —
+      result in docs/seed-data.md ("Verification status" table): 2 verified,
+      **27 need correction** (all FitInn + Fit Fabrik + clever fit entries!),
+      21 unverifiable by automation. Work the table studio-by-studio via
+      `70-admin-catalog.http` or the seeder BEFORE staging.
+- [ ] Remove/replace any studio you cannot verify (start: Doorbreaker
+      Gasometer — domain dead, likely closed; re-check Club Danube)
+- [x] Confirm demo reviews/cases are Development-only (re-verified; demo case
+      number now drawn from the shared sequence — collision bug fixed)
 
 ### 1.5 External services (create now, still free)
 
@@ -163,6 +176,75 @@ free staging year; re-evaluate cost before credit expiry.
 - [ ] Publish reviewed versions via `80-admin-legal.http`
 - [ ] Verify CORS allowlists, cookie flags, rate limits with staging URLs
 - [ ] Dependabot/CodeQL/Trivy findings triaged to zero high/critical
+
+### 2.7 Go-public compliance checklist (researched 2026-08-31, primary sources)
+
+Verified against ECG, MedienG, DSA (Reg. 2022/2065), EAA/BaFG, TKG 2021,
+UWG/Omnibus, GDPR. Items marked [LAWYER] need professional confirmation.
+
+**Urgent (before any public traffic):**
+
+- [ ] [LAWYER] **Badge wording "Verifiziert ueber Google"**: under the
+      Omnibus Directive/UWG it is misleading to imply verified *gym usage*
+      when only the Google account is verified. Mitigation shipped: tooltip +
+      disclosure text ("Google-Konto bestaetigt — kein Nachweis eines
+      Studiobesuchs"). Decide with lawyer whether to relabel to
+      "Google-Konto verifiziert" (CONSTRAINTS change → documented decision).
+- [ ] Add the UCPD Art. 7 review-authenticity disclosure to Nutzungsbedingungen
+      and near review lists: "Wir pruefen nicht, ob Bewertende das Studio
+      tatsaechlich besucht haben."
+- [ ] Impressum per ECG §5 **plus** MedienG §25 Offenlegung (kleines Medium:
+      name + address of Medieninhaber) on one `/impressum` page. A serviceable
+      c/o or business address is sufficient — a home address is NOT mandatory,
+      but a pure Postfach is not enough. [LAWYER]
+- [ ] Do NOT link the EU ODR platform — discontinued 20 July 2025
+      (Reg. 2024/3228); remove from any template text.
+
+**DSA duties that apply DESPITE micro exemption (hosting/platform):**
+
+- [ ] Art. 11+12: designate + publish one electronic contact point for
+      authorities (RTR) and users (e.g. kontakt@ in Impressum/legal section)
+- [ ] Art. 14: Nutzungsbedingungen must state content rules, removal grounds,
+      moderation procedure, redress options (feed into lawyer draft)
+- [ ] Art. 16: notice-and-action — ALREADY BUILT (report flow); keep the log
+      of notices + actions (LegalCase audit trail covers this)
+- [ ] Art. 17: statement of reasons on removal/restriction — ALREADY BUILT
+      (decision mails with rationale); verify template wording with lawyer
+- [ ] Notify RTR-GmbH (Austrian DSC) of contact point (no fee) [LAWYER]
+- [x] Exempt as micro: transparency reports, internal complaint system,
+      out-of-court bodies, trusted flaggers (DSA Art. 19(1))
+
+**Confirmed NOT required (documented, stop worrying):**
+
+- [x] Cookie banner — session cookies are strictly necessary (TKG §165(3));
+      analytics is cookie-less/PII-free → no consent surface. Re-check the
+      moment ads or any client-side identifier arrives.
+- [x] EAA/Barrierefreiheitsgesetz — microenterprise service exemption
+      (EAA Art. 4(5)); keep WCAG AA as voluntary quality bar. Re-audit at
+      10 employees / 2M EUR turnover.
+- [x] DPO (GDPR Art. 37) and ODR link.
+
+**Before launch (cheap, do once):**
+
+- [ ] RoPA/Verarbeitungsverzeichnis: Art. 30(5) exemption does NOT apply
+      (processing is not occasional) — the generated processing-activities
+      record exists; review it against an Art. 30 template. [LAWYER]
+- [ ] Datenschutzerklaerung: include Google OAuth data-flow disclosure +
+      DSB complaint right + retention periods (feed lawyer draft)
+- [ ] 72h breach-notification one-pager (who, what, DSB portal dsb.gv.at)
+      → runbook entry
+- [ ] Trademark search "WhatTheGym": tmview (patentamt.at) + EUIPO eSearch,
+      classes 35/41/42 (~20 min; [LAWYER] only on conflict)
+- [ ] T&C content rules: forbid fake reviews, owner self-reviews, third-party
+      PII in texts; document the 48h response process for injunction letters
+      (einstweilige Verfuegung) → runbook entry
+
+**When monetizing (Phase 5 triggers):**
+
+- [ ] Gewerbe registration (freies Gewerbe, GISA) + SVS check at first ad
+      revenue; income tax registration [LAWYER]
+- [ ] Werbeabgabe 5% on online ad revenue from the first Euro
+      (WerbeabgabeG 2000) — register with Finanzamt
 
 **Exit gate 2:** staging runs on Azure at ~0 EUR (credits), one full
 staging deploy + rollback executed, budget alerts armed, runbook exists and
@@ -333,12 +415,13 @@ models, pick per partner:
 
 ## Testing strategy (answer to "is more testing worth it?")
 
-Current pyramid — **keep exactly this, it is right-sized**:
+Current pyramid — **keep exactly this, it is right-sized** (counts after the
+2026-08-31 edge-case campaign, 1,254 tests total):
 
 | Layer | Tool | Covers | Verdict |
 | --- | --- | --- | --- |
-| Unit (Domain/Application) | xUnit | invariants, scoring, validators | keep, extend per feature |
-| Integration | Testcontainers PostgreSQL + real HTTP | API contracts, auth, legal flow, search | keep — this is the valuable layer |
+| Unit (Domain 535 / Application 420) | xUnit | invariants, scoring matrices, validator boundaries | keep, extend per feature |
+| Integration (299) | Testcontainers PostgreSQL + real HTTP | API contracts, auth, legal flow, search, regressions | keep — this is the valuable layer |
 | Migration check | CI job | schema drift | keep |
 | Manual/exploratory | `backend/http/` suite | admin ops, error paths, environments | new — use as the daily driver |
 | Security | CodeQL, Trivy, Dependabot | dependencies/images | keep |

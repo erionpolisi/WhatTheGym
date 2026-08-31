@@ -86,6 +86,7 @@ docs/             Architecture, domain, API, scoring, legal, ADRs, onboarding
 - [docs/scoring.md](docs/scoring.md) — 50/50 aggregation and `scoreBasis`
 - [docs/legal.md](docs/legal.md) — reports, LegalCase lifecycle, retention
 - [docs/api.md](docs/api.md) — endpoint overview (Swagger is authoritative)
+- [docs/testing.md](docs/testing.md) — test strategy, layer ownership, edge-case map
 - [backend/http/](backend/http/README.md) — Rider HTTP client suite for manual
   testing and administration (all endpoints, all environments)
 - [docs/deployment-azure.md](docs/deployment-azure.md) — prepared Azure setup
