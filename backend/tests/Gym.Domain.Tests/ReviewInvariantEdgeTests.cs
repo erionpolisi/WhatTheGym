@@ -106,6 +106,19 @@ public sealed class ReviewInvariantEdgeTests
         review.EditCount.Should().Be(0);
     }
 
+    [Fact]
+    public void Edit_is_rejected_for_soft_deleted_reviews()
+    {
+        var review = DomainTestHelpers.CreateReview();
+        review.SoftDelete(ReviewDeletionOrigin.Moderator, "Grund", DomainTestHelpers.Now.AddMinutes(1));
+
+        var result = review.Edit(new ReviewRatings { Staff = 4 }, "Nachtraeglich", DomainTestHelpers.Now.AddMinutes(2));
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("review.locked");
+        review.EditCount.Should().Be(0);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

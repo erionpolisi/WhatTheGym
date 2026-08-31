@@ -3,6 +3,7 @@ using Gym.Application.Abstractions;
 using Gym.Domain.Entities;
 using Gym.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Gym.Infrastructure.Persistence;
 
@@ -40,7 +41,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<OutboxEmail> OutboxEmails => Set<OutboxEmail>();
 
-    Task IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) => SaveChangesAsync(cancellationToken);
+    async Task IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } postgres)
+        {
+            throw new UniqueConstraintViolationException(postgres.ConstraintName ?? "unknown", ex);
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -130,6 +141,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.Property(r => r.DeletionReason).HasMaxLength(500);
             b.HasIndex(r => new { r.GymId, r.Status });
             b.HasIndex(r => new { r.UserId, r.GymId });
+            // Database-side guarantee for "one active review per user and gym" (the
+            // application check alone is racy under concurrent requests).
+            b.HasIndex(r => new { r.UserId, r.GymId }, "IX_Reviews_UserId_GymId_Active")
+                .IsUnique()
+                .HasFilter("\"Status\" IN ('Published', 'UnderReview')");
             b.HasOne<GymEntry>().WithMany().HasForeignKey(r => r.GymId).OnDelete(DeleteBehavior.Cascade);
             b.HasOne<User>().WithMany().HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.Restrict);
 

@@ -63,6 +63,22 @@ public sealed class CreateReviewCommandValidator : AbstractValidator<CreateRevie
     }
 }
 
+/// <summary>Edits must satisfy the same content rules as new reviews (incl. the link-spam check).</summary>
+public sealed class UpdateOwnReviewCommandValidator : AbstractValidator<UpdateOwnReviewCommand>
+{
+    public UpdateOwnReviewCommandValidator()
+    {
+        RuleFor(c => c.Text).MaximumLength(Review.MaxTextLength)
+            .WithMessage($"Der Text darf hoechstens {Review.MaxTextLength} Zeichen lang sein.");
+        RuleFor(c => c.Ratings).Must(CreateReviewCommandValidator.HaveAtLeastOneRating)
+            .WithMessage("Mindestens eine Kategorie muss mit 1 bis 5 bewertet werden.");
+        RuleFor(c => c.Ratings).Must(CreateReviewCommandValidator.AllRatingsInRange)
+            .WithMessage("Alle Bewertungen muessen zwischen 1 und 5 liegen.");
+        RuleFor(c => c.Text).Must(CreateReviewCommandValidator.NotContainTooManyLinks)
+            .WithMessage("Der Text enthaelt zu viele Links.");
+    }
+}
+
 public sealed class CreateReviewCommandHandler(
     IReviewRepository reviews,
     IGymRepository gyms,
@@ -138,10 +154,17 @@ public sealed class UpdateOwnReviewCommandHandler(
     IReviewRepository reviews,
     GymScoreUpdater scoreUpdater,
     IUnitOfWork unitOfWork,
-    IClock clock) : ICommandHandler<UpdateOwnReviewCommand, OwnReviewDto>
+    IClock clock,
+    IValidator<UpdateOwnReviewCommand> validator) : ICommandHandler<UpdateOwnReviewCommand, OwnReviewDto>
 {
     public async Task<Result<OwnReviewDto>> Handle(UpdateOwnReviewCommand command, CancellationToken cancellationToken)
     {
+        var validation = await validator.ValidateAsync(command, cancellationToken);
+        if (!validation.IsValid)
+        {
+            return Result.Failure<OwnReviewDto>(validation.ToError());
+        }
+
         var review = await reviews.GetByIdAsync(command.ReviewId, cancellationToken);
         if (review is null || review.UserId != command.UserId)
         {

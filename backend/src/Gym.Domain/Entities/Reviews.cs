@@ -127,7 +127,8 @@ public sealed class Review : Entity
 
     public Result Edit(ReviewRatings ratings, string? text, DateTimeOffset utcNow)
     {
-        if (Status is ReviewStatus.RemovedLegal or ReviewStatus.UnderReview)
+        // Soft deleted content must stay frozen as removed; restore first, then edit.
+        if (Status != ReviewStatus.Published)
         {
             return Result.Failure(Error.Conflict("review.locked", "Review cannot be edited in its current state."));
         }

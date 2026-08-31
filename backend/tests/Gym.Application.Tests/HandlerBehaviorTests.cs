@@ -343,7 +343,7 @@ public sealed class ReviewHandlerBehaviorTests
         var review = AppTestData.Review();
         reviews.Add(review);
 
-        var result = await new UpdateOwnReviewCommandHandler(reviews, new GymScoreUpdater(reviews, new InMemorySummaryStore()), new FakeUnitOfWork(), new FakeClock(AppTestData.Now))
+        var result = await new UpdateOwnReviewCommandHandler(reviews, new GymScoreUpdater(reviews, new InMemorySummaryStore()), new FakeUnitOfWork(), new FakeClock(AppTestData.Now), new UpdateOwnReviewCommandValidator())
             .Handle(new UpdateOwnReviewCommand(Guid.NewGuid(), review.Id, AppTestData.Ratings(5), "Neu"), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -362,7 +362,7 @@ public sealed class ReviewHandlerBehaviorTests
         var review = AppTestData.Review();
         reviews.Add(review);
 
-        var result = await new UpdateOwnReviewCommandHandler(reviews, new GymScoreUpdater(reviews, summaries), new FakeUnitOfWork(), new FakeClock(AppTestData.Now.AddHours(1)))
+        var result = await new UpdateOwnReviewCommandHandler(reviews, new GymScoreUpdater(reviews, summaries), new FakeUnitOfWork(), new FakeClock(AppTestData.Now.AddHours(1)), new UpdateOwnReviewCommandValidator())
             .Handle(new UpdateOwnReviewCommand(review.UserId, review.Id, AppTestData.Ratings(rating), "Neu"), CancellationToken.None);
 
         result.IsSuccess.Should().Be(expectedSuccess);
