@@ -57,15 +57,17 @@ artifact was a false negative). Re-do in the browser for UX feel:
 
 ### 1.4 Data correctness (go-live blocker, ADR 0009)
 
-- [~] Verify all ~50 seeded studios: automated web check done 2026-08-31 —
-      result in docs/seed-data.md ("Verification status" table): 2 verified,
-      **27 need correction** (all FitInn + Fit Fabrik + clever fit entries!),
-      21 unverifiable by automation. Work the table studio-by-studio via
-      `70-admin-catalog.http` or the seeder BEFORE staging.
-- [ ] Remove/replace any studio you cannot verify (start: Doorbreaker
-      Gasometer — domain dead, likely closed; re-check Club Danube)
+- [x] Catalog rebuilt 2026-08-31 (ADR 0011): 92 Vienna studios, 81 verified
+      against official chain sources (fitinn.at, clever-fit.com, mrssporty.at,
+      johnharris.at, holmesplace.at, fitfabrik.at, johnreed.fitness,
+      crossfitvienna.at). Details: docs/seed-data.md "Catalog rebuild".
+- [ ] Re-verify the 11 remaining unverified entries manually in a browser
+      (McFIT ×5, Club Danube ×4, Kieser ×2 — sites are not script-readable)
+      and spot-check opening data before staging
+- [x] Doorbreaker removed (domain dead), MYGYM Vienna entries removed (chain
+      has no Vienna branches), CrossFit Vienna corrected to Rennweg 97
 - [x] Confirm demo reviews/cases are Development-only (re-verified; demo case
-      number now drawn from the shared sequence — collision bug fixed)
+      number drawn from the shared sequence — collision bug fixed)
 
 ### 1.5 External services (create now, still free)
 
