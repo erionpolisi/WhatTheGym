@@ -38,7 +38,12 @@ to become the bootstrap Admin. Any other email creates a normal user.
   `cd backend && dotnet ef migrations add <Name> --project src/Gym.Infrastructure --startup-project src/Gym.Api`
 - Tests: `dotnet test backend/tests/<project>` (integration tests spin up their
   own PostgreSQL container via Testcontainers).
-- Admin operations happen through Swagger — there is intentionally no admin UI.
+- Manual/exploratory testing and administration: open `backend/http/` in Rider
+  (JetBrains HTTP Client) — per-area request files for every endpoint with
+  environment switching (local/staging/production) and captured tokens. See
+  `backend/http/README.md`.
+- Admin operations happen through Swagger or `backend/http/` — there is
+  intentionally no admin UI.
 
 ## Configuration model
 

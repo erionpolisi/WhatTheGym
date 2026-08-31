@@ -79,11 +79,15 @@ docs/             Architecture, domain, API, scoring, legal, ADRs, onboarding
 
 ## Key documentation
 
+- [TASKS.md](TASKS.md) — road to launch: local finish, Azure cost plan, social
+  validation, go-live checklist, monetization
 - [docs/onboarding.md](docs/onboarding.md) — start here
 - [docs/architecture.md](docs/architecture.md) — layers, ports, composition
 - [docs/scoring.md](docs/scoring.md) — 50/50 aggregation and `scoreBasis`
 - [docs/legal.md](docs/legal.md) — reports, LegalCase lifecycle, retention
 - [docs/api.md](docs/api.md) — endpoint overview (Swagger is authoritative)
+- [backend/http/](backend/http/README.md) — Rider HTTP client suite for manual
+  testing and administration (all endpoints, all environments)
 - [docs/deployment-azure.md](docs/deployment-azure.md) — prepared Azure setup
 - [docs/adr/](docs/adr/) — architecture decision records
 
