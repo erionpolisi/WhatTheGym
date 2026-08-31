@@ -6,6 +6,12 @@
     "apiImage": { "value": "REGISTRY_TO_BE_CONFIGURED.azurecr.io/whatthegym-api:RELEASE_TAG" },
     "deployPostgres": { "value": false },
     "externalPostgresConnectionString": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
-    "frontendOrigin": { "value": "https://whatthegym.at" }
+    "frontendOrigin": { "value": "https://whatthegym.at" },
+    "googleClientId": { "value": "GOOGLE_CLIENT_ID_TO_BE_CONFIGURED" },
+    "googleClientSecret": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
+    "bootstrapAdminEmail": { "value": "ADMIN_EMAIL_TO_BE_CONFIGURED" },
+    "publicBaseUrl": { "value": "https://whatthegym.at" },
+    "analyticsHashSecret": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
+    "resendApiKey": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" }
   }
 }

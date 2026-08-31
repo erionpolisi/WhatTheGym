@@ -27,6 +27,27 @@ param externalPostgresConnectionString string = ''
 @description('Allowed CORS origin of the frontend, e.g. https://staging.whatthegym.at')
 param frontendOrigin string
 
+@description('Google OAuth client id of the BFF login.')
+param googleClientId string
+
+@secure()
+@description('Google OAuth client secret of the BFF login.')
+param googleClientSecret string
+
+@description('Verified Google email that becomes the first Admin while no Admin exists.')
+param bootstrapAdminEmail string
+
+@description('Public frontend base URL used in mail links (case status, appeals), e.g. https://whatthegym.at')
+param publicBaseUrl string
+
+@secure()
+@description('Secret for the daily-rotating analytics session-bucket HMAC.')
+param analyticsHashSecret string
+
+@secure()
+@description('Resend API key for transactional mail. Empty means mails are only logged - do not run staging/production without it.')
+param resendApiKey string = ''
+
 var prefix = 'wtg-${environmentName}'
 var tags = {
   project: 'whatthegym'
@@ -70,11 +91,17 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-resource postgresConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!deployPostgres) {
+// Connection secret is always present: either the managed flexible server (deployPostgres = true)
+// or the externally provided connection string. The container app references it via Key Vault.
+resource postgresConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'postgres-connection-string'
   properties: {
-    value: externalPostgresConnectionString
+    // ARM's if() only evaluates the selected branch, so the reference is safe when deployPostgres = false.
+    #disable-next-line BCP318
+    value: deployPostgres
+      ? 'Host=${postgres.properties.fullyQualifiedDomainName};Port=5432;Database=whatthegym;Username=wtgadmin;Password=${postgresAdminPassword};Ssl Mode=Require'
+      : externalPostgresConnectionString
   }
 }
 
@@ -134,13 +161,31 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         transport: 'http'
       }
-      secrets: [
-        {
-          name: 'postgres-connection'
-          keyVaultUrl: '${keyVault.properties.vaultUri}secrets/postgres-connection-string'
-          identity: 'system'
-        }
-      ]
+      secrets: concat(
+        [
+          {
+            name: 'postgres-connection'
+            keyVaultUrl: '${keyVault.properties.vaultUri}secrets/postgres-connection-string'
+            identity: 'system'
+          }
+          {
+            name: 'google-client-secret'
+            value: googleClientSecret
+          }
+          {
+            name: 'analytics-hash-secret'
+            value: analyticsHashSecret
+          }
+        ],
+        empty(resendApiKey)
+          ? []
+          : [
+              {
+                name: 'resend-api-key'
+                value: resendApiKey
+              }
+            ]
+      )
     }
     template: {
       containers: [
@@ -151,19 +196,37 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
-          env: [
-            { name: 'ASPNETCORE_ENVIRONMENT', value: environmentName == 'production' ? 'Production' : 'Staging' }
-            { name: 'ConnectionStrings__Postgres', secretRef: 'postgres-connection' }
-            { name: 'Database__MigrateOnStartup', value: 'true' }
-            { name: 'Seed__SeedCatalog', value: 'true' }
-            { name: 'Seed__SeedDemoData', value: 'false' }
-            { name: 'Auth__EnableDevLogin', value: 'false' }
-            { name: 'Cors__AllowedOrigins__0', value: frontendOrigin }
-            { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
-          ]
+          env: concat(
+            [
+              { name: 'ASPNETCORE_ENVIRONMENT', value: environmentName == 'production' ? 'Production' : 'Staging' }
+              { name: 'ConnectionStrings__Postgres', secretRef: 'postgres-connection' }
+              { name: 'Database__MigrateOnStartup', value: 'true' }
+              { name: 'Seed__SeedCatalog', value: 'true' }
+              { name: 'Seed__SeedDemoData', value: 'false' }
+              { name: 'Auth__EnableDevLogin', value: 'false' }
+              { name: 'Auth__GoogleClientId', value: googleClientId }
+              { name: 'Auth__GoogleClientSecret', secretRef: 'google-client-secret' }
+              { name: 'Auth__BootstrapAdminEmail', value: bootstrapAdminEmail }
+              { name: 'Mail__PublicBaseUrl', value: publicBaseUrl }
+              { name: 'Analytics__HashSecret', secretRef: 'analytics-hash-secret' }
+              // Ingress terminates TLS; the app must honor X-Forwarded-For/Proto for
+              // rate limiting per client IP and correct OIDC redirect URIs.
+              { name: 'ForwardedHeaders__Enabled', value: 'true' }
+              { name: 'Cors__AllowedOrigins__0', value: frontendOrigin }
+              { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
+            ],
+            empty(resendApiKey)
+              ? []
+              : [
+                  { name: 'Mail__ResendApiKey', secretRef: 'resend-api-key' }
+                ]
+          )
         }
       ]
       scale: {
+        // Cost decision (ADR 0008/0012): scale to zero stays. Tradeoff: hosted background
+        // services (email outbox, retention sweeper) only run while an instance is warm;
+        // pending work is picked up on the next request-triggered start.
         minReplicas: 0
         maxReplicas: 1
       }
