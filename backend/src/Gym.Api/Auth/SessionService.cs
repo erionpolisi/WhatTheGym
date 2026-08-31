@@ -30,7 +30,8 @@ public sealed class SessionService(
     ISecureTokenService tokenService,
     IUnitOfWork unitOfWork,
     IClock clock,
-    IOptions<AuthOptions> authOptions)
+    IOptions<AuthOptions> authOptions,
+    IHostEnvironment environment)
 {
     public const string RefreshCookieName = "wtg.refresh";
     private const string RefreshCookiePath = "/api/v1/auth";
@@ -121,11 +122,13 @@ public sealed class SessionService(
         ClearRefreshCookie(httpContext);
     }
 
-    private static void SetRefreshCookie(HttpContext httpContext, string token, TimeSpan lifetime) =>
+    private void SetRefreshCookie(HttpContext httpContext, string token, TimeSpan lifetime) =>
         httpContext.Response.Cookies.Append(RefreshCookieName, token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = httpContext.Request.IsHttps,
+            // Outside Development the Secure flag is mandatory regardless of what the
+            // (possibly TLS-terminating) proxy reports for the inbound scheme.
+            Secure = !environment.IsDevelopment() || httpContext.Request.IsHttps,
             SameSite = SameSiteMode.Lax,
             Path = RefreshCookiePath,
             MaxAge = lifetime,

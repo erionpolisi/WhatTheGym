@@ -159,7 +159,6 @@ public sealed class DeleteMyAccountCommandHandler(
     IUserRepository users,
     IReviewRepository reviews,
     IRefreshTokenRepository refreshTokens,
-    ILegalHoldRepository legalHolds,
     GymScoreUpdater scoreUpdater,
     IUnitOfWork unitOfWork,
     IClock clock) : ICommandHandler<DeleteMyAccountCommand>
@@ -177,14 +176,11 @@ public sealed class DeleteMyAccountCommandHandler(
         var affectedGyms = new HashSet<Guid>();
         foreach (var review in await reviews.ListByUserAsync(user.Id, cancellationToken))
         {
-            // Reviews under an active legal hold stay archived (non-public) until the hold is released.
-            if (await legalHolds.HasActiveHoldForReviewAsync(review.Id, cancellationToken))
-            {
-                continue;
-            }
-
             if (review.Status is ReviewStatus.Published or ReviewStatus.UnderReview)
             {
+                // Deletion always removes the content from public view. An active legal hold
+                // only pauses retention PURGING (the sweeper skips held records); it must never
+                // keep content publicly visible against the author's deletion request.
                 review.SoftDelete(ReviewDeletionOrigin.AccountDeletion, "Konto geloescht.", clock.UtcNow);
                 affectedGyms.Add(review.GymId);
             }

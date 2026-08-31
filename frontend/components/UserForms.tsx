@@ -136,7 +136,11 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
       <div className="card">
         <p>
           Angemeldet als <strong>{me.displayName}</strong> ({me.email}) - Rolle: {me.role}
-          {me.emailVerified ? <span className="badge">Verifiziert ueber Google</span> : null}
+          {me.emailVerified ? (
+            <span className="badge" title="Google-Konto bestaetigt - kein Nachweis eines Studiobesuchs">
+              Verifiziert ueber Google
+            </span>
+          ) : null}
         </p>
         <button
           type="button"

@@ -67,7 +67,11 @@ var authenticationBuilder = builder.Services
     {
         options.Cookie.Name = "wtg.session";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        // Local Docker serves plain HTTP; everywhere else the Secure flag is mandatory
+        // and must not depend on (possibly misconfigured) proxy forwarding.
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(Math.Max(5, authOptions.SessionCookieMinutes));
         options.SlidingExpiration = false;
@@ -144,6 +148,12 @@ var analyticsLimit = builder.Configuration.GetValue("RateLimits:AnalyticsPerMinu
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, _) =>
+    {
+        // Fixed one-minute windows: tell well-behaved clients when to retry.
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+        return ValueTask.CompletedTask;
+    };
 
     static RateLimitPartition<string> ByIp(HttpContext context, int permitLimit, TimeSpan window) =>
         RateLimitPartition.GetFixedWindowLimiter(

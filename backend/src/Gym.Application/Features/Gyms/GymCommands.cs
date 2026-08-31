@@ -45,7 +45,7 @@ public sealed class CreateGymCommandValidator : AbstractValidator<CreateGymComma
         RuleFor(c => c.Name).NotEmpty().MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
         RuleFor(c => c.District).InclusiveBetween(1, 23).WithMessage("Der Bezirk muss zwischen 1 und 23 liegen.");
         RuleFor(c => c.AddressLine).NotEmpty().MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
-        RuleFor(c => c.PostalCode).Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
+        RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
         RuleFor(c => c.Phone).MaximumLength(40);
@@ -63,7 +63,7 @@ public sealed class UpdateGymCommandValidator : AbstractValidator<UpdateGymComma
         RuleFor(c => c.Name).NotEmpty().MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
         RuleFor(c => c.District).InclusiveBetween(1, 23).WithMessage("Der Bezirk muss zwischen 1 und 23 liegen.");
         RuleFor(c => c.AddressLine).NotEmpty().MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
-        RuleFor(c => c.PostalCode).Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
+        RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(CreateGymCommandValidator.BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
         RuleFor(c => c.Phone).MaximumLength(40);

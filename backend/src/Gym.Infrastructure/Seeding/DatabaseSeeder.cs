@@ -202,11 +202,17 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
             }
         }
 
-        // One demo legal case (Received) on the first demo review.
+        // One demo legal case (Received) on the first demo review. The case number MUST be
+        // drawn from the same database sequence production uses; a hardcoded number would
+        // collide with the first real report (unique index on CaseNumber).
         if (reviews.Count > 0)
         {
+            var next = await context.Database
+                .SqlQuery<long>($"SELECT nextval('legal_case_seq') AS \"Value\"")
+                .ToListAsync(ct);
+            var demoCaseNumber = $"WTG-{SeedStamp.Year}-{next[0]:D6}";
             var caseResult = LegalCase.Create(
-                "WTG-2026-000001",
+                demoCaseNumber,
                 reviews[0].Id,
                 LegalCaseCategory.Other,
                 "Demo Melder",
@@ -214,7 +220,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 "Demo-Fall fuer lokale Entwicklung: Diese Meldung dient nur zu Testzwecken.",
                 new string('0', 64),
                 SeedStamp);
-            if (caseResult.IsSuccess && !await context.LegalCases.AnyAsync(c => c.CaseNumber == "WTG-2026-000001", ct))
+            if (caseResult.IsSuccess)
             {
                 context.LegalCases.Add(caseResult.Value);
                 context.LegalCaseEvents.Add(LegalCaseEvent.Create(

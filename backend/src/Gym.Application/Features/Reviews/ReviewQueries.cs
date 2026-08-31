@@ -95,6 +95,13 @@ public sealed class ModeratorRemoveReviewCommandHandler(
 {
     public async Task<Result> Handle(ModeratorRemoveReviewCommand command, CancellationToken cancellationToken)
     {
+        // Defense in depth: the API policy already restricts this endpoint, but the command
+        // carries the actor role and the handler must not trust callers blindly.
+        if (command.ActorRole is not (UserRole.Moderator or UserRole.Admin))
+        {
+            return Result.Failure(Error.Forbidden("moderation.role", "Keine Berechtigung fuer diese Aktion."));
+        }
+
         if (string.IsNullOrWhiteSpace(command.Reason))
         {
             return Result.Failure(Error.Validation("moderation.reason", "Eine Begruendung ist erforderlich."));

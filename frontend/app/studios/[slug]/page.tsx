@@ -113,11 +113,19 @@ export default async function GymDetailPage({ params }: { params: { slug: string
       ) : null}
 
       <h2>Bewertungen ({reviews?.totalCount ?? 0})</h2>
+      <p className="muted">
+        Bewertungen stammen von angemeldeten Google-Konten. Ein tatsaechlicher Besuch des Studios wird nicht
+        ueberprueft.
+      </p>
       {(reviews?.items ?? []).map((review) => (
         <div className="card" key={review.id}>
           <p>
             <strong>{review.author.displayName}</strong>
-            {review.author.verifiedViaGoogle ? <span className="badge">Verifiziert ueber Google</span> : null}
+            {review.author.verifiedViaGoogle ? (
+              <span className="badge" title="Google-Konto bestaetigt - kein Nachweis eines Studiobesuchs">
+                Verifiziert ueber Google
+              </span>
+            ) : null}
             <span className="muted"> - {new Date(review.createdAtUtc).toLocaleDateString("de-AT")}</span>
             {review.editCount > 0 ? <span className="muted"> (bearbeitet)</span> : null}
           </p>

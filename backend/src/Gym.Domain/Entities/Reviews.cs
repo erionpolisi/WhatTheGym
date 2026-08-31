@@ -191,9 +191,16 @@ public sealed class Review : Entity
     /// <summary>Fast-track only: temporarily hides content while an obviously-illegal report is decided.</summary>
     public Result PlaceUnderLegalReview(DateTimeOffset utcNow)
     {
-        if (Status is ReviewStatus.RemovedLegal)
+        if (Status == ReviewStatus.UnderReview)
         {
-            return Result.Failure(Error.Conflict("review.removedLegal", "Review is already removed."));
+            return Result.Success();
+        }
+
+        // Only a published review may be hidden. Anything else (soft deleted, legally removed)
+        // must keep its state: releasing it later would otherwise resurrect deleted content.
+        if (Status != ReviewStatus.Published)
+        {
+            return Result.Failure(Error.Conflict("review.notPublished", "Only published reviews can be placed under review."));
         }
 
         Status = ReviewStatus.UnderReview;
