@@ -22,12 +22,18 @@ Received ──► UnderReview ──► Decided ──► Closed
     └─ fast-track may hide the review immediately
 ```
 
+Correcting a fast-track misclassification back to `Normal` republishes the
+hidden review automatically (unless another open fast-track case for the same
+review exists); the release is audited as `ContentRestored`.
+
 - Decisions: `KeepOnline` or `FullyRemoved` — nothing else. `FullyRemoved`
   sets the review to `RemovedLegal`. Every decision requires a documented
   rationale.
 - Every step appends an immutable `LegalCaseEvent` (unique sequence per case;
   a PostgreSQL trigger blocks UPDATE). Notification texts are stored verbatim
-  in the audit trail.
+  in the audit trail **except confidential tokens**: status/appeal links are
+  masked as `***` in the audit copy so staff with case access can never reuse
+  them (ADR 0012). The mail itself carries the real link.
 - Notifications go through the persistent outbox (Resend or dev logging):
   report received (reporter), content hidden (author, fast-track only),
   decision (reporter + author), appeal received, appeal decided.
@@ -53,8 +59,11 @@ Configured via `Retention` options; the daily `RetentionSweeper` enforces:
 | Sent/failed outbox mails      | 90 days                                    |
 
 Active **LegalHolds** (case-, review-, or user-scoped) pause deletion
-unconditionally. Deleted/under-review content is never public and never
-score-relevant but remains archived under these rules.
+unconditionally: a review-scoped hold protects the review's revisions, a
+user-scoped hold protects all revisions of the user's reviews, and case purges
+are blocked by holds on the case, the reported review, or the review author.
+Deleted/under-review content is never public and never score-relevant but
+remains archived under these rules.
 
 ## Privacy (GDPR)
 

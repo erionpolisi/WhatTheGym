@@ -63,6 +63,24 @@ detection revokes the whole family). Provider tokens are never persisted and
 never reach the browser. Locally, a Development-only dev-login replaces Google.
 See [adr/0003-authentication.md](adr/0003-authentication.md).
 
+Hardening (see [adr/0012-security-hardening.md](adr/0012-security-hardening.md)):
+
+- **Per-request session revalidation**: `OnValidatePrincipal` checks every
+  cookie session against the user store, so role changes, account deletion and
+  server-side revocation take effect immediately (stale claims are replaced,
+  inactive users rejected).
+- **CSRF defense in depth**: authenticated state-changing requests must carry
+  `X-CSRF: 1` or a JSON content type (`CsrfHeaderMiddleware`); primary defense
+  remains `SameSite=Lax` cookies, which requires frontend and API to be
+  deployed same-site (e.g. `whatthegym.at` + `api.whatthegym.at`).
+- **Forwarded headers**: behind a TLS-terminating ingress,
+  `ForwardedHeaders:Enabled=true` makes the app honor `X-Forwarded-For/Proto`
+  (client-IP rate limiting, correct OIDC redirect URIs). Only enable where the
+  app is reachable exclusively through the ingress.
+- **DB-enforced review uniqueness**: a filtered unique index guarantees one
+  active review per user and gym; races surface as HTTP 409
+  (`UniqueConstraintViolationException`).
+
 ## Composition
 
 `Program.cs` wires everything: options binding, `AddApplication()` (reflection

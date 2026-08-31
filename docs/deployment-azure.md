@@ -35,12 +35,21 @@ documented in [adr/0008-azure-cost-plan.md](adr/0008-azure-cost-plan.md).
 3. Provision per environment:
    `az deployment group create -g wtg-staging-rg -f infrastructure/azure/main.bicep -p @infrastructure/azure/parameters.staging.json`
    supplying the secure parameters (`externalPostgresConnectionString` or
-   `postgresAdminPassword`).
-4. Configure secrets in Key Vault / Container Apps: Google OAuth client
-   (redirect URI `https://api-<env>.whatthegym.at/api/v1/auth/google/callback`),
-   Resend API key, `Auth:BootstrapAdminEmail`, `Analytics:HashSecret`.
+   `postgresAdminPassword`, `googleClientSecret`, `analyticsHashSecret`,
+   `resendApiKey`).
+4. Runtime configuration is wired by Bicep as container-app env/secrets:
+   Google OAuth client (redirect URI
+   `https://api-<env>.whatthegym.at/api/v1/auth/google/callback`), Resend API
+   key, `Auth:BootstrapAdminEmail`, `Mail:PublicBaseUrl`,
+   `Analytics:HashSecret`, and `ForwardedHeaders:Enabled=true` (the ingress
+   terminates TLS; the app needs `X-Forwarded-For/Proto` for per-client rate
+   limiting and correct OIDC redirect URIs).
 5. Point DNS (CNAMEs) at the Static Web App and Container App, add custom
-   domains + managed certificates.
+   domains + managed certificates. **Same-site domains are mandatory**: the
+   session cookies are `SameSite=Lax`, so frontend (`whatthegym.at`) and API
+   (`api.whatthegym.at`) must share a registrable domain — the default
+   `*.azurestaticapps.net` / `*.azurecontainerapps.io` hostnames are
+   cross-site and will not work for login.
 6. Deploy the frontend to Static Web Apps with
    `NEXT_PUBLIC_API_BASE_URL=https://api-<env>.whatthegym.at`.
 7. Verify `/health/ready`, Swagger, Google login, mail delivery, and the CORS
@@ -50,3 +59,12 @@ documented in [adr/0008-azure-cost-plan.md](adr/0008-azure-cost-plan.md).
 
 Kubernetes, microservices, message brokers, PostGIS/geo search, image storage,
 CDN beyond SWA defaults, multi-region HA.
+
+## Known limitation: scale-to-zero vs. background services
+
+The container app scales to zero (cost decision, ADR 0008/0012). The hosted
+background services — email outbox processor and daily retention sweeper —
+only run while an instance is warm. Pending outbox mails and retention sweeps
+are picked up when the next request wakes the app. Acceptable for the MVP
+traffic profile; revisit (minReplicas 1 or a scheduled job) before legal mail
+latency becomes a compliance concern.

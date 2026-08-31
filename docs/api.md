@@ -25,6 +25,12 @@ Errors are RFC 7807 ProblemDetails with a stable `code` extension.
 
 ## Authenticated (cookie session)
 
+State-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) from an authenticated
+session must either send the custom header `X-CSRF: 1` or a JSON content type
+(defense-in-depth CSRF check; cross-site HTML forms can produce neither).
+Body-less calls such as `POST /auth/refresh` therefore need the header.
+Swagger UI injects it automatically; anonymous requests are unaffected.
+
 | Method | Route | Notes |
 | ------ | ----- | ----- |
 | GET | `/auth/google/start?returnUrl=` | Google Authorization Code Flow with PKCE (503 when unconfigured) |
@@ -36,7 +42,7 @@ Errors are RFC 7807 ProblemDetails with a stable `code` extension.
 | GET | `/me/export` | Personal data export (JSON) |
 | DELETE | `/me` | Account deletion/anonymization |
 | POST | `/gyms/{slug}/reviews` | Create review (verified Google account) |
-| PUT/DELETE | `/reviews/{id}` | Edit (archives revision) / soft delete own review |
+| PUT/DELETE | `/reviews/{id}` | Edit (same content rules as create, archives revision; only published reviews) / soft delete own review |
 
 ## Moderator (`Moderator` or `Admin` role)
 
