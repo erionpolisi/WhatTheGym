@@ -77,23 +77,30 @@ public sealed class RetentionSweeper(
             .Where(o => o.Status != OutboxEmailStatus.Pending && o.CreatedAtUtc < outboxCutoff)
             .ExecuteDeleteAsync(cancellationToken);
 
-        // Review revisions after the review left public visibility (default 3 years), unless held.
+        // Review revisions after the review left public visibility (default 3 years),
+        // unless a hold protects the review or its author.
         var revisionCutoff = now.AddYears(-retention.ReviewRevisionYears);
         var revisionsDeleted = await context.ReviewRevisions
             .Where(rev => context.Reviews.Any(r =>
                 r.Id == rev.ReviewId
                 && r.RemovedAtUtc != null
                 && r.RemovedAtUtc < revisionCutoff
-                && !context.LegalHolds.Any(h => h.ReviewId == r.Id && h.ReleasedAtUtc == null)))
+                && !context.LegalHolds.Any(h =>
+                    h.ReleasedAtUtc == null && (h.ReviewId == r.Id || h.UserId == r.UserId))))
             .ExecuteDeleteAsync(cancellationToken);
 
-        // Legal cases and their audit events after the audit retention period (default 7 years), unless held.
+        // Legal cases and their audit events after the audit retention period (default 7 years),
+        // unless a hold protects the case, the reported review or the review author.
         var caseCutoff = now.AddYears(-retention.CaseAuditYears);
         var expiredCaseIds = await context.LegalCases
             .Where(c => c.Status == LegalCaseStatus.Closed
                         && c.ClosedAtUtc != null
                         && c.ClosedAtUtc < caseCutoff
-                        && !context.LegalHolds.Any(h => h.LegalCaseId == c.Id && h.ReleasedAtUtc == null))
+                        && !context.LegalHolds.Any(h =>
+                            h.ReleasedAtUtc == null
+                            && (h.LegalCaseId == c.Id
+                                || h.ReviewId == c.ReviewId
+                                || context.Reviews.Any(r => r.Id == c.ReviewId && r.UserId == h.UserId))))
             .Select(c => c.Id)
             .ToListAsync(cancellationToken);
 
