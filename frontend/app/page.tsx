@@ -5,24 +5,42 @@ import { GymCard } from "@/components/Scores";
 export const revalidate = 120;
 
 export default async function HomePage() {
-  const top = await apiGet<PagedResult<GymListItem>>("/api/v1/gyms?sort=score&pageSize=5", 120);
+  const top = await apiGet<PagedResult<GymListItem>>("/api/v1/gyms?sort=score&pageSize=6", 120);
 
   return (
     <div>
-      <h1>Fitnessstudios in Wien - ehrlich bewertet</h1>
-      <p>
-        WhatTheGym sammelt verifizierte Bewertungen zu Wiener Fitnessstudios: getrennt nach{" "}
-        <strong>Mitgliedschaft</strong> (Preis-Leistung, Vertrag, Abrechnung, Kuendigung) und{" "}
-        <strong>Studio</strong> (Geraete, Sauberkeit, Personal, Auslastung, Umkleiden, Duschen, Atmosphaere).
-      </p>
-      <p>
+      <section className="hero">
+        <span className="eyebrow">Wien · Verifizierte Bewertungen</span>
+        <h1>
+          Finde das Gym, das <em>haelt</em>, was es verspricht.
+        </h1>
+        <p className="lead">
+          WhatTheGym sammelt ehrliche, verifizierte Bewertungen zu Wiener Fitnessstudios - getrennt nach{" "}
+          <strong>Mitgliedschaft</strong> und <strong>Studio</strong>, damit du vor der Unterschrift weisst, worauf du
+          dich einlaesst.
+        </p>
+        <div className="chips" aria-label="Bewertungskategorien">
+          <span className="chip accent">Preis-Leistung</span>
+          <span className="chip accent">Vertrag &amp; Kuendigung</span>
+          <span className="chip">Geraete</span>
+          <span className="chip">Sauberkeit</span>
+          <span className="chip">Personal</span>
+          <span className="chip">Auslastung</span>
+          <span className="chip">Umkleiden &amp; Duschen</span>
+          <span className="chip">Atmosphaere</span>
+        </div>
         <Link href="/studios">
           <button type="button">Alle Studios durchsuchen</button>
         </Link>
-      </p>
+      </section>
+
       <h2>Bestbewertete Studios</h2>
       {top && top.items.length > 0 ? (
-        top.items.map((gym) => <GymCard key={gym.id} gym={gym} />)
+        <div className="gym-grid">
+          {top.items.map((gym) => (
+            <GymCard key={gym.id} gym={gym} />
+          ))}
+        </div>
       ) : (
         <p className="muted">Noch keine Studios vorhanden.</p>
       )}

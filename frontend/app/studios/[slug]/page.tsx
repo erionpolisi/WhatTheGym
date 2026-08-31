@@ -64,11 +64,14 @@ export default async function GymDetailPage({ params }: { params: { slug: string
   return (
     <div>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <span className="eyebrow">
+        {gym.district}. Bezirk · {gym.postalCode} Wien
+        {gym.chain ? ` · ${gym.chain.name}` : ""}
+      </span>
       <h1>{gym.name}</h1>
       <p className="muted">
-        {gym.postalCode} Wien, {gym.district}. Bezirk - {gym.addressLine}
-        {gym.chain ? ` - Kette: ${gym.chain.name}` : ""}
-        {gym.status !== "Active" ? ` - Status: ${gym.status}` : ""}
+        {gym.addressLine}
+        {gym.status !== "Active" ? ` · Status: ${gym.status}` : ""}
       </p>
       {gym.website ? (
         <p>
@@ -86,7 +89,13 @@ export default async function GymDetailPage({ params }: { params: { slug: string
       {gym.amenities.length > 0 ? (
         <>
           <h2>Ausstattung</h2>
-          <p>{gym.amenities.map((a) => a.name).join(" - ")}</p>
+          <div className="chips">
+            {gym.amenities.map((a) => (
+              <span className="chip" key={a.id}>
+                {a.name}
+              </span>
+            ))}
+          </div>
         </>
       ) : null}
 

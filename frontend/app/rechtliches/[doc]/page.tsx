@@ -44,7 +44,7 @@ export default async function LegalDocumentPage({ params }: { params: { doc: str
           : ""}
       </p>
       {/* Content is trusted backend markdown; rendered as preformatted text for the MVP. */}
-      <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{document.contentMarkdown}</pre>
+      <pre className="legal-text">{document.contentMarkdown}</pre>
     </div>
   );
 }

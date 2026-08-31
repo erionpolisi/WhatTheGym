@@ -91,16 +91,24 @@ export default async function StudiosPage({ searchParams }: { searchParams: Sear
         Bereiche bewertet sind ({scoreBasisLabels.both}).
       </p>
 
-      {(result?.items ?? []).map((gym) => (
-        <GymCard key={gym.id} gym={gym} />
-      ))}
+      <div className="gym-grid">
+        {(result?.items ?? []).map((gym) => (
+          <GymCard key={gym.id} gym={gym} />
+        ))}
+      </div>
 
       {totalPages > 1 ? (
-        <p>
-          Seite {page} von {totalPages}{" "}
-          {page > 1 ? <a href={`?${new URLSearchParams({ ...searchParams, page: String(page - 1) }).toString()}`}>Zurueck</a> : null}{" "}
-          {page < totalPages ? <a href={`?${new URLSearchParams({ ...searchParams, page: String(page + 1) }).toString()}`}>Weiter</a> : null}
-        </p>
+        <nav className="pagination" aria-label="Seitennavigation">
+          {page > 1 ? (
+            <a href={`?${new URLSearchParams({ ...searchParams, page: String(page - 1) }).toString()}`}>Zurueck</a>
+          ) : null}
+          <span>
+            Seite {page} von {totalPages}
+          </span>
+          {page < totalPages ? (
+            <a href={`?${new URLSearchParams({ ...searchParams, page: String(page + 1) }).toString()}`}>Weiter</a>
+          ) : null}
+        </nav>
       ) : null}
     </div>
   );
