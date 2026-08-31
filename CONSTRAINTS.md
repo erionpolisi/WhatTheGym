@@ -84,8 +84,11 @@ interface. Do not store, show, filter, or rank by membership prices.
 - Search/filter only by district, total score, area score, chain, and branch.
   No price or location-radius behavior in this MVP.
 - Only Admins create gyms. Public gym/data suggestions use `ContactRequest`.
-  Seed real official Vienna gym data and approximately 50 studios; seed demo
-  reviews/cases only in local/development, never staging or production.
+  Seed all verifiable real official Vienna gym data; seed demo reviews/cases
+  only in local/development, never staging or production. Per-Bundesland
+  catalogs for the rest of Austria exist as inert, compiled reference data
+  only (never seeded, tested, or exposed) until expansion is decided
+  (ADR 0011).
 
 ## Reports, Legal, Privacy, and Email
 

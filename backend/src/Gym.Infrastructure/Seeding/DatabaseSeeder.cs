@@ -35,7 +35,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
     private async Task SeedCatalogAsync(CancellationToken ct)
     {
         var chainsBySlug = new Dictionary<string, GymChain>(StringComparer.Ordinal);
-        foreach (var (name, website) in ViennaCatalog.Chains)
+        foreach (var (name, website) in SeedVocabulary.Chains)
         {
             var slug = Slug.Generate(name);
             var existing = await context.GymChains.FirstOrDefaultAsync(c => c.Slug == slug, ct);
@@ -49,7 +49,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         }
 
         var amenityIds = new List<Guid>();
-        foreach (var amenityName in ViennaCatalog.Amenities)
+        foreach (var amenityName in SeedVocabulary.Amenities)
         {
             var slug = Slug.Generate(amenityName);
             var existing = await context.Amenities.FirstOrDefaultAsync(a => a.Slug == slug, ct);
