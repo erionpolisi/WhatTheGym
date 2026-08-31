@@ -31,3 +31,13 @@ details were open and are reversible, so conservative defaults were chosen.
 
 Full lifecycle covered by integration tests (report → status token → classify
 → decide → appeal → reversal → close → export → transparency counts).
+
+## Amendment (2026-09-01): superseded in part by ADR 0012
+
+- Notification texts in audit events are no longer fully verbatim: the
+  confidential status/appeal token inside links is masked as `***` (the
+  outbox mail keeps the real link). Rationale: audit events are readable by
+  staff with case access and must not contain usable secrets.
+- Reclassifying a fast-track case back to `Normal` republishes the hidden
+  review (audited as `ContentRestored`) unless another open fast-track case
+  for the same review exists.

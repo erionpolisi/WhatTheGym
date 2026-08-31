@@ -90,7 +90,9 @@
 - Account deletion anonymizes/restricts data according to configured retention
   and legal holds; only Admins access retained open-case data.
 - Persist email work in an outbox before sending through Resend. Retry failures
-  safely and record the exact legal notice text in the case audit trail.
+  safely and record the exact legal notice text in the case audit trail, with
+  confidential status/appeal tokens masked as `***` in the audit copy
+  (ADR 0012).
 - Use only rate limiting, honeypots, and server-side spam/abuse checks for MVP
   public forms; do not add CAPTCHA or external anti-abuse vendors.
 

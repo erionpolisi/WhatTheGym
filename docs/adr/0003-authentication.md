@@ -43,3 +43,10 @@ headers this could emit non-Secure auth cookies. Decision: outside the
 Development environment the `Secure` flag is now unconditional
 (`CookieSecurePolicy.Always` and the equivalent for the refresh cookie);
 Development keeps scheme-dependent behavior so plain-HTTP Docker login works.
+
+## Amendment (2026-09-01): session hardening (ADR 0012)
+
+Cookie sessions are revalidated against the user store on every request
+(role changes, deletion, and revocation take effect immediately), and
+authenticated state-changing requests require the `X-CSRF` header or a JSON
+content type. Details and rationale in ADR 0012.

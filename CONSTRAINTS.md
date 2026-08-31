@@ -38,9 +38,10 @@ interface. Do not store, show, filter, or rank by membership prices.
   optional pgAdmin without cloud credentials. Include `.env.example`, migrations,
   seed support, and an onboarding guide.
 - Maintain local, staging, and production configuration. Local frontend/API are
-  `http://localhost:3000` and `https://localhost:7001`; staging is
-  `staging.whatthegym.at` and `api-staging.whatthegym.at`; production is
-  `whatthegym.at` and `api.whatthegym.at`.
+  `http://localhost:3000` and `http://localhost:7001` via Docker Compose
+  (`https://localhost:7001` when running the API directly with `dotnet run`);
+  staging is `staging.whatthegym.at` and `api-staging.whatthegym.at`;
+  production is `whatthegym.at` and `api.whatthegym.at`.
 - Prepare Bicep and deployment documentation for Azure Static Web Apps,
   API hosting, PostgreSQL Flexible Server, Key Vault, and Application Insights.
   Do not deploy or require Azure, DNS, Google OAuth, Resend, or registry secrets
@@ -108,7 +109,10 @@ interface. Do not store, show, filter, or rank by membership prices.
   data export, account deletion/anonymization, and transparency-report APIs.
   Mark all legal text `ENTWURF - anwaltlich pruefen lassen`.
 - Legal/contact mail uses Resend through a persistent transactional outbox with
-  retry. Store exact legal notification text in the case audit trail.
+  retry. Store the exact legal notification text in the case audit trail, with
+  confidential status/appeal tokens masked as `***` in the audit copy — audit
+  events are staff-readable and must never contain usable secrets (ADR 0012);
+  only the outbox mail carries the real tokenized links.
 - Apply rate limiting, honeypots, and server-side abuse/spam checks to public
   forms. No CAPTCHA service. Analytics is PII-free, allowlisted, no IP storage,
   no fingerprinting, and uses short-lived rotating hashed session buckets.

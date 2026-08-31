@@ -27,3 +27,11 @@ account deletion must anonymize without destroying legally required records.
 Deletion is GDPR-conservative (anonymize + restrict rather than destroy where
 legal duties may exist), fully configurable, and testable — the sweeper logic
 is deterministic and hold-aware.
+
+## Amendment (2026-09-01): hold scope resolution (ADR 0012)
+
+"Protected by an active LegalHold" is resolved across scopes, not just by the
+directly linked id: revision purges skip reviews with a review- or user-scoped
+hold; case purges skip cases with a hold on the case, the reported review, or
+the review author. Previously user-scoped holds were not enforced by the
+sweeper.
