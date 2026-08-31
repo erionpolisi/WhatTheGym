@@ -64,6 +64,11 @@ jobs:
           WTG_CONNECTIONSTRING: "Host=localhost;Port=5432;Database=whatthegym_ci;Username=wtg_ci;Password=wtg_ci_password"
         run: dotnet ef database update --project src/Gym.Infrastructure --startup-project src/Gym.Api --connection "$WTG_CONNECTIONSTRING"
 
+      # CONSTRAINTS publish gate: build/verify the deployable artifact only —
+      # no push, no deploy until the ghcr.io registry is deliberately configured.
+      - name: Publish artifact (verify only)
+        run: dotnet publish src/Gym.Api -c Release --no-build -o ../artifacts/api
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
