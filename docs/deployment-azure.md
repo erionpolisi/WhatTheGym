@@ -2,8 +2,9 @@
 
 Nothing is deployed yet. Local Docker Compose is the mandatory first target;
 this document plus `infrastructure/azure/` prepare the later rollout. CI
-publish only builds and verifies artifacts/images — it does not push or deploy
-until an Azure Container Registry and credentials are deliberately configured.
+builds and verifies artifacts/images only — there is no push and no deploy
+workflow until the ghcr.io registry and Azure OIDC credentials are
+deliberately configured (TASKS Phase 2).
 
 ## Target topology
 
@@ -14,6 +15,7 @@ until an Azure Container Registry and credentials are deliberately configured.
 | Database | see ADR 0008 | external free PostgreSQL (default) or Azure PG Flexible B1ms | 0 EUR / ~14–17 EUR |
 | Secrets | Azure Key Vault | Standard | ~0 EUR |
 | Telemetry | Log Analytics + App Insights | 0.1 GB/day cap | ~0–2 EUR |
+| Registry | GitHub Container Registry (ghcr.io) | Free | 0 EUR (ADR 0008 addendum; no ACR) |
 
 Default (cost cap ≤ 10 EUR/month): hybrid with an external managed PostgreSQL
 free tier. The all-Azure variant (`deployPostgres=true`) exceeds the cap and is
@@ -28,12 +30,19 @@ documented in [adr/0008-azure-cost-plan.md](adr/0008-azure-cost-plan.md).
 
 ## Rollout steps (when going live)
 
-1. Create resource groups `wtg-staging-rg` / `wtg-production-rg` and an Azure
-   Container Registry; wire `AcrPush` credentials into GitHub Actions secrets.
-2. Extend the CI `publish` job to push `whatthegym-api:<sha>` (deliberate,
-   separate change — currently build/verify only).
+1. Create resource groups `wtg-staging` / `wtg-prod` (names match TASKS and
+   TODO_NOW). Container images go to **ghcr.io** — no Azure Container
+   Registry (cost decision, ADR 0008 addendum). If the ghcr package stays
+   private, add a `registries` block (username + PAT secret) to the container
+   app in Bicep; a public package needs no change.
+2. Add deploy workflows (deliberate, separate change — CI currently only
+   builds/verifies): GitHub OIDC federated identity to Azure (no static
+   secrets), `deploy-staging.yml` (on `main` after CI: build image → push
+   `ghcr.io/<owner>/whatthegym-api:<sha>` → `az containerapp update`),
+   `deploy-production.yml` (`workflow_dispatch`/`v*` tag only, never
+   automatic).
 3. Provision per environment:
-   `az deployment group create -g wtg-staging-rg -f infrastructure/azure/main.bicep -p @infrastructure/azure/parameters.staging.json`
+   `az deployment group create -g wtg-staging -f infrastructure/azure/main.bicep -p @infrastructure/azure/parameters.staging.json`
    supplying the secure parameters (`externalPostgresConnectionString` or
    `postgresAdminPassword`, `googleClientSecret`, `analyticsHashSecret`,
    `resendApiKey`).
@@ -52,8 +61,17 @@ documented in [adr/0008-azure-cost-plan.md](adr/0008-azure-cost-plan.md).
    cross-site and will not work for login.
 6. Deploy the frontend to Static Web Apps with
    `NEXT_PUBLIC_API_BASE_URL=https://api-<env>.whatthegym.at`.
+   **Validate early**: the frontend uses SSR/ISR (dynamic routes); SWA's
+   hybrid Next.js support is preview-quality. If staging surfaces blockers,
+   the documented fallback is hosting the frontend as a second scale-to-zero
+   container app (~0–2 EUR, still within cap) — decide via ADR.
 7. Verify `/health/ready`, Swagger, Google login, mail delivery, and the CORS
    allowlist; then run the production smoke checklist.
+
+Note on telemetry: Bicep passes `APPLICATIONINSIGHTS_CONNECTION_STRING`, but
+the API does not bundle the App Insights SDK. Active out of the box:
+console logs → Log Analytics and availability tests on `/health/ready`.
+Add the SDK/agent later if request-level telemetry is wanted.
 
 ## Explicitly out of scope for the MVP
 
