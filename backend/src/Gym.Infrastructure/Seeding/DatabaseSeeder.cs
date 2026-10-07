@@ -58,6 +58,10 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 existing = Amenity.Create(amenityName, slug, SeedStamp);
                 context.Amenities.Add(existing);
             }
+            else
+            {
+                existing.Rename(amenityName);
+            }
 
             amenityIds.Add(existing.Id);
         }
@@ -69,8 +73,27 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         foreach (var seed in ViennaCatalog.Gyms)
         {
             var slug = Slug.Generate(seed.Name);
-            if (await context.Gyms.AnyAsync(g => g.Slug == slug, ct))
+            var existing = await context.Gyms.FirstOrDefaultAsync(g => g.Slug == slug, ct);
+            if (existing is not null)
             {
+                if (existing.CreatedAtUtc == SeedStamp && existing.UpdatedAtUtc == SeedStamp)
+                {
+                    Guid? seededChainId =
+                        seed.ChainSlug is not null && chainsBySlug.TryGetValue(seed.ChainSlug, out var seededChain)
+                            ? seededChain.Id
+                            : null;
+                    existing.Update(
+                        seed.Name,
+                        seededChainId,
+                        seed.District,
+                        seed.Address,
+                        seed.PostalCode,
+                        seededChainId is not null ? chainsBySlug[seed.ChainSlug!].Website : existing.Website,
+                        existing.Phone,
+                        existing.Description,
+                        SeedStamp);
+                }
+
                 continue;
             }
 
@@ -151,8 +174,8 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         };
         var demoTexts = new[]
         {
-            "Gute Geraeteauswahl und faire Preise. Zu Stosszeiten wird es allerdings eng.",
-            "Sauberkeit koennte besser sein, das Team ist aber sehr freundlich.",
+            "Gute Geräteauswahl und faire Preise. Zu Stoßzeiten wird es allerdings eng.",
+            "Sauberkeit könnte besser sein, das Team ist aber sehr freundlich.",
             "Unkomplizierte Anmeldung und transparente Abrechnung.",
         };
 
@@ -217,7 +240,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 LegalCaseCategory.Other,
                 "Demo Melder",
                 "melder@example.invalid",
-                "Demo-Fall fuer lokale Entwicklung: Diese Meldung dient nur zu Testzwecken.",
+                "Demo-Fall für lokale Entwicklung: Diese Meldung dient nur zu Testzwecken.",
                 new string('0', 64),
                 SeedStamp);
             if (caseResult.IsSuccess)
@@ -236,7 +259,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
 
 internal static class LegalDocumentDrafts
 {
-    private const string Marker = "\n\n---\n\n**ENTWURF - anwaltlich pruefen lassen**\n";
+    private const string Marker = "\n\n---\n\n**ENTWURF - anwaltlich prüfen lassen**\n";
 
     public static readonly IReadOnlyList<(LegalDocumentType Type, string Title, string Content)> All =
     [
@@ -244,39 +267,39 @@ internal static class LegalDocumentDrafts
             """
             # Impressum
 
-            Medieninhaber und Herausgeber: WhatTheGym (Platzhalter - vor Veroeffentlichung ergaenzen)
-            Sitz: Wien, Oesterreich
+            Medieninhaber und Herausgeber: WhatTheGym (Platzhalter - vor Veröffentlichung ergänzen)
+            Sitz: Wien, Österreich
             Kontakt: kontakt@whatthegym.at
 
             Plattform zur Bewertung von Fitnessstudios in Wien.
-            Offenlegung gemaess Paragraf 25 MedienG folgt vor Produktivbetrieb.
+            Offenlegung gemäß Paragraf 25 MedienG folgt vor Produktivbetrieb.
             """ + Marker),
-        (LegalDocumentType.PrivacyPolicy, "Datenschutzerklaerung",
+        (LegalDocumentType.PrivacyPolicy, "Datenschutzerklärung",
             """
-            # Datenschutzerklaerung
+            # Datenschutzerklärung
 
-            Wir verarbeiten personenbezogene Daten ausschliesslich gemaess DSGVO.
+            Wir verarbeiten personenbezogene Daten ausschließlich gemäß DSGVO.
 
-            - Anmeldung erfolgt ueber Google (Auth-Code-Flow); es werden keine Passwoerter gespeichert.
-            - Bewertungen sind nicht anonym und werden mit dem Anzeigenamen veroeffentlicht.
+            - Anmeldung erfolgt über Google (Auth-Code-Flow); es werden keine Passwörter gespeichert.
+            - Bewertungen sind nicht anonym und werden mit dem Anzeigenamen veröffentlicht.
             - Meldungen zu Bewertungen werden als Rechtsfall mit revisionssicherem Verlauf dokumentiert.
             - Die Reichweitenmessung ist PII-frei: keine IP-Speicherung, kein Fingerprinting.
-            - Betroffenenrechte: Auskunft (Datenexport), Loeschung (Kontoloeschung mit Anonymisierung),
-              Beschwerde bei der Datenschutzbehoerde.
+            - Betroffenenrechte: Auskunft (Datenexport), Löschung (Kontolöschung mit Anonymisierung),
+              Beschwerde bei der Datenschutzbehörde.
 
-            Details zu allen Verarbeitungen enthaelt das Verzeichnis von Verarbeitungstaetigkeiten
-            (oeffentlich abrufbar ueber die API).
+            Details zu allen Verarbeitungen enthält das Verzeichnis von Verarbeitungstätigkeiten
+            (öffentlich abrufbar über die API).
             """ + Marker),
         (LegalDocumentType.TermsOfUse, "Nutzungsbedingungen",
             """
             # Nutzungsbedingungen
 
-            1. Bewertungen muessen auf eigenen Erfahrungen beruhen und wahrheitsgemaess sein.
+            1. Bewertungen müssen auf eigenen Erfahrungen beruhen und wahrheitsgemäß sein.
             2. Rechtswidrige Inhalte (Beleidigung, Verleumdung, Verletzung von Rechten Dritter) sind untersagt.
-            3. Gemeldete Inhalte bleiben waehrend der Pruefung grundsaetzlich online; offensichtlich
-               rechtswidrige Inhalte koennen im Schnellverfahren voruebergehend ausgeblendet werden.
-            4. Entscheidungen koennen mindestens sechs Monate lang angefochten werden.
-            5. Konten koennen jederzeit geloescht werden; Inhalte werden entsprechend den
+            3. Gemeldete Inhalte bleiben während der Prüfung grundsätzlich online; offensichtlich
+               rechtswidrige Inhalte können im Schnellverfahren vorübergehend ausgeblendet werden.
+            4. Entscheidungen können mindestens sechs Monate lang angefochten werden.
+            5. Konten können jederzeit gelöscht werden; Inhalte werden entsprechend den
                Aufbewahrungsregeln anonymisiert oder entfernt.
             """ + Marker),
     ];

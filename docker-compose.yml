@@ -31,7 +31,7 @@ services:
       ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-whatthegym};Username=${POSTGRES_USER:-wtg};Password=${POSTGRES_PASSWORD:-wtg_dev_password}"
       Database__MigrateOnStartup: "true"
       Seed__SeedCatalog: "true"
-      Seed__SeedDemoData: ${SEED_DEMO_DATA:-true}
+      Seed__SeedDemoData: ${SEED_DEMO_DATA:-false}
       Auth__EnableDevLogin: ${ENABLE_DEV_LOGIN:-true}
       Auth__BootstrapAdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.invalid}
       Auth__GoogleClientId: ${GOOGLE_CLIENT_ID:-}
