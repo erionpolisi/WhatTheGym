@@ -195,12 +195,21 @@ header.site .container {
 }
 
 header.site .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.25rem;
   letter-spacing: -0.02em;
   color: var(--text);
   text-decoration: none;
+}
+
+header.site .brand img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
 }
 
 header.site .brand .brand-mark {
