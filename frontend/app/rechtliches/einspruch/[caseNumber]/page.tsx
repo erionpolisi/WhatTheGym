@@ -26,14 +26,14 @@ export default function AppealPage() {
       return;
     }
     const problem = (await response.json().catch(() => ({}))) as { detail?: string };
-    setError(problem.detail ?? "Der Einspruch konnte nicht uebermittelt werden.");
+    setError(problem.detail ?? "Der Einspruch konnte nicht übermittelt werden.");
   }
 
   if (!token) {
     return (
       <div>
         <h1>Einspruch</h1>
-        <p className="error">Der vertrauliche Einspruchslink ist unvollstaendig (Token fehlt).</p>
+        <p className="error">Der vertrauliche Einspruchslink ist unvollständig (Token fehlt).</p>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default function AppealPage() {
       <div>
         <h1>Einspruch zu Fall {params.caseNumber}</h1>
         <p className="success">
-          Ihr Einspruch ist eingegangen und wird geprueft. Sie werden per E-Mail ueber das Ergebnis informiert.
+          Ihr Einspruch ist eingegangen und wird geprüft. Sie werden per E-Mail über das Ergebnis informiert.
         </p>
       </div>
     );
@@ -53,11 +53,11 @@ export default function AppealPage() {
     <div>
       <h1>Einspruch zu Fall {params.caseNumber}</h1>
       <p className="muted">
-        Einsprueche sind mindestens sechs Monate nach der urspruenglichen Entscheidung moeglich.
+        Einsprüche sind mindestens sechs Monate nach der ursprünglichen Entscheidung möglich.
       </p>
       <form className="stack" onSubmit={submit}>
         <label className="field" htmlFor="appeal-text">
-          Begruendung des Einspruchs
+          Begründung des Einspruchs
           <textarea
             id="appeal-text"
             required

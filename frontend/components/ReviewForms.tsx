@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { API_BASE, CSRF_HEADER, categoryLabels, membershipCategoryLabels, studioCategoryLabels, type Ratings } from "@/lib/api";
 import { sendEvent } from "@/components/Analytics";
 
@@ -37,6 +37,7 @@ function RatingSelect({
 
 export function ReviewForm({ gymSlug }: { gymSlug: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [ratings, setRatings] = useState<Record<string, number | null>>({});
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +56,7 @@ export function ReviewForm({ gymSlug }: { gymSlug: string }) {
         body: JSON.stringify({ ratings: ratings as Ratings, text: text.trim() === "" ? null : text.trim() }),
       });
       if (response.status === 401) {
-        setError("Bitte zuerst anmelden, um eine Bewertung zu schreiben.");
+        router.push(`/konto?returnUrl=${encodeURIComponent(pathname)}`);
         return;
       }
       if (!response.ok) {
@@ -67,14 +68,14 @@ export function ReviewForm({ gymSlug }: { gymSlug: string }) {
       sendEvent("review_created");
       router.refresh();
     } catch {
-      setError("Netzwerkfehler. Bitte spaeter erneut versuchen.");
+      setError("Netzwerkfehler. Bitte später erneut versuchen.");
     } finally {
       setPending(false);
     }
   }
 
   if (success) {
-    return <p className="success">Danke! Deine Bewertung wurde veroeffentlicht.</p>;
+    return <p className="success">Danke! Deine Bewertung wurde veröffentlicht.</p>;
   }
 
   return (
@@ -119,7 +120,7 @@ export function ReviewForm({ gymSlug }: { gymSlug: string }) {
       </label>
       {error ? <p className="error">{error}</p> : null}
       <button type="submit" disabled={pending}>
-        {pending ? "Wird gespeichert..." : "Bewertung veroeffentlichen"}
+        {pending ? "Wird gespeichert..." : "Bewertung veröffentlichen"}
       </button>
     </form>
   );
@@ -150,7 +151,7 @@ export function ReportForm({ reviewId }: { reviewId: string }) {
       return;
     }
     const problem = (await response.json().catch(() => ({}))) as { detail?: string };
-    setError(problem.detail ?? "Die Meldung konnte nicht uebermittelt werden.");
+    setError(problem.detail ?? "Die Meldung konnte nicht übermittelt werden.");
   }
 
   if (result) {
@@ -186,10 +187,10 @@ export function ReportForm({ reviewId }: { reviewId: string }) {
           value={state.category}
           onChange={(event) => setState({ ...state, category: event.target.value })}
         >
-          <option value="Defamation">Ueble Nachrede / Kreditschaedigung</option>
+          <option value="Defamation">Üble Nachrede / Kreditschädigung</option>
           <option value="FalseFactualClaim">Falsche Tatsachenbehauptung</option>
           <option value="Insult">Beleidigung</option>
-          <option value="PrivacyViolation">Verletzung der Privatsphaere</option>
+          <option value="PrivacyViolation">Verletzung der Privatsphäre</option>
           <option value="IllegalContent">Rechtswidriger Inhalt</option>
           <option value="Other">Sonstiges</option>
         </select>
@@ -215,7 +216,7 @@ export function ReportForm({ reviewId }: { reviewId: string }) {
         />
       </label>
       <label className="field" htmlFor={`desc-${reviewId}`}>
-        Begruendung (mind. 20 Zeichen)
+        Begründung (mind. 20 Zeichen)
         <textarea
           id={`desc-${reviewId}`}
           required
@@ -239,8 +240,8 @@ export function ReportForm({ reviewId }: { reviewId: string }) {
         </label>
       </div>
       <p className="muted">
-        Die gemeldete Bewertung bleibt waehrend der Pruefung grundsaetzlich online. Sie erhalten eine Fallnummer und
-        werden ueber die Entscheidung informiert.
+        Die gemeldete Bewertung bleibt während der Prüfung grundsätzlich online. Sie erhalten eine Fallnummer und
+        werden über die Entscheidung informiert.
       </p>
       {error ? <p className="error">{error}</p> : null}
       <button type="submit">Meldung absenden</button>

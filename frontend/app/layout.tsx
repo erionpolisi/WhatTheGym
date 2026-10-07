@@ -11,7 +11,7 @@ import { PageViewTracker } from "@/components/Analytics";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "WhatTheGym - Fitnessstudio-Bewertungen fuer Wien",
+    default: "WhatTheGym - Fitnessstudio-Bewertungen für Wien",
     template: "%s | WhatTheGym",
   },
   description:
@@ -60,9 +60,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/rechtliches/impressum">Impressum</Link>
               <Link href="/rechtliches/datenschutz">Datenschutz</Link>
               <Link href="/rechtliches/nutzungsbedingungen">Nutzungsbedingungen</Link>
-              <Link href="/transparenz">Transparenzbericht</Link>
             </nav>
-            <div>WhatTheGym - ehrliche Bewertungen fuer Fitnessstudios in Wien.</div>
+            <div>WhatTheGym - ehrliche Bewertungen für Fitnessstudios in Wien.</div>
           </div>
         </footer>
         <PageViewTracker />

@@ -6,7 +6,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: SITE_URL, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/studios`, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/kontakt`, changeFrequency: "monthly", priority: 0.3 },
-    { url: `${SITE_URL}/transparenz`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${SITE_URL}/rechtliches/impressum`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/rechtliches/datenschutz`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/rechtliches/nutzungsbedingungen`, changeFrequency: "yearly", priority: 0.2 },

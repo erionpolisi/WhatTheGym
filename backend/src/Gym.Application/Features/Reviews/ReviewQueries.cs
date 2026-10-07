@@ -59,7 +59,7 @@ public sealed class ModerationQueueQueryHandler(IReviewRepository reviews) : IQu
     {
         if (!Enum.TryParse<ReviewStatus>(query.Status, ignoreCase: true, out var status))
         {
-            return Result.Failure<PagedResult<ModerationReviewDto>>(Error.Validation("moderation.status", "Ungueltiger Status."));
+            return Result.Failure<PagedResult<ModerationReviewDto>>(Error.Validation("moderation.status", "Ungültiger Status."));
         }
 
         var (page, pageSize) = Paging.Normalize(query.Page, query.PageSize);
@@ -99,12 +99,12 @@ public sealed class ModeratorRemoveReviewCommandHandler(
         // carries the actor role and the handler must not trust callers blindly.
         if (command.ActorRole is not (UserRole.Moderator or UserRole.Admin))
         {
-            return Result.Failure(Error.Forbidden("moderation.role", "Keine Berechtigung fuer diese Aktion."));
+            return Result.Failure(Error.Forbidden("moderation.role", "Keine Berechtigung für diese Aktion."));
         }
 
         if (string.IsNullOrWhiteSpace(command.Reason))
         {
-            return Result.Failure(Error.Validation("moderation.reason", "Eine Begruendung ist erforderlich."));
+            return Result.Failure(Error.Validation("moderation.reason", "Eine Begründung ist erforderlich."));
         }
 
         var review = await reviews.GetByIdAsync(command.ReviewId, cancellationToken);

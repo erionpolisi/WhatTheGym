@@ -35,7 +35,7 @@ public sealed class UpsertGoogleUserCommandHandler(
         {
             if (user.Status == UserStatus.Deleted)
             {
-                return Result.Failure<MeDto>(Error.Forbidden("auth.deleted", "Dieses Konto wurde geloescht."));
+                return Result.Failure<MeDto>(Error.Forbidden("auth.deleted", "Dieses Konto wurde gelöscht."));
             }
 
             user.RecordLogin(command.Email, command.EmailVerified, clock.UtcNow);
@@ -181,7 +181,7 @@ public sealed class DeleteMyAccountCommandHandler(
                 // Deletion always removes the content from public view. An active legal hold
                 // only pauses retention PURGING (the sweeper skips held records); it must never
                 // keep content publicly visible against the author's deletion request.
-                review.SoftDelete(ReviewDeletionOrigin.AccountDeletion, "Konto geloescht.", clock.UtcNow);
+                review.SoftDelete(ReviewDeletionOrigin.AccountDeletion, "Konto gelöscht.", clock.UtcNow);
                 affectedGyms.Add(review.GymId);
             }
         }
@@ -225,7 +225,7 @@ public sealed class SetUserRoleCommandHandler(
     {
         if (!Enum.TryParse<UserRole>(command.Role, ignoreCase: true, out var role))
         {
-            return Result.Failure(Error.Validation("user.role", "Ungueltige Rolle."));
+            return Result.Failure(Error.Validation("user.role", "Ungültige Rolle."));
         }
 
         var user = await users.GetByIdAsync(command.TargetUserId, cancellationToken);

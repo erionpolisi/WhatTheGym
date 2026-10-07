@@ -75,7 +75,7 @@ public sealed class SessionService(
         var stored = await refreshTokens.GetByHashAsync(tokenService.Hash(token), httpContext.RequestAborted);
         if (stored is null)
         {
-            return Result.Failure<MeDto>(Error.Unauthorized("auth.invalidRefreshToken", "Ungueltiges Refresh-Token."));
+            return Result.Failure<MeDto>(Error.Unauthorized("auth.invalidRefreshToken", "Ungültiges Refresh-Token."));
         }
 
         if (!stored.IsActive(clock.UtcNow))

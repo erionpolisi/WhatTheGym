@@ -2,17 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { apiGet, type LegalDocument } from "@/lib/api";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const slugToType: Record<string, string> = {
   impressum: "imprint",
   datenschutz: "privacyPolicy",
   nutzungsbedingungen: "termsOfUse",
 };
-
-export function generateStaticParams() {
-  return Object.keys(slugToType).map((doc) => ({ doc }));
-}
 
 export async function generateMetadata({ params }: { params: { doc: string } }): Promise<Metadata> {
   const type = slugToType[params.doc];
@@ -40,7 +36,7 @@ export default async function LegalDocumentPage({ params }: { params: { doc: str
       <p className="muted">
         Version {document.version}
         {document.publishedAtUtc
-          ? ` - veroeffentlicht am ${new Date(document.publishedAtUtc).toLocaleDateString("de-AT")}`
+          ? ` - veröffentlicht am ${new Date(document.publishedAtUtc).toLocaleDateString("de-AT")}`
           : ""}
       </p>
       {/* Content is trusted backend markdown; rendered as preformatted text for the MVP. */}

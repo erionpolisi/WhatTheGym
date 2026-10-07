@@ -6,7 +6,7 @@ export const API_BASE =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-const SERVER_API_BASE =
+export const SERVER_API_BASE =
   process.env.API_BASE_URL ?? API_BASE;
 
 // Cookie-authenticated state-changing requests must carry this header (CSRF defense in depth).
@@ -131,17 +131,17 @@ export const membershipCategoryLabels: Record<string, string> = {
   priceValue: "Preis-Leistung",
   contractTerms: "Vertragsbedingungen",
   billing: "Abrechnung",
-  cancellationExperience: "Kuendigungserfahrung",
+  cancellationExperience: "Kündigungserfahrung",
 };
 
 export const studioCategoryLabels: Record<string, string> = {
-  equipment: "Geraete",
+  equipment: "Geräte",
   cleanliness: "Sauberkeit",
   staff: "Personal",
   crowding: "Auslastung",
   changingRoom: "Umkleiden",
   showers: "Duschen",
-  atmosphere: "Atmosphaere",
+  atmosphere: "Atmosphäre",
 };
 
 export const categoryLabels: Record<string, string> = {

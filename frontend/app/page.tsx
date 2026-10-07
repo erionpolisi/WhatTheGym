@@ -12,22 +12,22 @@ export default async function HomePage() {
       <section className="hero">
         <span className="eyebrow">Wien · Verifizierte Bewertungen</span>
         <h1>
-          Finde das Gym, das <em>haelt</em>, was es verspricht.
+          Finde das Gym, das <em>hält</em>, was es verspricht.
         </h1>
         <p className="lead">
           WhatTheGym sammelt ehrliche, verifizierte Bewertungen zu Wiener Fitnessstudios - getrennt nach{" "}
-          <strong>Mitgliedschaft</strong> und <strong>Studio</strong>, damit du vor der Unterschrift weisst, worauf du
-          dich einlaesst.
+          <strong>Mitgliedschaft</strong> und <strong>Studio</strong>, damit du vor der Unterschrift weißt, worauf du
+          dich einlässt.
         </p>
         <div className="chips" aria-label="Bewertungskategorien">
           <span className="chip accent">Preis-Leistung</span>
-          <span className="chip accent">Vertrag &amp; Kuendigung</span>
-          <span className="chip">Geraete</span>
+          <span className="chip accent">Vertrag &amp; Kündigung</span>
+          <span className="chip">Geräte</span>
           <span className="chip">Sauberkeit</span>
           <span className="chip">Personal</span>
           <span className="chip">Auslastung</span>
           <span className="chip">Umkleiden &amp; Duschen</span>
-          <span className="chip">Atmosphaere</span>
+          <span className="chip">Atmosphäre</span>
         </div>
         <Link href="/studios">
           <button type="button">Alle Studios durchsuchen</button>

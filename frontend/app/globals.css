@@ -183,7 +183,7 @@ header.site {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
-  padding: 0.85rem 0;
+  padding: 1rem 0;
 }
 
 header.site .container {
@@ -200,15 +200,15 @@ header.site .brand {
   gap: 0.45rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.45rem;
   letter-spacing: -0.02em;
   color: var(--text);
   text-decoration: none;
 }
 
 header.site .brand img {
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   object-fit: contain;
 }
 
@@ -223,11 +223,11 @@ nav.main {
 }
 
 nav.main a {
-  color: var(--text-muted);
+  color: var(--text);
   text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  padding: 0.15rem 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.3rem 0;
   border-bottom: 2px solid transparent;
   transition: color 0.15s ease, border-color 0.15s ease;
 }

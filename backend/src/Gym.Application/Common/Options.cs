@@ -70,6 +70,7 @@ public sealed class AnalyticsOptions
         "review_created",
         "report_submitted",
         "contact_submitted",
+        "external_gym_website_click",
     ];
 }
 

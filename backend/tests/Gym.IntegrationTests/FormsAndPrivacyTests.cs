@@ -80,7 +80,7 @@ public class FormsAndPrivacyTests(WtgApiFactory factory)
         var client = factory.CreateClient();
 
         var imprint = await client.GetJsonAsync("/api/v1/legal/documents/imprint");
-        imprint["contentMarkdown"]!.GetValue<string>().Should().Contain("ENTWURF - anwaltlich pruefen lassen");
+        imprint["contentMarkdown"]!.GetValue<string>().Should().Contain("ENTWURF - anwaltlich prüfen lassen");
         imprint["version"]!.GetValue<int>().Should().Be(1);
 
         var versions = await client.GetJsonAsync("/api/v1/legal/documents/privacyPolicy/versions");
@@ -92,7 +92,7 @@ public class FormsAndPrivacyTests(WtgApiFactory factory)
         {
             type = "Imprint",
             title = "Impressum",
-            contentMarkdown = "# Impressum v2\n\nENTWURF - anwaltlich pruefen lassen",
+            contentMarkdown = "# Impressum v2\n\nENTWURF - anwaltlich prüfen lassen",
         });
         created.StatusCode.Should().Be(HttpStatusCode.Created);
         var documentId = (await created.Content.ReadFromJsonAsync<JsonNode>())!["id"]!.GetValue<Guid>();

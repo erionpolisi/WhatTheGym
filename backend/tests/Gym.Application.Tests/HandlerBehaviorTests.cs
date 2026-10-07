@@ -195,7 +195,7 @@ public sealed class CatalogHandlerBehaviorTests
         if (!expectedSuccess)
         {
             result.Error.Type.Should().Be(ErrorType.Validation);
-            result.Error.Message.Should().Contain("Ungueltig");
+            result.Error.Message.Should().Contain("Ungültig");
         }
     }
 
@@ -428,6 +428,7 @@ public sealed class ContactAnalyticsAndLegalDocumentHandlerTests
     public static TheoryData<string, bool> AnalyticsEventCases() => new()
     {
         { "page_view", true }, { "search_performed", true }, { "gym_detail_view", true }, { "review_created", true }, { "report_submitted", true }, { "contact_submitted", true },
+        { "external_gym_website_click", true },
         { "Page_View", false }, { "login", false }, { "", false }, { " ", false }, { "<script>", false },
     };
 
@@ -481,7 +482,7 @@ public sealed class ContactAnalyticsAndLegalDocumentHandlerTests
     {
         var docs = new AppFakeLegalDocumentRepository();
         var result = await new CreateLegalDocumentVersionCommandHandler(docs, new FakeUnitOfWork(), new FakeClock(AppTestData.Now))
-            .Handle(new CreateLegalDocumentVersionCommand(type, "Titel", "ENTWURF - anwaltlich pruefen lassen"), CancellationToken.None);
+            .Handle(new CreateLegalDocumentVersionCommand(type, "Titel", "ENTWURF - anwaltlich prüfen lassen"), CancellationToken.None);
 
         result.IsSuccess.Should().Be(expectedSuccess);
         if (expectedSuccess)
@@ -553,6 +554,4 @@ public sealed class ContactAnalyticsAndLegalDocumentHandlerTests
     private static RecordAnalyticsEventCommandHandler AnalyticsSut(AppFakeAnalyticsStore store) =>
         new(store, new AppFakeSessionBucketHasher(), new FakeUnitOfWork(), new FakeClock(AppTestData.Now), Options.Create(new AnalyticsOptions()));
 }
-
-
 

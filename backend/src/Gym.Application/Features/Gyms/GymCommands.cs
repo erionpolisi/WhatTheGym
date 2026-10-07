@@ -90,7 +90,7 @@ public sealed class CreateGymCommandHandler(
 
         if (!Enum.TryParse<GymStatus>(command.Status, ignoreCase: true, out var status))
         {
-            return Result.Failure<Guid>(Error.Validation("gym.status", "Ungueltiger Status."));
+            return Result.Failure<Guid>(Error.Validation("gym.status", "Ungültiger Status."));
         }
 
         if (command.ChainId is Guid chainId && await chains.GetByIdAsync(chainId, cancellationToken) is null)
@@ -148,7 +148,7 @@ public sealed class CreateGymCommandHandler(
         {
             if (!TimeOnly.TryParse(input.OpensAt, out var opens) || !TimeOnly.TryParse(input.ClosesAt, out var closes))
             {
-                return Result.Failure(Error.Validation("openingHours.format", "Oeffnungszeiten muessen im Format HH:mm angegeben werden."));
+                return Result.Failure(Error.Validation("openingHours.format", "Öffnungszeiten müssen im Format HH:mm angegeben werden."));
             }
 
             var hourResult = GymOpeningHour.Create(input.IsoDayOfWeek, opens, closes);
@@ -223,7 +223,7 @@ public sealed class ChangeGymStatusCommandHandler(
     {
         if (!Enum.TryParse<GymStatus>(command.Status, ignoreCase: true, out var status))
         {
-            return Result.Failure(Error.Validation("gym.status", "Ungueltiger Status."));
+            return Result.Failure(Error.Validation("gym.status", "Ungültiger Status."));
         }
 
         var gym = await gyms.GetByIdAsync(command.GymId, cancellationToken);

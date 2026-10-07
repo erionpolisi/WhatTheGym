@@ -17,7 +17,7 @@ public sealed class GetCaseStatusByTokenQueryHandler(
         var legalCase = await cases.GetByCaseNumberAsync(query.CaseNumber, cancellationToken);
         if (legalCase is null || !string.Equals(legalCase.StatusTokenHash, tokens.Hash(query.Token), StringComparison.Ordinal))
         {
-            return Result.Failure<LegalCaseStatusPublicDto>(Error.NotFound("legalCase.invalid", "Der Fall wurde nicht gefunden oder der Link ist ungueltig."));
+            return Result.Failure<LegalCaseStatusPublicDto>(Error.NotFound("legalCase.invalid", "Der Fall wurde nicht gefunden oder der Link ist ungültig."));
         }
 
         return new LegalCaseStatusPublicDto(
@@ -41,7 +41,7 @@ public sealed class ListCasesQueryHandler(ILegalCaseRepository cases) : IQueryHa
         {
             if (!Enum.TryParse<LegalCaseStatus>(query.Status, ignoreCase: true, out var parsed))
             {
-                return Result.Failure<PagedResult<LegalCaseListItemDto>>(Error.Validation("legalCase.status", "Ungueltiger Status."));
+                return Result.Failure<PagedResult<LegalCaseListItemDto>>(Error.Validation("legalCase.status", "Ungültiger Status."));
             }
 
             status = parsed;
@@ -104,7 +104,7 @@ public sealed class TransparencyReportQueryHandler(ILegalCaseRepository cases) :
     {
         if (query.Year is < 2024 or > 2100)
         {
-            return Result.Failure<TransparencyReportDto>(Error.Validation("transparency.year", "Ungueltiges Jahr."));
+            return Result.Failure<TransparencyReportDto>(Error.Validation("transparency.year", "Ungültiges Jahr."));
         }
 
         var counts = await cases.GetTransparencyCountsAsync(query.Year, cancellationToken);
@@ -117,6 +117,6 @@ public sealed class TransparencyReportQueryHandler(ILegalCaseRepository cases) :
             counts.FastTrackCases,
             counts.AppealsSubmitted,
             counts.AppealsReversed,
-            "Aggregierte Kennzahlen ohne Personenbezug. Faelle werden nach Eingangsjahr gezaehlt.");
+            "Aggregierte Kennzahlen ohne Personenbezug. Fälle werden nach Eingangsjahr gezählt.");
     }
 }

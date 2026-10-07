@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "WhatTheGym",
     short_name: "WhatTheGym",
-    description: "Ehrliche, verifizierte Fitnessstudio-Bewertungen fuer Wien.",
+    description: "Ehrliche, verifizierte Fitnessstudio-Bewertungen für Wien.",
     start_url: "/",
     display: "standalone",
     background_color: "#0b0b0d",
