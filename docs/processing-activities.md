@@ -5,16 +5,16 @@ The authoritative, versioned record is generated from code
 `GET /api/v1/legal/processing-activities`. Tests enforce that every entity
 persisting personal data is covered. This document mirrors version 1.0.
 
-`ENTWURF - anwaltlich pruefen lassen`
+`ENTWURF - anwaltlich prüfen lassen`
 
 | # | Activity | Purpose | Legal basis | Entities | Retention | Recipients |
 |---|----------|---------|-------------|----------|-----------|------------|
-| 1 | Kontoverwaltung | Google-Anmeldung, Rollen, Profil | Art. 6(1)(b) | User, RefreshToken | Bis Kontoloeschung; Tokens 30 Tage | Google LLC |
-| 2 | Bewertungen | Nicht-anonyme Studio-Bewertungen inkl. Historie | Art. 6(1)(b)(f) | Review, ReviewRevision | Bis Loeschung; Revisionen 3 Jahre nach Entfernung | — |
-| 3 | Rechtsfaelle | Meldungen, Entscheidungen, Einsprueche, Audit | Art. 6(1)(c)(f) | LegalCase, LegalCaseAppeal, LegalCaseEvent, LegalHold | Audit 7 Jahre nach Abschluss; Holds pausieren Loeschung | — |
-| 4 | Kontaktanfragen | Anfragen, Studio-Vorschlaege, Korrekturen | Art. 6(1)(b)(f) | ContactRequest | Bis Erledigung + Nachweisfrist | — |
+| 1 | Kontoverwaltung | Google-Anmeldung, Rollen, Profil | Art. 6(1)(b) | User, RefreshToken | Bis Kontolöschung; Tokens 30 Tage | Google LLC |
+| 2 | Bewertungen | Nicht-anonyme Studio-Bewertungen inkl. Historie | Art. 6(1)(b)(f) | Review, ReviewRevision | Bis Löschung; Revisionen 3 Jahre nach Entfernung | — |
+| 3 | Rechtsfälle | Meldungen, Entscheidungen, Einsprüche, Audit | Art. 6(1)(c)(f) | LegalCase, LegalCaseAppeal, LegalCaseEvent, LegalHold | Audit 7 Jahre nach Abschluss; Holds pausieren Löschung | — |
+| 4 | Kontaktanfragen | Anfragen, Studio-Vorschläge, Korrekturen | Art. 6(1)(b)(f) | ContactRequest | Bis Erledigung + Nachweisfrist | — |
 | 5 | Transaktionale E-Mails | Rechtlich erforderliche Benachrichtigungen | Art. 6(1)(c)(f) | OutboxEmail | 90 Tage nach Versand/Fehlschlag | Resend Inc. |
-| 6 | Reichweitenmessung | PII-freie Statistik (kein IP, kein Fingerprinting) | Art. 6(1)(f) | AnalyticsEvent | Max. 400 Tage | — |
+| 6 | Reichweitenmessung | PII-freie Seiten- und externe Studio-Website-Klickstatistik (Studio-Pfad, Ziel-Domain, kein IP, kein Fingerprinting) | Art. 6(1)(f) | AnalyticsEvent | Max. 400 Tage | — |
 
 Principles enforced in code and tests:
 

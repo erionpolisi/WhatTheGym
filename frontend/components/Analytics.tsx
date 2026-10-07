@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { API_BASE, CSRF_HEADER } from "@/lib/api";
 
 // PII-free analytics: random per-tab session id (not a credential), no IP, no fingerprinting.
@@ -36,4 +37,27 @@ export function PageViewTracker() {
   }, [pathname]);
 
   return null;
+}
+
+interface TrackedExternalLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+  children: ReactNode;
+  gymSlug: string;
+  href: string;
+}
+
+export function TrackedExternalLink({ children, gymSlug, href, onClick, ...props }: TrackedExternalLinkProps) {
+  const destinationHost = new URL(href).hostname;
+
+  return (
+    <a
+      {...props}
+      href={href}
+      onClick={(event) => {
+        sendEvent("external_gym_website_click", `/studios/${gymSlug}/external/${destinationHost}`);
+        onClick?.(event);
+      }}
+    >
+      {children}
+    </a>
+  );
 }
