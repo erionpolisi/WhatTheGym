@@ -1,5 +1,9 @@
 [CmdletBinding()]
-param()
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern("^[0-9a-f]{40}$")]
+    [string]$SourceSha
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -62,6 +66,8 @@ try {
         "externalPostgresConnectionString=$postgresConnectionString",
         "googleClientSecret=$googleClientSecret",
         "analyticsHashSecret=$analyticsHashSecret",
+        "apiImage=ghcr.io/erionpolisi/whatthegym-api:$SourceSha",
+        "frontendImage=ghcr.io/erionpolisi/whatthegym-web:$SourceSha-production",
         "allowedIngressIpv4Cidr=",
         "resendApiKey=",
         "--query", "properties.outputs",
