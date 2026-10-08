@@ -1,0 +1,225 @@
+name: Deploy production
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+  packages: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  API_IMAGE: ghcr.io/erionpolisi/whatthegym-api
+  WEB_IMAGE: ghcr.io/erionpolisi/whatthegym-web
+
+jobs:
+  validate:
+    name: Validate staged release
+    runs-on: ubuntu-latest
+    outputs:
+      api_image: ${{ steps.manifest.outputs.api_image }}
+      production_web_image: ${{ steps.manifest.outputs.production_web_image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release tag and main ancestry
+        shell: bash
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Production tags must use vMAJOR.MINOR.PATCH." >&2
+            exit 1
+          fi
+          git fetch origin main
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "The release commit is not part of main." >&2
+            exit 1
+          fi
+
+      - name: Download successful staging release manifest
+        id: manifest
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          artifacts=$(curl --fail --silent --show-error \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts?name=staging-release-${GITHUB_SHA}&per_page=100")
+          artifact=$(jq --compact-output \
+            '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last // empty' \
+            <<< "$artifacts")
+          download_url=$(jq --raw-output '.archive_download_url // empty' <<< "$artifact")
+          run_id=$(jq --raw-output '.workflow_run.id // empty' <<< "$artifact")
+          if [[ -z "$download_url" ]]; then
+            echo "This commit has no successful, non-expired staging release manifest." >&2
+            exit 1
+          fi
+          run=$(curl --fail --silent --show-error \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}")
+          if ! jq --exit-status '
+            .conclusion == "success"
+            and .event == "workflow_run"
+            and .head_branch == "main"
+            and .path == ".github/workflows/deploy-staging.yml"
+          ' <<< "$run" > /dev/null; then
+            echo "The release manifest did not originate from the trusted main staging workflow." >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --location \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            "$download_url" \
+            --output staged-release.zip
+          unzip -q staged-release.zip -d staged-release
+          if ! jq --exit-status --arg sha "${GITHUB_SHA}" '
+            .sourceSha == $sha
+            and (.apiImage | test("^ghcr\\.io/erionpolisi/whatthegym-api@sha256:[0-9a-f]{64}$"))
+            and (.stagingWebImage | test("^ghcr\\.io/erionpolisi/whatthegym-web@sha256:[0-9a-f]{64}$"))
+            and (.productionWebImage | test("^ghcr\\.io/erionpolisi/whatthegym-web@sha256:[0-9a-f]{64}$"))
+          ' staged-release/manifest.json > /dev/null; then
+            echo "The staged release manifest is invalid." >&2
+            exit 1
+          fi
+          api_image=$(jq --raw-output .apiImage staged-release/manifest.json)
+          staging_web_image=$(jq --raw-output .stagingWebImage staged-release/manifest.json)
+          production_web_image=$(jq --raw-output .productionWebImage staged-release/manifest.json)
+          docker manifest inspect "$api_image" > /dev/null
+          docker manifest inspect "$staging_web_image" > /dev/null
+          docker manifest inspect "$production_web_image" > /dev/null
+          echo "api_image=$api_image" >> "$GITHUB_OUTPUT"
+          echo "production_web_image=$production_web_image" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Promote to production
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - name: Require production Azure configuration
+        shell: bash
+        run: |
+          if [[ -z "${AZURE_CLIENT_ID}" || -z "${AZURE_TENANT_ID}" || -z "${AZURE_SUBSCRIPTION_ID}" ]]; then
+            echo "Configure AZURE_CLIENT_ID, AZURE_TENANT_ID, and AZURE_SUBSCRIPTION_ID in the production environment." >&2
+            exit 1
+          fi
+
+      - name: Sign in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Capture current production images
+        id: previous
+        shell: bash
+        run: |
+          api=$(az containerapp show \
+            --resource-group wtg-prod \
+            --name wtg-prod-api \
+            --query properties.template.containers[0].image \
+            --output tsv)
+          web=$(az containerapp show \
+            --resource-group wtg-prod \
+            --name wtg-prod-web \
+            --query properties.template.containers[0].image \
+            --output tsv)
+          if [[ -z "$api" || -z "$web" ]]; then
+            echo "Could not determine both current production images." >&2
+            exit 1
+          fi
+          echo "api=$api" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy API
+        shell: bash
+        run: |
+          revision=$(az containerapp update \
+            --resource-group wtg-prod \
+            --name wtg-prod-api \
+            --image "${{ needs.validate.outputs.api_image }}" \
+            --query properties.latestRevisionName \
+            --output tsv)
+          for attempt in {1..60}; do
+            state=$(az containerapp revision show \
+              --resource-group wtg-prod \
+              --name wtg-prod-api \
+              --revision "$revision" \
+              --query properties.provisioningState \
+              --output tsv)
+            if [[ "$state" == "Provisioned" ]]; then exit 0; fi
+            if [[ "$state" == "ProvisioningFailed" || "$state" == "Failed" ]]; then exit 1; fi
+            sleep 10
+          done
+          echo "API revision did not become ready in time." >&2
+          exit 1
+
+      - name: Deploy frontend
+        shell: bash
+        run: |
+          revision=$(az containerapp update \
+            --resource-group wtg-prod \
+            --name wtg-prod-web \
+            --image "${{ needs.validate.outputs.production_web_image }}" \
+            --query properties.latestRevisionName \
+            --output tsv)
+          for attempt in {1..60}; do
+            state=$(az containerapp revision show \
+              --resource-group wtg-prod \
+              --name wtg-prod-web \
+              --revision "$revision" \
+              --query properties.provisioningState \
+              --output tsv)
+            if [[ "$state" == "Provisioned" ]]; then exit 0; fi
+            if [[ "$state" == "ProvisioningFailed" || "$state" == "Failed" ]]; then exit 1; fi
+            sleep 10
+          done
+          echo "Frontend revision did not become ready in time." >&2
+          exit 1
+
+      - name: Smoke test production
+        shell: bash
+        run: |
+          curl --fail --show-error --silent --retry 12 --retry-all-errors --retry-delay 10 \
+            https://api.whatthegym.at/health/ready > /dev/null
+          curl --fail --show-error --silent --retry 12 --retry-all-errors --retry-delay 10 \
+            https://whatthegym.at/ > /dev/null
+
+      - name: Restore previous images on failure
+        if: failure() && steps.previous.outputs.api != '' && steps.previous.outputs.web != ''
+        shell: bash
+        run: |
+          set +e
+          az containerapp update \
+            --resource-group wtg-prod \
+            --name wtg-prod-api \
+            --image "${{ steps.previous.outputs.api }}" \
+            --only-show-errors \
+            --output none
+          api_status=$?
+          az containerapp update \
+            --resource-group wtg-prod \
+            --name wtg-prod-web \
+            --image "${{ steps.previous.outputs.web }}" \
+            --only-show-errors \
+            --output none
+          web_status=$?
+          if [[ $api_status -ne 0 || $web_status -ne 0 ]]; then
+            echo "One or more production images could not be restored." >&2
+            exit 1
+          fi

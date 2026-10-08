@@ -56,6 +56,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish API image
+        id: api-build
         uses: docker/build-push-action@v6
         with:
           context: backend
@@ -64,12 +65,13 @@ jobs:
           cache-from: type=gha,scope=staging-api
           cache-to: type=gha,mode=max,scope=staging-api
 
-      - name: Build and publish frontend image
+      - name: Build and publish staging frontend image
+        id: staging-web-build
         uses: docker/build-push-action@v6
         with:
           context: frontend
           push: true
-          tags: ${{ env.WEB_IMAGE }}:${{ steps.source.outputs.sha }}
+          tags: ${{ env.WEB_IMAGE }}:${{ steps.source.outputs.sha }}-staging
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=https://api-staging.whatthegym.at
             NEXT_PUBLIC_SITE_URL=https://staging.whatthegym.at
@@ -77,6 +79,21 @@ jobs:
             NEXT_PUBLIC_ENABLE_DEV_LOGIN=false
           cache-from: type=gha,scope=staging-web
           cache-to: type=gha,mode=max,scope=staging-web
+
+      - name: Build and publish production frontend image
+        id: production-web-build
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          tags: ${{ env.WEB_IMAGE }}:${{ steps.source.outputs.sha }}-production
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=https://api.whatthegym.at
+            NEXT_PUBLIC_SITE_URL=https://whatthegym.at
+            NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED=true
+            NEXT_PUBLIC_ENABLE_DEV_LOGIN=false
+          cache-from: type=gha,scope=production-web
+          cache-to: type=gha,mode=max,scope=production-web
 
       - name: Sign in to Azure with OIDC
         uses: azure/login@v2
@@ -91,7 +108,7 @@ jobs:
           revision=$(az containerapp update \
             --resource-group wtg-staging \
             --name wtg-staging-api \
-            --image "${API_IMAGE}:${{ steps.source.outputs.sha }}" \
+            --image "${API_IMAGE}@${{ steps.api-build.outputs.digest }}" \
             --query properties.latestRevisionName \
             --output tsv)
           for attempt in {1..60}; do
@@ -114,7 +131,7 @@ jobs:
           revision=$(az containerapp update \
             --resource-group wtg-staging \
             --name wtg-staging-web \
-            --image "${WEB_IMAGE}:${{ steps.source.outputs.sha }}" \
+            --image "${WEB_IMAGE}@${{ steps.staging-web-build.outputs.digest }}" \
             --query properties.latestRevisionName \
             --output tsv)
           for attempt in {1..60}; do
@@ -130,3 +147,27 @@ jobs:
           done
           echo "Frontend revision did not become healthy in time." >&2
           exit 1
+
+      - name: Create staged release manifest
+        shell: bash
+        run: |
+          mkdir -p staged-release
+          jq --null-input \
+            --arg sourceSha "${{ steps.source.outputs.sha }}" \
+            --arg apiImage "${API_IMAGE}@${{ steps.api-build.outputs.digest }}" \
+            --arg stagingWebImage "${WEB_IMAGE}@${{ steps.staging-web-build.outputs.digest }}" \
+            --arg productionWebImage "${WEB_IMAGE}@${{ steps.production-web-build.outputs.digest }}" \
+            '{
+              sourceSha: $sourceSha,
+              apiImage: $apiImage,
+              stagingWebImage: $stagingWebImage,
+              productionWebImage: $productionWebImage
+            }' > staged-release/manifest.json
+
+      - name: Publish staged release manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-release-${{ steps.source.outputs.sha }}
+          path: staged-release/manifest.json
+          if-no-files-found: error
+          retention-days: 90

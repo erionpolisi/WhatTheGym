@@ -45,15 +45,16 @@ sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
       `parameters.production.json` (`ghcr.io/<your-user>/whatthegym-api:<tag>`)
 - [ ] If ghcr package will be private (recommended): add `registries` block +
       PAT secret to the Container App in Bicep; if public, no change needed
-- [x] Set up **GitHub OIDC → Azure** federated identity (no static secrets):
+- [x] Set up staging **GitHub OIDC → Azure** federated identity (no static secrets):
       `az ad app create` + service principal + federated credential for
-      `repo:<you>/WhatTheGym:ref:refs/heads/main` (and one for the prod
-      workflow/tag), Contributor on the two RGs
+      the GitHub `staging` environment, Contributor on `wtg-staging`
+- [x] Create the separate production OIDC identity for the protected GitHub
+      `production` environment, Contributor only on `wtg-prod`
 - [x] New workflow `deploy-staging.yml`: on `main` push, after CI →
       `docker build` → push to ghcr.io with `GITHUB_TOKEN` →
       `az containerapp update -n wtg-staging-api -g wtg-staging --image ghcr.io/...:<sha>`
-- [ ] New workflow `deploy-production.yml`: `workflow_dispatch` (input: image
-      tag) or `v*` tag trigger only — never automatic
+- [x] New workflow `deploy-production.yml`: semantic `v*.*.*` tag trigger,
+      staged-image verification, protected environment approval, and rollback
 
 ## Step 3 — First staging deployment (validates the never-executed Bicep)
 
