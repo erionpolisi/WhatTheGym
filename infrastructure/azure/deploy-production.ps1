@@ -1,5 +1,9 @@
 [CmdletBinding()]
-param()
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern("^[0-9a-f]{40}$")]
+    [string]$SourceSha
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -32,9 +36,12 @@ $username = [Uri]::UnescapeDataString($userInfo[0])
 $password = [Uri]::UnescapeDataString($userInfo[1])
 $database = [Uri]::UnescapeDataString($databaseUri.AbsolutePath.TrimStart("/"))
 $port = if ($databaseUri.Port -gt 0) { $databaseUri.Port } else { 5432 }
+$escapedUsername = $username.Replace('"', '""')
+$escapedCredential = $password.Replace('"', '""')
+$escapedDatabase = $database.Replace('"', '""')
 $postgresConnectionString =
-    "Host=$($databaseUri.Host);Port=$port;Database=$database;" +
-    "Username=$username;******;SSL Mode=Require"
+    "Host=$($databaseUri.Host);Port=$port;Database=`"$escapedDatabase`";" +
+    "Username=`"$escapedUsername`";Pwd=`"$escapedCredential`";SSL Mode=Require"
 
 $googleClientSecretSecure = Read-Host "Production Google OAuth client secret" -AsSecureString
 $secretPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($googleClientSecretSecure)
@@ -62,6 +69,8 @@ try {
         "externalPostgresConnectionString=$postgresConnectionString",
         "googleClientSecret=$googleClientSecret",
         "analyticsHashSecret=$analyticsHashSecret",
+        "apiImage=ghcr.io/erionpolisi/whatthegym-api:$SourceSha",
+        "frontendImage=ghcr.io/erionpolisi/whatthegym-web:$SourceSha-production",
         "allowedIngressIpv4Cidr=",
         "resendApiKey=",
         "--query", "properties.outputs",
@@ -80,5 +89,6 @@ finally {
 
     $googleClientSecret = $null
     $postgresConnectionString = $null
+    $escapedCredential = $null
     $password = $null
 }

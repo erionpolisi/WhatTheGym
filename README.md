@@ -73,7 +73,7 @@ The allowlist is configuration (`Cors:AllowedOrigins`); cookies are `HttpOnly`,
 ```
 backend/          .NET 8 solution (Domain, Application, Infrastructure, Api + 3 test projects)
 frontend/         Next.js (App Router) SEO-aware thin client
-infrastructure/   Azure Bicep and staging deployment tooling
+infrastructure/   Azure Bicep and staging/production deployment tooling
 docs/             Architecture, domain, API, scoring, legal, ADRs, onboarding
 ```
 
@@ -89,7 +89,8 @@ docs/             Architecture, domain, API, scoring, legal, ADRs, onboarding
 - [docs/testing.md](docs/testing.md) — test strategy, layer ownership, edge-case map
 - [backend/http/](backend/http/README.md) — Rider HTTP client suite for manual
   testing and administration (all endpoints, all environments)
-- [docs/deployment-azure.md](docs/deployment-azure.md) — prepared Azure setup
+- [docs/deployment-azure.md](docs/deployment-azure.md) — deployed Azure topology,
+  release promotion, DNS/TLS, monitoring, and operational limitations
 - [docs/adr/](docs/adr/) — architecture decision records
 
 ## Conventions

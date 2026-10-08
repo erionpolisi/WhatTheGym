@@ -1,9 +1,8 @@
-// WhatTheGym Azure infrastructure (prepared, not yet deployed).
+// WhatTheGym Azure infrastructure for the deployed Staging and Production environments.
 // Cost-optimized around the <= 10 EUR/month target; see docs/adr/0008-azure-cost-plan.md
 // for the tradeoffs (managed PostgreSQL alone exceeds the cap).
 //
-// Deploy (when deliberately going live):
-//   az deployment group create -g <rg> -f main.bicep -p @parameters.staging.json
+// Deploy/reconcile with the environment parameter file and secure runtime parameters.
 
 @allowed(['staging', 'production'])
 param environmentName string
