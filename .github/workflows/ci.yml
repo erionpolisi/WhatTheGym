@@ -67,8 +67,8 @@ jobs:
           WTG_CONNECTIONSTRING: "Host=localhost;Port=5432;Database=whatthegym_ci;Username=wtg_ci;Password=wtg_ci_password"
         run: dotnet ef database update --project src/Gym.Infrastructure --startup-project src/Gym.Api --connection "$WTG_CONNECTIONSTRING"
 
-      # CONSTRAINTS publish gate: build/verify the deployable artifact only —
-      # no push, no deploy until the ghcr.io registry is deliberately configured.
+      # CI verifies the deployable artifact; the separate staging workflow
+      # publishes only after every CI gate succeeds on main.
       - name: Publish artifact (verify only)
         run: dotnet publish src/Gym.Api -c Release --no-build -o ../artifacts/api
 
@@ -130,9 +130,8 @@ jobs:
           severity: LOW,MEDIUM
 
   publish:
-    # Build/verify artifacts and images only. No registry push and no deployment
-    # until an Azure registry and credentials are deliberately configured.
-    name: Publish (build artifacts, no push)
+    # Build/verify only; deploy-staging.yml owns registry publication and Azure.
+    name: Publish verification
     runs-on: ubuntu-latest
     needs: [backend, frontend, security-scan]
     steps:

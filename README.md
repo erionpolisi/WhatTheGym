@@ -73,7 +73,7 @@ The allowlist is configuration (`Cors:AllowedOrigins`); cookies are `HttpOnly`,
 ```
 backend/          .NET 8 solution (Domain, Application, Infrastructure, Api + 3 test projects)
 frontend/         Next.js (App Router) SEO-aware thin client
-infrastructure/   Azure Bicep (prepared, not deployed)
+infrastructure/   Azure Bicep and staging deployment tooling
 docs/             Architecture, domain, API, scoring, legal, ADRs, onboarding
 ```
 
@@ -96,6 +96,6 @@ docs/             Architecture, domain, API, scoring, legal, ADRs, onboarding
 
 - Conventional Commits (`feat:`, `fix:`, `docs:`, ...), `main` + `feature/*` branches.
 - CI gates: restore → build → unit tests → integration tests → migration/schema
-  check → security scan (CodeQL, Trivy, Dependabot) → publish (build/verify
-  only; no registry push until one is deliberately configured).
+  check → security scan (CodeQL, Trivy, Dependabot) → publish verification.
+  Successful `main` CI runs trigger the OIDC-based staging image deployment.
 - All legal copy is draft: `ENTWURF - anwaltlich pruefen lassen`.

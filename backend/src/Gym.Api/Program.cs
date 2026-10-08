@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Azure.Identity;
 using Gym.Api.Auth;
 using Gym.Api.Middleware;
 using Gym.Application;
@@ -14,6 +15,7 @@ using Gym.Infrastructure.Persistence;
 using Gym.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +43,40 @@ builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOpt
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<SessionService>();
+
+var dataProtectionBlobUri = builder.Configuration["DataProtection:BlobUri"];
+var dataProtectionKeyIdentifier = builder.Configuration["DataProtection:KeyIdentifier"];
+var dataProtectionManagedIdentityClientId = builder.Configuration["DataProtection:ManagedIdentityClientId"];
+var hasAnyDataProtectionSetting =
+    !string.IsNullOrWhiteSpace(dataProtectionBlobUri)
+    || !string.IsNullOrWhiteSpace(dataProtectionKeyIdentifier)
+    || !string.IsNullOrWhiteSpace(dataProtectionManagedIdentityClientId);
+
+if (hasAnyDataProtectionSetting)
+{
+    if (string.IsNullOrWhiteSpace(dataProtectionBlobUri)
+        || string.IsNullOrWhiteSpace(dataProtectionKeyIdentifier)
+        || string.IsNullOrWhiteSpace(dataProtectionManagedIdentityClientId))
+    {
+        throw new InvalidOperationException(
+            "DataProtection:BlobUri, KeyIdentifier, and ManagedIdentityClientId must be configured together.");
+    }
+
+    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+    {
+        ManagedIdentityClientId = dataProtectionManagedIdentityClientId,
+    });
+
+    builder.Services
+        .AddDataProtection()
+        .SetApplicationName("WhatTheGym")
+        .PersistKeysToAzureBlobStorage(new Uri(dataProtectionBlobUri), credential)
+        .ProtectKeysWithAzureKeyVault(new Uri(dataProtectionKeyIdentifier), credential);
+}
+else if (builder.Environment.IsProduction())
+{
+    throw new InvalidOperationException("Persistent Data Protection is required in Production.");
+}
 
 // MVC + JSON
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -153,8 +189,12 @@ if (googleConfigured)
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         options.Scope.Add("email");
-        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-        options.NonceCookie.SameSite = SameSiteMode.Lax;
+        // Google returns through a cross-site form POST. These short-lived protocol cookies
+        // must be sent on that POST; the application session cookie remains SameSite=Lax.
+        options.CorrelationCookie.SameSite = SameSiteMode.None;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.NonceCookie.SameSite = SameSiteMode.None;
+        options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
         options.ClaimActions.MapJsonKey("email_verified", "email_verified");
         options.Events.OnTicketReceived = async context =>
         {
@@ -180,6 +220,12 @@ if (googleConfigured)
             context.Principal = SessionService.BuildPrincipal(result.Value);
             var session = services.GetRequiredService<SessionService>();
             await session.IssueRefreshTokenAsync(context.HttpContext, result.Value.Id);
+        };
+        options.Events.OnRemoteFailure = context =>
+        {
+            context.Response.Redirect("/api/v1/auth/login-failed");
+            context.HandleResponse();
+            return Task.CompletedTask;
         };
     });
 }

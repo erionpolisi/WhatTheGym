@@ -33,3 +33,8 @@ backend/certs/*.crt
 .DS_Store
 Thumbs.db
 .idea/
+
+# Local Neon / agent state
+.neon
+.agents/
+skills-lock.json

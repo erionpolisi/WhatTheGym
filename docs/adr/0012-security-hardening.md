@@ -82,6 +82,12 @@ documented in `docs/deployment-azure.md` and must be revisited (minReplicas 1
 or a scheduled trigger) if legal notification latency becomes a compliance
 concern.
 
+Scale-to-zero also replaces the API container filesystem. The ASP.NET Core
+Data Protection key ring is therefore persisted in a private Azure Blob
+container and protected with an environment-specific Key Vault key. ADR 0003
+records the configuration and the required login rehearsal across a cold start
+and revision replacement.
+
 ## Consequences
 
 - Staging/production Bicep now fails fast on missing auth/mail/analytics

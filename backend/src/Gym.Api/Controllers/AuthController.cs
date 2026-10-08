@@ -26,12 +26,13 @@ public sealed class AuthController(
     [EnableRateLimiting("auth")]
     public ActionResult StartGoogleLogin([FromQuery] string? returnUrl)
     {
-        if (string.IsNullOrWhiteSpace(authOptions.Value.GoogleClientId))
+        if (string.IsNullOrWhiteSpace(authOptions.Value.GoogleClientId)
+            || string.IsNullOrWhiteSpace(authOptions.Value.GoogleClientSecret))
         {
             return Problem(
                 statusCode: StatusCodes.Status503ServiceUnavailable,
                 title: "Google-Login nicht konfiguriert",
-                detail: "Google OAuth ist in dieser Umgebung nicht konfiguriert. Lokal steht der Dev-Login zur Verfuegung.");
+                detail: "Google OAuth ist in dieser Umgebung nicht vollständig konfiguriert.");
         }
 
         return Challenge(

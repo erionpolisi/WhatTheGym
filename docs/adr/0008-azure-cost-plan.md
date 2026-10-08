@@ -12,8 +12,8 @@ which already exceeds the cap.
 
 Two prepared variants in `infrastructure/azure/main.bicep`:
 
-1. **Default (within cap): hybrid** — Azure Static Web Apps Free (frontend),
-   Azure Container Apps consumption with scale-to-zero (API, ~0–5 EUR),
+1. **Default (within cap): hybrid** — Azure Container Apps consumption with
+   scale-to-zero (frontend and API, ~0–7 EUR),
    Key Vault + capped Log Analytics (~0–2 EUR), and an **external managed
    PostgreSQL free tier** (e.g. Neon/Supabase; connection string stored in Key
    Vault). Estimated total: **~0–7 EUR/month**.
@@ -49,7 +49,7 @@ month, before any production go-live):
 | Item | SKU | Est. EUR/month |
 | --- | --- | --- |
 | Container Apps (scale-to-zero, low traffic) | Consumption | 0–3 |
-| Static Web Apps | Free | 0 |
+| Frontend Container App (scale-to-zero, low traffic) | Consumption | 0–2 |
 | PostgreSQL (external free tier, e.g. Neon) | Free | 0 |
 | Container registry | ghcr.io | 0 |
 | Key Vault | Standard, few ops | <1 |

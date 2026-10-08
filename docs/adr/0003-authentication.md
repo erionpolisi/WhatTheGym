@@ -50,3 +50,13 @@ Cookie sessions are revalidated against the user store on every request
 (role changes, deletion, and revocation take effect immediately), and
 authenticated state-changing requests require the `X-CSRF` header or a JSON
 content type. Details and rationale in ADR 0012.
+
+## Amendment (2026-10-08): scale-to-zero key persistence
+
+Staging and Production keep `minReplicas: 0` for cost control. ASP.NET Core
+Data Protection keys are persisted in a private Azure Blob container and
+protected at rest with an environment-specific Key Vault RSA key. The API's
+user-assigned managed identity is the only application identity granted blob
+data and key cryptography access. Production fails at startup when this
+configuration is absent. Login must be rehearsed across a forced scale-to-zero
+and revision replacement before go-live.
