@@ -36,9 +36,12 @@ $username = [Uri]::UnescapeDataString($userInfo[0])
 $password = [Uri]::UnescapeDataString($userInfo[1])
 $database = [Uri]::UnescapeDataString($databaseUri.AbsolutePath.TrimStart("/"))
 $port = if ($databaseUri.Port -gt 0) { $databaseUri.Port } else { 5432 }
+$escapedUsername = $username.Replace('"', '""')
+$escapedCredential = $password.Replace('"', '""')
+$escapedDatabase = $database.Replace('"', '""')
 $postgresConnectionString =
-    "Host=$($databaseUri.Host);Port=$port;Database=$database;" +
-    "Username=$username;******;SSL Mode=Require"
+    "Host=$($databaseUri.Host);Port=$port;Database=`"$escapedDatabase`";" +
+    "Username=`"$escapedUsername`";Pwd=`"$escapedCredential`";SSL Mode=Require"
 
 $googleClientSecretSecure = Read-Host "Production Google OAuth client secret" -AsSecureString
 $secretPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($googleClientSecretSecure)
@@ -86,5 +89,6 @@ finally {
 
     $googleClientSecret = $null
     $postgresConnectionString = $null
+    $escapedCredential = $null
     $password = $null
 }

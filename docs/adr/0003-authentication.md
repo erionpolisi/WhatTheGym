@@ -53,10 +53,15 @@ content type. Details and rationale in ADR 0012.
 
 ## Amendment (2026-10-08): scale-to-zero key persistence
 
-Staging and Production keep `minReplicas: 0` for cost control. ASP.NET Core
-Data Protection keys are persisted in a private Azure Blob container and
-protected at rest with an environment-specific Key Vault RSA key. The API's
-user-assigned managed identity is the only application identity granted blob
-data and key cryptography access. Production fails at startup when this
-configuration is absent. Login must be rehearsed across a forced scale-to-zero
-and revision replacement before go-live.
+Staging and Production keep `minReplicas: 0` for cost control. The Bicep
+template declares a private Azure Blob container and environment-specific Key
+Vault RSA key for ASP.NET Core Data Protection. The API's user-assigned managed
+identity is the only application identity granted blob data and key
+cryptography access. Production fails at startup when this configuration is
+absent.
+
+Production has this storage deployed. Staging was deployed before the
+persistence resources were added and remains intentionally tolerant of
+ephemeral keys until its infrastructure is reconciled; replacing its revision
+can invalidate staging sessions. Reconcile staging and rehearse login across a
+forced scale-to-zero and revision replacement before public go-live.

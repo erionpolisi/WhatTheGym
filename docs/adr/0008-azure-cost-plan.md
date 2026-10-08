@@ -58,3 +58,21 @@ month, before any production go-live):
 | DNS zone | — | ~0.4 |
 | Domain (yearly / 12) | — | ~2 |
 | **Total** | | **~3–9** |
+
+## Addendum (2026-10-08): shared Container Apps environment
+
+The Azure for Students subscription currently permits one Container Apps
+environment globally. Staging and Production therefore share
+`wtg-staging-cae` in Germany West Central while retaining separate Container
+Apps, identities, Key Vaults, databases, domains, and revisions. A Consumption
+environment has no dedicated-plan base charge; sharing it does not add a fixed
+compute fee. The isolation tradeoff is accepted until a free quota increase is
+approved.
+
+The environment-level log destination is shared, so all container/platform
+logs enter `wtg-staging-logs` and are separated by Container App name.
+Production Application Insights remains separately provisioned for future
+request/dependency telemetry. The private Standard LRS account used for
+Data Protection contains only small key files and is expected to cost
+cent-level amounts; it must not be removed to save cost because doing so would
+destabilize authentication across scale-to-zero and deployments.

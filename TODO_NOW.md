@@ -1,20 +1,23 @@
 # TODO_NOW.md — Continue Phase 2 (step by step)
 
-Snapshot 2026-09-01 of where Phase 2 stands and exactly what to do next.
+Snapshot 2026-10-08 of where Phase 2 stands and exactly what to do next.
 Companion to TASKS.md Phase 2; delete this file once the exit gate is met.
 
 ## Current state (verified in repo)
 
 | Phase 2 item | State |
 | --- | --- |
-| Bicep templates | ✅ Staging deployed — frontend and API Container Apps (scale-to-zero, 0.25 vCPU/0.5Gi), Key Vault, capped Log Analytics; runtime config is wired as params/env/secrets |
-| Parameters | ✅ Staging images, region, domains, Google client, and admin bootstrap email are configured; secure values are supplied at deploy time |
+| Bicep templates | ✅ Staging and Production deployed — four scale-to-zero Container Apps share `wtg-staging-cae`; identities, Key Vaults, databases, and revisions remain separate |
+| Parameters | ✅ Staging/Production images, region, domains, Google clients, and admin bootstrap email are configured; secure values are supplied at deploy time |
 | CI | ✅ `.github/workflows/ci.yml` builds/tests/scans; successful `main` runs trigger the staging deployment workflow |
-| Deploy workflows | ✅ Staging workflow builds/pushes both images and updates Container Apps through GitHub OIDC; production workflow remains pending |
-| Registry auth in Bicep | ⚠️ No `registries` block — only needed if the ghcr package is private |
+| Deploy workflows | ✅ Staging deployment succeeded for `b74ab3e`; production promotes its recorded digests from a semantic release tag and awaits its first rehearsal |
+| Registry auth in Bicep | ✅ GHCR packages are public; repository Actions access is `Write`; no runtime registry credentials or workflow PAT required |
 | Runbook | ❌ `docs/runbook.md` doesn't exist |
 | ADR 0008 | ✅ Addendum done: ghcr.io instead of ACR + cost table (verify numbers against real billing after the first staging month) |
 | Security hardening | ✅ ADR 0012 shipped: session revalidation, CSRF (X-CSRF header or JSON content type), forwarded headers, audit-token masking, DB-unique reviews — REST clients/scripts must send `X-CSRF: 1` on body-less authenticated writes |
+| Production domains | ⏳ easyname A/TXT/CNAME records, Azure hostname bindings, and managed TLS pending |
+| Production mail | ❌ Resend account, verified domain, API key, and DNS records pending |
+| Production telemetry | ⏳ Container logs active; Application Insights SDK, availability test, and alerts pending |
 
 Flag: Phase 1's exit gate is met except for the Resend account and verified
 sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
@@ -33,18 +36,17 @@ sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
 
 - [x] Activate **Azure for Students**; put credit expiry date in calendar
 - [x] Install/verify `az` CLI, `az login`
-- [x] Create the `wtg-staging` resource group. Create `wtg-prod` only when the
-      application is ready for the production rollout.
+- [x] Create resource groups `wtg-staging` and `wtg-prod`
 - [x] Budget alerts in Cost Management: 1 / 5 / 10 EUR forecast on the subscription
 - [x] Sign up for **Neon** (or Supabase) free tier, EU region → create staging
       database → keep connection string for Step 3
 
 ## Step 2 — Repo changes for ghcr.io + deploy pipeline (main coding work)
 
-- [ ] Fill in the GitHub owner in `parameters.staging.json` /
+- [x] Fill in the GitHub owner in `parameters.staging.json` /
       `parameters.production.json` (`ghcr.io/<your-user>/whatthegym-api:<tag>`)
-- [ ] If ghcr package will be private (recommended): add `registries` block +
-      PAT secret to the Container App in Bicep; if public, no change needed
+- [x] Keep GHCR packages public and grant the repository Actions `Write`
+      access; no `registries` block or workflow PAT is required
 - [x] Set up staging **GitHub OIDC → Azure** federated identity (no static secrets):
       `az ad app create` + service principal + federated credential for
       the GitHub `staging` environment, Contributor on `wtg-staging`
@@ -58,8 +60,8 @@ sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
 
 ## Step 3 — First staging deployment (validates the never-executed Bicep)
 
-- [ ] Deploy (all secure params are required since ADR 0012 — the deployment
-      fails fast instead of booting a silently broken environment):
+- [x] Deploy (database, Google, and analytics secure params are required;
+      Resend remains optional only while the environment is not public):
       ```
       az deployment group create -g wtg-staging -f infrastructure/azure/main.bicep `
         -p '@infrastructure/azure/parameters.staging.json' `
@@ -70,20 +72,32 @@ sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
       ```
       (`googleClientId`, `bootstrapAdminEmail`, `publicBaseUrl` are plain
       values in the parameters file — fill them in first.)
-      Expect iteration: first-run Bicep almost always surfaces small issues
-      (Key Vault name `wtg-staging-kv` must be globally unique; role-assignment
-      propagation timing; SWA region).
-- [ ] Push a first image manually to ghcr.io so the Container App has something
+      First deployment required iteration for Key Vault references, role
+      propagation, region policy, and Container Apps environment mode.
+- [x] Push a first image manually to ghcr.io so the Container App has something
       to pull; verify `/health/live` and `/health/ready` on the outputted `apiUrl`
-- [ ] Verify migrations ran + catalog seeded, no demo data
+- [x] Verify migrations ran + catalog seeded, no demo data
       (`Seed__SeedDemoData=false` is already in the Bicep)
-- [ ] **Validate SWA + Next.js SSR/ISR early** — hybrid support is
-      preview-quality and the app has dynamic routes. Fallback if blocked:
-      frontend as second scale-to-zero container app (decide via ADR)
-- [ ] Once DNS exists: point `api-staging.whatthegym.at` + `staging.whatthegym.at`,
+- [x] Host Next.js as a second Container App after Static Web Apps proved
+      unavailable in the subscription's permitted regions
+- [x] Point `api-staging.whatthegym.at` + `staging.whatthegym.at`,
       add custom domains/managed certs, then test real Google login —
       **login cannot work on the default hostnames** (`SameSite=Lax` needs
       same-site frontend + API, see docs/deployment-azure.md)
+
+## Immediate next steps — finish Production
+
+- [ ] Replace the easyname apex A record with `4.182.7.34`
+- [ ] Add `asuid`, `api`, and `asuid.api` records exactly as documented in
+      `docs/deployment-azure.md`
+- [ ] Bind `whatthegym.at` to `wtg-prod-web` and
+      `api.whatthegym.at` to `wtg-prod-api`; issue managed certificates
+- [ ] Verify Production Google login and bootstrap Admin
+- [ ] Reconcile Staging Bicep so its Data Protection keys are also persistent
+- [ ] Configure Resend and verify its sending-domain DNS before public launch
+- [ ] Add Production Application Insights/OpenTelemetry, sampling, readiness
+      availability test, and email alert
+- [ ] Create the first semantic release tag and rehearse promotion + rollback
 
 ## Step 4 — Rehearse rollback (2.3, while nothing matters)
 
@@ -95,8 +109,9 @@ sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
 ## Step 5 — Monitoring (2.4, ~30 min)
 
 - [ ] App Insights availability test on `/health/ready` + alert rule → your
-      email. Note: the API has no App Insights SDK — availability tests +
-      console logs → Log Analytics are the monitoring story; that is enough
+      email. Add Application Insights/OpenTelemetry to Production for request,
+      dependency, exception, and performance telemetry; shared Container Apps
+      console logs alone are not sufficient for Production observability
 - [ ] Write 3–4 SQL queries (page views/day, reviews/day, top gyms, stuck
       outbox mails) — these go in the runbook
 - [ ] Scale-to-zero caveat (ADR 0012): outbox mails/retention sweeps only run
