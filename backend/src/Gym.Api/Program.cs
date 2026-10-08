@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+using Azure.Identity;
 using Gym.Api.Auth;
 using Gym.Api.Middleware;
 using Gym.Application;
@@ -14,6 +15,7 @@ using Gym.Infrastructure.Persistence;
 using Gym.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +43,40 @@ builder.Services.Configure<SeedOptions>(builder.Configuration.GetSection(SeedOpt
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<SessionService>();
+
+var dataProtectionBlobUri = builder.Configuration["DataProtection:BlobUri"];
+var dataProtectionKeyIdentifier = builder.Configuration["DataProtection:KeyIdentifier"];
+var dataProtectionManagedIdentityClientId = builder.Configuration["DataProtection:ManagedIdentityClientId"];
+var hasAnyDataProtectionSetting =
+    !string.IsNullOrWhiteSpace(dataProtectionBlobUri)
+    || !string.IsNullOrWhiteSpace(dataProtectionKeyIdentifier)
+    || !string.IsNullOrWhiteSpace(dataProtectionManagedIdentityClientId);
+
+if (hasAnyDataProtectionSetting)
+{
+    if (string.IsNullOrWhiteSpace(dataProtectionBlobUri)
+        || string.IsNullOrWhiteSpace(dataProtectionKeyIdentifier)
+        || string.IsNullOrWhiteSpace(dataProtectionManagedIdentityClientId))
+    {
+        throw new InvalidOperationException(
+            "DataProtection:BlobUri, KeyIdentifier, and ManagedIdentityClientId must be configured together.");
+    }
+
+    var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+    {
+        ManagedIdentityClientId = dataProtectionManagedIdentityClientId,
+    });
+
+    builder.Services
+        .AddDataProtection()
+        .SetApplicationName("WhatTheGym")
+        .PersistKeysToAzureBlobStorage(new Uri(dataProtectionBlobUri), credential)
+        .ProtectKeysWithAzureKeyVault(new Uri(dataProtectionKeyIdentifier), credential);
+}
+else if (builder.Environment.IsProduction())
+{
+    throw new InvalidOperationException("Persistent Data Protection is required in Production.");
+}
 
 // MVC + JSON
 builder.Services.AddControllers().AddJsonOptions(options =>
