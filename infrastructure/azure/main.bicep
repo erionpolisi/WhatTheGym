@@ -30,7 +30,7 @@ param externalPostgresConnectionString string = ''
 @description('Allowed CORS origin of the frontend, e.g. https://staging.whatthegym.at')
 param frontendOrigin string
 
-@description('Optional IPv4 CIDR allowed to access both public apps. Empty allows public access.')
+@description('Optional staging-only IPv4 CIDR allowed to access both public apps. Production always remains public.')
 param allowedIngressIpv4Cidr string = ''
 
 @description('Existing Container Apps environment name to reuse. Empty creates an environment for this deployment.')
@@ -67,6 +67,7 @@ var tags = {
 }
 var dataProtectionStorageName = '${environmentName == 'production' ? 'wtgp' : 'wtgs'}${uniqueString(subscription().subscriptionId, resourceGroup().id)}dp'
 var reuseContainerAppsEnvironment = !empty(existingContainerAppsEnvironmentName)
+var applyIngressIpRestriction = environmentName == 'staging' && !empty(allowedIngressIpv4Cidr)
 var containerAppsEnvironmentId = reuseContainerAppsEnvironment
   ? resourceId(
       existingContainerAppsEnvironmentResourceGroup,
@@ -306,9 +307,8 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: true
         targetPort: 8080
         transport: 'http'
-        ipSecurityRestrictions: empty(allowedIngressIpv4Cidr)
-          ? []
-          : [
+        ipSecurityRestrictions: applyIngressIpRestriction
+          ? [
               {
                 name: 'staging-owner'
                 description: 'Current staging owner public IPv4'
@@ -316,6 +316,7 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
                 action: 'Allow'
               }
             ]
+          : []
       }
       secrets: concat(
         [
@@ -420,9 +421,8 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: true
         targetPort: 3000
         transport: 'http'
-        ipSecurityRestrictions: empty(allowedIngressIpv4Cidr)
-          ? []
-          : [
+        ipSecurityRestrictions: applyIngressIpRestriction
+          ? [
               {
                 name: 'staging-owner'
                 description: 'Current staging owner public IPv4'
@@ -430,6 +430,7 @@ resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
                 action: 'Allow'
               }
             ]
+          : []
       }
     }
     template: {

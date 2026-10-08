@@ -81,6 +81,13 @@ the database connection, Google secret, analytics secret, and optional Resend
 key in the environment-specific Key Vault; the API accesses them through its
 managed identity.
 
+Before deploying, run the read-only preflight check for the target environment:
+
+```powershell
+infrastructure/azure/test-prerequisites.ps1 -Environment staging
+infrastructure/azure/test-prerequisites.ps1 -Environment production
+```
+
 ## Rollout steps (when going live)
 
 1. Create resource groups `wtg-staging` / `wtg-prod` (names match TASKS and
