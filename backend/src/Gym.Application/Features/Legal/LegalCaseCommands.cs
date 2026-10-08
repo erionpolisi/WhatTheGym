@@ -53,9 +53,19 @@ public sealed class ReportReviewCommandValidator : AbstractValidator<ReportRevie
 {
     public ReportReviewCommandValidator()
     {
-        RuleFor(c => c.ReporterName).NotEmpty().MaximumLength(120).WithMessage("Name ist erforderlich (max. 120 Zeichen).");
-        RuleFor(c => c.ReporterEmail).NotEmpty().EmailAddress().MaximumLength(254).WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.");
-        RuleFor(c => c.Description).NotEmpty().MinimumLength(20).MaximumLength(LegalCase.MaxDescriptionLength)
+        // WithMessage only applies to the preceding rule component; set it per component
+        // so messages stay German regardless of the host culture (CI/production run non-German).
+        RuleFor(c => c.ReporterName)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 120 Zeichen).")
+            .MaximumLength(120).WithMessage("Name ist erforderlich (max. 120 Zeichen).");
+        RuleFor(c => c.ReporterEmail)
+            .NotEmpty().WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.")
+            .EmailAddress().WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.")
+            .MaximumLength(254).WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.");
+        RuleFor(c => c.Description)
+            .NotEmpty().WithMessage($"Die Begründung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.")
+            .MinimumLength(20).WithMessage($"Die Begründung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.")
+            .MaximumLength(LegalCase.MaxDescriptionLength)
             .WithMessage($"Die Begründung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.");
     }
 }

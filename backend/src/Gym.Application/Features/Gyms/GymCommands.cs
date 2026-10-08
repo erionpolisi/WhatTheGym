@@ -42,10 +42,18 @@ public sealed class CreateGymCommandValidator : AbstractValidator<CreateGymComma
 {
     public CreateGymCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
+        // WithMessage only applies to the preceding rule component; set it per component
+        // so messages stay German regardless of the host culture (CI/production run non-German).
+        RuleFor(c => c.Name)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 200 Zeichen).")
+            .MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
         RuleFor(c => c.District).InclusiveBetween(1, 23).WithMessage("Der Bezirk muss zwischen 1 und 23 liegen.");
-        RuleFor(c => c.AddressLine).NotEmpty().MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
-        RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
+        RuleFor(c => c.AddressLine)
+            .NotEmpty().WithMessage("Adresse ist erforderlich (max. 300 Zeichen).")
+            .MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
+        RuleFor(c => c.PostalCode)
+            .NotEmpty().WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).")
+            .Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
         RuleFor(c => c.Phone).MaximumLength(40).WithMessage("Die Telefonnummer darf höchstens 40 Zeichen lang sein.");
@@ -60,10 +68,16 @@ public sealed class UpdateGymCommandValidator : AbstractValidator<UpdateGymComma
 {
     public UpdateGymCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
+        RuleFor(c => c.Name)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 200 Zeichen).")
+            .MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
         RuleFor(c => c.District).InclusiveBetween(1, 23).WithMessage("Der Bezirk muss zwischen 1 und 23 liegen.");
-        RuleFor(c => c.AddressLine).NotEmpty().MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
-        RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
+        RuleFor(c => c.AddressLine)
+            .NotEmpty().WithMessage("Adresse ist erforderlich (max. 300 Zeichen).")
+            .MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
+        RuleFor(c => c.PostalCode)
+            .NotEmpty().WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).")
+            .Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(CreateGymCommandValidator.BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
         RuleFor(c => c.Phone).MaximumLength(40).WithMessage("Die Telefonnummer darf höchstens 40 Zeichen lang sein.");
