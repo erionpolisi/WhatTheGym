@@ -48,8 +48,8 @@ public sealed class CreateGymCommandValidator : AbstractValidator<CreateGymComma
         RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
-        RuleFor(c => c.Phone).MaximumLength(40);
-        RuleFor(c => c.Description).MaximumLength(2000);
+        RuleFor(c => c.Phone).MaximumLength(40).WithMessage("Die Telefonnummer darf höchstens 40 Zeichen lang sein.");
+        RuleFor(c => c.Description).MaximumLength(2000).WithMessage("Die Beschreibung darf höchstens 2000 Zeichen lang sein.");
     }
 
     internal static bool BeAbsoluteHttpUrl(string? url) =>
@@ -66,8 +66,8 @@ public sealed class UpdateGymCommandValidator : AbstractValidator<UpdateGymComma
         RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(CreateGymCommandValidator.BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
-        RuleFor(c => c.Phone).MaximumLength(40);
-        RuleFor(c => c.Description).MaximumLength(2000);
+        RuleFor(c => c.Phone).MaximumLength(40).WithMessage("Die Telefonnummer darf höchstens 40 Zeichen lang sein.");
+        RuleFor(c => c.Description).MaximumLength(2000).WithMessage("Die Beschreibung darf höchstens 2000 Zeichen lang sein.");
     }
 }
 
