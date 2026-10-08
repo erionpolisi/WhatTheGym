@@ -142,7 +142,7 @@ public class UserTests
 
         user.Email.Should().NotContain("max@");
         user.GoogleSubject.Should().StartWith("deleted:");
-        user.DisplayName.Should().Be("Geloeschtes Konto");
+        user.DisplayName.Should().Be("Gelöschtes Konto");
         user.EmailVerified.Should().BeFalse();
         user.Status.Should().Be(UserStatus.Deleted);
         user.IsVerifiedGoogleAccount.Should().BeFalse();

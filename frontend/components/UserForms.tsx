@@ -136,7 +136,22 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
   const [requestedReturnUrl, setRequestedReturnUrl] = useState("/");
 
   useEffect(() => {
-    setRequestedReturnUrl(new URLSearchParams(window.location.search).get("returnUrl") ?? window.location.href);
+    const rawReturnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+    if (!rawReturnUrl) {
+      setRequestedReturnUrl("/");
+      return;
+    }
+
+    try {
+      const parsed = new URL(rawReturnUrl, window.location.origin);
+      if (parsed.origin === window.location.origin && parsed.pathname.startsWith("/")) {
+        setRequestedReturnUrl(`${parsed.pathname}${parsed.search}${parsed.hash}`);
+      } else {
+        setRequestedReturnUrl("/");
+      }
+    } catch {
+      setRequestedReturnUrl("/");
+    }
   }, []);
 
   if (me) {

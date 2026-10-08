@@ -19,6 +19,14 @@ COPY src/ src/
 RUN dotnet publish src/Gym.Api/Gym.Api.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+# Apply Debian security patches ahead of the base-image rebuild cadence so the
+# blocking Trivy high/critical gate stays green for already-fixed OS CVEs.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080

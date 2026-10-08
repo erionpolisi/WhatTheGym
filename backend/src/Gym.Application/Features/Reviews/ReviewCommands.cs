@@ -31,7 +31,7 @@ public sealed class CreateReviewCommandValidator : AbstractValidator<CreateRevie
 {
     public CreateReviewCommandValidator()
     {
-        RuleFor(c => c.GymSlug).NotEmpty();
+        RuleFor(c => c.GymSlug).NotEmpty().WithMessage("Das Studio ist erforderlich.");
         RuleFor(c => c.Text).MaximumLength(Review.MaxTextLength)
             .WithMessage($"Der Text darf hoechstens {Review.MaxTextLength} Zeichen lang sein.");
         RuleFor(c => c.Ratings).Must(HaveAtLeastOneRating)

@@ -118,7 +118,7 @@ public sealed class UserAndTokenEdgeTests
 
         user.GoogleSubject.Should().Be($"deleted:{user.Id:N}");
         user.Email.Should().Be($"deleted-{user.Id:N}@anonymized.invalid");
-        user.DisplayName.Should().Be("Geloeschtes Konto");
+        user.DisplayName.Should().Be("Gelöschtes Konto");
         user.Status.Should().Be(UserStatus.Deleted);
         user.DeletedAtUtc.Should().Be(deletedAt);
         user.UpdatedAtUtc.Should().Be(deletedAt);
