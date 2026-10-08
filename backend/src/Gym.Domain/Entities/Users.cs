@@ -81,7 +81,7 @@ public sealed class User : Entity
         GoogleSubject = $"deleted:{Id:N}";
         Email = $"deleted-{Id:N}@anonymized.invalid";
         EmailVerified = false;
-        DisplayName = "Geloeschtes Konto";
+        DisplayName = "Gelöschtes Konto";
         Status = UserStatus.Deleted;
         DeletedAtUtc = utcNow;
         UpdatedAtUtc = utcNow;

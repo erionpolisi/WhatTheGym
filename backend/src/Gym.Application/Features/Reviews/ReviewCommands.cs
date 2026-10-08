@@ -31,15 +31,15 @@ public sealed class CreateReviewCommandValidator : AbstractValidator<CreateRevie
 {
     public CreateReviewCommandValidator()
     {
-        RuleFor(c => c.GymSlug).NotEmpty();
+        RuleFor(c => c.GymSlug).NotEmpty().WithMessage("Das Studio ist erforderlich.");
         RuleFor(c => c.Text).MaximumLength(Review.MaxTextLength)
             .WithMessage($"Der Text darf hoechstens {Review.MaxTextLength} Zeichen lang sein.");
         RuleFor(c => c.Ratings).Must(HaveAtLeastOneRating)
             .WithMessage("Mindestens eine Kategorie muss mit 1 bis 5 bewertet werden.");
         RuleFor(c => c.Ratings).Must(AllRatingsInRange)
-            .WithMessage("Alle Bewertungen muessen zwischen 1 und 5 liegen.");
+            .WithMessage("Alle Bewertungen müssen zwischen 1 und 5 liegen.");
         RuleFor(c => c.Text).Must(NotContainTooManyLinks)
-            .WithMessage("Der Text enthaelt zu viele Links.");
+            .WithMessage("Der Text enthält zu viele Links.");
     }
 
     internal static bool HaveAtLeastOneRating(RatingsDto ratings) => ratings.ToDomain().HasAnyRating;
@@ -73,9 +73,9 @@ public sealed class UpdateOwnReviewCommandValidator : AbstractValidator<UpdateOw
         RuleFor(c => c.Ratings).Must(CreateReviewCommandValidator.HaveAtLeastOneRating)
             .WithMessage("Mindestens eine Kategorie muss mit 1 bis 5 bewertet werden.");
         RuleFor(c => c.Ratings).Must(CreateReviewCommandValidator.AllRatingsInRange)
-            .WithMessage("Alle Bewertungen muessen zwischen 1 und 5 liegen.");
+            .WithMessage("Alle Bewertungen müssen zwischen 1 und 5 liegen.");
         RuleFor(c => c.Text).Must(CreateReviewCommandValidator.NotContainTooManyLinks)
-            .WithMessage("Der Text enthaelt zu viele Links.");
+            .WithMessage("Der Text enthält zu viele Links.");
     }
 }
 
@@ -105,7 +105,7 @@ public sealed class CreateReviewCommandHandler(
         if (!user.EmailVerified)
         {
             return Result.Failure<OwnReviewDto>(Error.Forbidden(
-                "review.unverified", "Nur ueber Google verifizierte Konten koennen Bewertungen schreiben."));
+                "review.unverified", "Nur über Google verifizierte Konten können Bewertungen schreiben."));
         }
 
         var gym = await gyms.GetBySlugAsync(command.GymSlug, cancellationToken);

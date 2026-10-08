@@ -86,7 +86,7 @@ public sealed class DeleteChainCommandHandler(
 
         if (await chains.CountGymsAsync(chain.Id, cancellationToken) > 0)
         {
-            return Result.Failure(Error.Conflict("chain.inUse", "Die Kette hat noch zugeordnete Studios und kann nicht geloescht werden."));
+            return Result.Failure(Error.Conflict("chain.inUse", "Die Kette hat noch zugeordnete Studios und kann nicht gelöscht werden."));
         }
 
         chains.Remove(chain);

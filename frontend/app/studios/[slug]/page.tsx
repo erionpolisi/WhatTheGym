@@ -10,6 +10,7 @@ import {
 } from "@/lib/api";
 import { ScoreBreakdown } from "@/components/Scores";
 import { ReportForm, ReviewForm } from "@/components/ReviewForms";
+import { TrackedExternalLink } from "@/components/Analytics";
 
 export const revalidate = 60;
 
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   }
   return {
     title: `${gym.name} - Bewertungen`,
-    description: `Bewertungen fuer ${gym.name} im ${gym.district}. Bezirk Wien: Mitgliedschaft, Geraete, Sauberkeit und mehr.`,
+    description: `Bewertungen für ${gym.name} im ${gym.district}. Bezirk Wien: Mitgliedschaft, Geräte, Sauberkeit und mehr.`,
     alternates: { canonical: `${SITE_URL}/studios/${gym.slug}` },
   };
 }
@@ -75,9 +76,14 @@ export default async function GymDetailPage({ params }: { params: { slug: string
       </p>
       {gym.website ? (
         <p>
-          <a href={gym.website} rel="noopener noreferrer nofollow" target="_blank">
+          <TrackedExternalLink
+            href={gym.website}
+            gymSlug={gym.slug}
+            rel="noopener noreferrer nofollow"
+            target="_blank"
+          >
             Offizielle Website
-          </a>
+          </TrackedExternalLink>
           {gym.phone ? <span className="muted"> - {gym.phone}</span> : null}
         </p>
       ) : null}
@@ -101,7 +107,7 @@ export default async function GymDetailPage({ params }: { params: { slug: string
 
       {gym.openingHours.length > 0 ? (
         <>
-          <h2>Oeffnungszeiten (offizielle Angaben)</h2>
+          <h2>Öffnungszeiten (offizielle Angaben)</h2>
           <ul>
             {gym.openingHours.map((h) => (
               <li key={h.isoDayOfWeek}>
@@ -114,16 +120,16 @@ export default async function GymDetailPage({ params }: { params: { slug: string
 
       <h2>Bewertungen ({reviews?.totalCount ?? 0})</h2>
       <p className="muted">
-        Bewertungen stammen von angemeldeten Google-Konten. Ein tatsaechlicher Besuch des Studios wird nicht
-        ueberprueft.
+        Bewertungen stammen von angemeldeten Google-Konten. Ein tatsächlicher Besuch des Studios wird nicht
+        überprüft.
       </p>
       {(reviews?.items ?? []).map((review) => (
         <div className="card" key={review.id}>
           <p>
             <strong>{review.author.displayName}</strong>
             {review.author.verifiedViaGoogle ? (
-              <span className="badge" title="Google-Konto bestaetigt - kein Nachweis eines Studiobesuchs">
-                Verifiziert ueber Google
+              <span className="badge" title="Google-Konto bestätigt - kein Nachweis eines Studiobesuchs">
+                Verifiziert über Google
               </span>
             ) : null}
             <span className="muted"> - {new Date(review.createdAtUtc).toLocaleDateString("de-AT")}</span>
@@ -143,8 +149,8 @@ export default async function GymDetailPage({ params }: { params: { slug: string
 
       <h2>Eigene Bewertung schreiben</h2>
       <p className="muted">
-        Dafuer ist eine Anmeldung mit Google notwendig. Konten mit bestaetigter E-Mail-Adresse erhalten den Hinweis
-        &quot;Verifiziert ueber Google&quot;; das ist kein Nachweis einer Mitgliedschaft.
+        Dafür ist eine Anmeldung mit Google notwendig. Konten mit bestätigter E-Mail-Adresse erhalten den Hinweis
+        &quot;Verifiziert über Google&quot;; das ist kein Nachweis einer Mitgliedschaft.
       </p>
       <ReviewForm gymSlug={gym.slug} />
     </div>

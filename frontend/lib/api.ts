@@ -6,6 +6,9 @@ export const API_BASE =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+export const SERVER_API_BASE =
+  process.env.API_BASE_URL ?? API_BASE;
+
 // Cookie-authenticated state-changing requests must carry this header (CSRF defense in depth).
 export const CSRF_HEADER = { "X-CSRF": "1" } as const;
 
@@ -111,7 +114,7 @@ export interface LegalDocument {
 /** Server-side GET with incremental revalidation; returns null on 404 or when the API is unreachable (e.g. during build). */
 export async function apiGet<T>(path: string, revalidateSeconds = 60): Promise<T | null> {
   try {
-    const response = await fetch(`${API_BASE}${path}`, {
+    const response = await fetch(`${SERVER_API_BASE}${path}`, {
       next: { revalidate: revalidateSeconds },
     });
     if (!response.ok) {
@@ -128,17 +131,17 @@ export const membershipCategoryLabels: Record<string, string> = {
   priceValue: "Preis-Leistung",
   contractTerms: "Vertragsbedingungen",
   billing: "Abrechnung",
-  cancellationExperience: "Kuendigungserfahrung",
+  cancellationExperience: "Kündigungserfahrung",
 };
 
 export const studioCategoryLabels: Record<string, string> = {
-  equipment: "Geraete",
+  equipment: "Geräte",
   cleanliness: "Sauberkeit",
   staff: "Personal",
   crowding: "Auslastung",
   changingRoom: "Umkleiden",
   showers: "Duschen",
-  atmosphere: "Atmosphaere",
+  atmosphere: "Atmosphäre",
 };
 
 export const categoryLabels: Record<string, string> = {

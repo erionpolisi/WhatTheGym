@@ -24,7 +24,7 @@ public sealed class RecordAnalyticsEventCommandHandler(
 
         if (string.IsNullOrWhiteSpace(command.SessionId) || command.SessionId.Length > 128)
         {
-            return Result.Failure(Error.Validation("analytics.session", "Ungueltige Session-Kennung."));
+            return Result.Failure(Error.Validation("analytics.session", "Ungültige Session-Kennung."));
         }
 
         // Strip query strings and cap length so no free-form data can be smuggled in.

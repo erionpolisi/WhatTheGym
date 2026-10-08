@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 // Self-hosted variable fonts (no external requests at build or runtime).
 import "@fontsource-variable/inter";
@@ -10,11 +11,17 @@ import { PageViewTracker } from "@/components/Analytics";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "WhatTheGym - Fitnessstudio-Bewertungen fuer Wien",
+    default: "WhatTheGym - Fitnessstudio-Bewertungen für Wien",
     template: "%s | WhatTheGym",
   },
   description:
     "Finde Fitnessstudios in Wien und vergleiche echte, verifizierte Bewertungen zu Mitgliedschaft und Studio.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
+    shortcut: "/icon.png",
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },
   openGraph: {
     siteName: "WhatTheGym",
     locale: "de_AT",
@@ -32,7 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="site">
           <div className="container">
             <Link href="/" className="brand">
-              WhatThe<span className="brand-mark">Gym</span>
+              <span>
+                WhatThe<span className="brand-mark">Gym</span>
+              </span>
+              <Image src="/brand-icon.png" alt="" width={32} height={32} priority />
             </Link>
             <nav className="main" aria-label="Hauptnavigation">
               <Link href="/studios">Studios</Link>
@@ -50,9 +60,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/rechtliches/impressum">Impressum</Link>
               <Link href="/rechtliches/datenschutz">Datenschutz</Link>
               <Link href="/rechtliches/nutzungsbedingungen">Nutzungsbedingungen</Link>
-              <Link href="/transparenz">Transparenzbericht</Link>
             </nav>
-            <div>WhatTheGym - ehrliche Bewertungen fuer Fitnessstudios in Wien.</div>
+            <div>WhatTheGym - ehrliche Bewertungen für Fitnessstudios in Wien.</div>
           </div>
         </footer>
         <PageViewTracker />

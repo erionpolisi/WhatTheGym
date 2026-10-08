@@ -54,6 +54,7 @@ public sealed class HardeningTests(WtgApiFactory factory)
     [InlineData("review_created")]
     [InlineData("report_submitted")]
     [InlineData("contact_submitted")]
+    [InlineData("external_gym_website_click")]
     public async Task Analytics_accepts_every_allowlisted_event_type(string eventType)
     {
         var response = await factory.CreateClient().PostAsJsonAsync("/api/v1/analytics/events", new
@@ -165,7 +166,7 @@ public sealed class HardeningTests(WtgApiFactory factory)
         var document = await client.GetJsonAsync($"/api/v1/legal/documents/{type}");
         var versions = await client.GetJsonAsync($"/api/v1/legal/documents/{type}/versions");
 
-        document["contentMarkdown"]!.GetValue<string>().Should().Contain("ENTWURF - anwaltlich pruefen lassen");
+        document["contentMarkdown"]!.GetValue<string>().Should().Contain("ENTWURF - anwaltlich prüfen lassen");
         document["isPublished"]!.GetValue<bool>().Should().BeTrue();
         versions.AsArray().Should().Contain(v => v!["version"]!.GetValue<int>() == document["version"]!.GetValue<int>());
     }

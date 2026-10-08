@@ -28,7 +28,7 @@ export function ContactForm({ gymSlug }: { gymSlug?: string }) {
   }
 
   if (done) {
-    return <p className="success">Danke! Ihre Anfrage ist eingegangen. Sie erhalten eine Bestaetigung per E-Mail.</p>;
+    return <p className="success">Danke! Ihre Anfrage ist eingegangen. Sie erhalten eine Bestätigung per E-Mail.</p>;
   }
 
   return (
@@ -130,6 +130,26 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
   const [devEmail, setDevEmail] = useState("");
   const [devName, setDevName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [requestedReturnUrl, setRequestedReturnUrl] = useState("/");
+
+  useEffect(() => {
+    const rawReturnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+    if (!rawReturnUrl) {
+      setRequestedReturnUrl("/");
+      return;
+    }
+
+    try {
+      const parsed = new URL(rawReturnUrl, window.location.origin);
+      if (parsed.origin === window.location.origin && parsed.pathname.startsWith("/")) {
+        setRequestedReturnUrl(`${parsed.pathname}${parsed.search}${parsed.hash}`);
+      } else {
+        setRequestedReturnUrl("/");
+      }
+    } catch {
+      setRequestedReturnUrl("/");
+    }
+  }, []);
 
   if (me) {
     return (
@@ -137,8 +157,8 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
         <p>
           Angemeldet als <strong>{me.displayName}</strong> ({me.email}) - Rolle: {me.role}
           {me.emailVerified ? (
-            <span className="badge" title="Google-Konto bestaetigt - kein Nachweis eines Studiobesuchs">
-              Verifiziert ueber Google
+            <span className="badge" title="Google-Konto bestätigt - kein Nachweis eines Studiobesuchs">
+              Verifiziert über Google
             </span>
           ) : null}
         </p>
@@ -170,16 +190,20 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
       body: JSON.stringify({ email: devEmail, displayName: devName || devEmail }),
     });
     if (response.ok) {
-      reload();
+      if (requestedReturnUrl !== "/") {
+        window.location.assign(requestedReturnUrl);
+      } else {
+        reload();
+      }
       return;
     }
-    setError("Dev-Login ist in dieser Umgebung nicht verfuegbar.");
+    setError("Dev-Login ist in dieser Umgebung nicht verfügbar.");
   }
 
   return (
     <div className="card">
       <p>
-        <a href={`${API_BASE}/api/v1/auth/google/start?returnUrl=${encodeURIComponent(typeof window === "undefined" ? "/" : window.location.href)}`}>
+        <a href={`${API_BASE}/api/v1/auth/google/start?returnUrl=${encodeURIComponent(requestedReturnUrl)}`}>
           <button type="button">Mit Google anmelden</button>
         </a>
       </p>

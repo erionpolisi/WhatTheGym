@@ -16,14 +16,14 @@ docker compose up --build
 ```
 
 - API + Swagger (admin interface): http://localhost:7001/swagger
+- Website: http://localhost:3000
 - Health: http://localhost:7001/health/live and /health/ready
 - Optional pgAdmin: `docker compose --profile tools up` → http://localhost:5050
 
-Migrations apply automatically and the official Vienna catalogue (~50 studios),
-legal document drafts, and demo reviews/cases are seeded (demo data only in the
-Development environment — never staging/production).
+Migrations apply automatically and seed the official Vienna catalogue
+(~50 studios) and legal document drafts. Demo reviews are disabled by default.
 
-Frontend:
+For frontend-only development with hot reload:
 
 ```bash
 cd frontend

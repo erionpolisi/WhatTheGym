@@ -42,14 +42,22 @@ public sealed class CreateGymCommandValidator : AbstractValidator<CreateGymComma
 {
     public CreateGymCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
+        // WithMessage only applies to the preceding rule component; set it per component
+        // so messages stay German regardless of the host culture (CI/production run non-German).
+        RuleFor(c => c.Name)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 200 Zeichen).")
+            .MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
         RuleFor(c => c.District).InclusiveBetween(1, 23).WithMessage("Der Bezirk muss zwischen 1 und 23 liegen.");
-        RuleFor(c => c.AddressLine).NotEmpty().MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
-        RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
+        RuleFor(c => c.AddressLine)
+            .NotEmpty().WithMessage("Adresse ist erforderlich (max. 300 Zeichen).")
+            .MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
+        RuleFor(c => c.PostalCode)
+            .NotEmpty().WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).")
+            .Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
-        RuleFor(c => c.Phone).MaximumLength(40);
-        RuleFor(c => c.Description).MaximumLength(2000);
+        RuleFor(c => c.Phone).MaximumLength(40).WithMessage("Die Telefonnummer darf höchstens 40 Zeichen lang sein.");
+        RuleFor(c => c.Description).MaximumLength(2000).WithMessage("Die Beschreibung darf höchstens 2000 Zeichen lang sein.");
     }
 
     internal static bool BeAbsoluteHttpUrl(string? url) =>
@@ -60,14 +68,20 @@ public sealed class UpdateGymCommandValidator : AbstractValidator<UpdateGymComma
 {
     public UpdateGymCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
+        RuleFor(c => c.Name)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 200 Zeichen).")
+            .MaximumLength(200).WithMessage("Name ist erforderlich (max. 200 Zeichen).");
         RuleFor(c => c.District).InclusiveBetween(1, 23).WithMessage("Der Bezirk muss zwischen 1 und 23 liegen.");
-        RuleFor(c => c.AddressLine).NotEmpty().MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
-        RuleFor(c => c.PostalCode).NotEmpty().Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
+        RuleFor(c => c.AddressLine)
+            .NotEmpty().WithMessage("Adresse ist erforderlich (max. 300 Zeichen).")
+            .MaximumLength(300).WithMessage("Adresse ist erforderlich (max. 300 Zeichen).");
+        RuleFor(c => c.PostalCode)
+            .NotEmpty().WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).")
+            .Matches("^1[0-9]{3}$").WithMessage("Die Postleitzahl muss eine Wiener PLZ sein (1xxx).");
         RuleFor(c => c.Website).Must(CreateGymCommandValidator.BeAbsoluteHttpUrl).When(c => !string.IsNullOrWhiteSpace(c.Website))
             .WithMessage("Die Website muss eine absolute http(s)-URL sein.");
-        RuleFor(c => c.Phone).MaximumLength(40);
-        RuleFor(c => c.Description).MaximumLength(2000);
+        RuleFor(c => c.Phone).MaximumLength(40).WithMessage("Die Telefonnummer darf höchstens 40 Zeichen lang sein.");
+        RuleFor(c => c.Description).MaximumLength(2000).WithMessage("Die Beschreibung darf höchstens 2000 Zeichen lang sein.");
     }
 }
 
@@ -90,7 +104,7 @@ public sealed class CreateGymCommandHandler(
 
         if (!Enum.TryParse<GymStatus>(command.Status, ignoreCase: true, out var status))
         {
-            return Result.Failure<Guid>(Error.Validation("gym.status", "Ungueltiger Status."));
+            return Result.Failure<Guid>(Error.Validation("gym.status", "Ungültiger Status."));
         }
 
         if (command.ChainId is Guid chainId && await chains.GetByIdAsync(chainId, cancellationToken) is null)
@@ -148,7 +162,7 @@ public sealed class CreateGymCommandHandler(
         {
             if (!TimeOnly.TryParse(input.OpensAt, out var opens) || !TimeOnly.TryParse(input.ClosesAt, out var closes))
             {
-                return Result.Failure(Error.Validation("openingHours.format", "Oeffnungszeiten muessen im Format HH:mm angegeben werden."));
+                return Result.Failure(Error.Validation("openingHours.format", "Öffnungszeiten müssen im Format HH:mm angegeben werden."));
             }
 
             var hourResult = GymOpeningHour.Create(input.IsoDayOfWeek, opens, closes);
@@ -223,7 +237,7 @@ public sealed class ChangeGymStatusCommandHandler(
     {
         if (!Enum.TryParse<GymStatus>(command.Status, ignoreCase: true, out var status))
         {
-            return Result.Failure(Error.Validation("gym.status", "Ungueltiger Status."));
+            return Result.Failure(Error.Validation("gym.status", "Ungültiger Status."));
         }
 
         var gym = await gyms.GetByIdAsync(command.GymId, cancellationToken);

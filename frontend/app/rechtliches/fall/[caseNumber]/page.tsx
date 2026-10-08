@@ -17,14 +17,14 @@ interface CaseStatus {
 
 const statusLabels: Record<string, string> = {
   Received: "Eingegangen",
-  UnderReview: "In Pruefung",
+  UnderReview: "In Prüfung",
   Decided: "Entschieden",
   Closed: "Abgeschlossen",
 };
 
 const decisionLabels: Record<string, string> = {
   KeepOnline: "Die Bewertung bleibt online.",
-  FullyRemoved: "Die Bewertung wurde vollstaendig entfernt.",
+  FullyRemoved: "Die Bewertung wurde vollständig entfernt.",
 };
 
 export default async function CaseStatusPage({
@@ -38,7 +38,7 @@ export default async function CaseStatusPage({
     return (
       <div>
         <h1>Fallstatus</h1>
-        <p className="error">Der vertrauliche Zugriffslink ist unvollstaendig (Token fehlt).</p>
+        <p className="error">Der vertrauliche Zugriffslink ist unvollständig (Token fehlt).</p>
       </div>
     );
   }
@@ -52,7 +52,7 @@ export default async function CaseStatusPage({
     return (
       <div>
         <h1>Fallstatus</h1>
-        <p className="error">Der Fall wurde nicht gefunden oder der Link ist ungueltig.</p>
+        <p className="error">Der Fall wurde nicht gefunden oder der Link ist ungültig.</p>
       </div>
     );
   }
@@ -72,13 +72,13 @@ export default async function CaseStatusPage({
             <p>{decisionLabels[status.decision] ?? status.decision}</p>
             {status.appealDeadlineUtc ? (
               <p className="muted">
-                Einspruch moeglich bis {new Date(status.appealDeadlineUtc).toLocaleDateString("de-AT")}.
+                Einspruch möglich bis {new Date(status.appealDeadlineUtc).toLocaleDateString("de-AT")}.
               </p>
             ) : null}
           </>
         ) : (
           <p className="muted">
-            Die gemeldete Bewertung bleibt waehrend der Pruefung grundsaetzlich online, sofern kein offensichtlich
+            Die gemeldete Bewertung bleibt während der Prüfung grundsätzlich online, sofern kein offensichtlich
             rechtswidriger Inhalt vorliegt.
           </p>
         )}

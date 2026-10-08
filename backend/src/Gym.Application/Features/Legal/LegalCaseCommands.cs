@@ -53,10 +53,20 @@ public sealed class ReportReviewCommandValidator : AbstractValidator<ReportRevie
 {
     public ReportReviewCommandValidator()
     {
-        RuleFor(c => c.ReporterName).NotEmpty().MaximumLength(120).WithMessage("Name ist erforderlich (max. 120 Zeichen).");
-        RuleFor(c => c.ReporterEmail).NotEmpty().EmailAddress().MaximumLength(254).WithMessage("Eine gueltige E-Mail-Adresse ist erforderlich.");
-        RuleFor(c => c.Description).NotEmpty().MinimumLength(20).MaximumLength(LegalCase.MaxDescriptionLength)
-            .WithMessage($"Die Begruendung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.");
+        // WithMessage only applies to the preceding rule component; set it per component
+        // so messages stay German regardless of the host culture (CI/production run non-German).
+        RuleFor(c => c.ReporterName)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 120 Zeichen).")
+            .MaximumLength(120).WithMessage("Name ist erforderlich (max. 120 Zeichen).");
+        RuleFor(c => c.ReporterEmail)
+            .NotEmpty().WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.")
+            .EmailAddress().WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.")
+            .MaximumLength(254).WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.");
+        RuleFor(c => c.Description)
+            .NotEmpty().WithMessage($"Die Begründung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.")
+            .MinimumLength(20).WithMessage($"Die Begründung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.")
+            .MaximumLength(LegalCase.MaxDescriptionLength)
+            .WithMessage($"Die Begründung muss zwischen 20 und {LegalCase.MaxDescriptionLength} Zeichen lang sein.");
     }
 }
 
@@ -80,7 +90,7 @@ public sealed class ReportReviewCommandHandler(
 
         if (!Enum.TryParse<LegalCaseCategory>(command.Category, ignoreCase: true, out var category))
         {
-            return Result.Failure<ReportReviewResultDto>(Error.Validation("legalCase.category", "Ungueltige Meldekategorie."));
+            return Result.Failure<ReportReviewResultDto>(Error.Validation("legalCase.category", "Ungültige Meldekategorie."));
         }
 
         var review = await reviews.GetByIdAsync(command.ReviewId, cancellationToken);
@@ -155,7 +165,7 @@ public sealed class ClassifyCaseCommandHandler(
     {
         if (!Enum.TryParse<LegalCaseClassification>(command.Classification, ignoreCase: true, out var classification))
         {
-            return Result.Failure(Error.Validation("legalCase.classification", "Ungueltige Klassifizierung."));
+            return Result.Failure(Error.Validation("legalCase.classification", "Ungültige Klassifizierung."));
         }
 
         var legalCase = await cases.GetByIdAsync(command.CaseId, cancellationToken);
@@ -276,7 +286,7 @@ public sealed class DecideCaseCommandHandler(
     {
         if (!Enum.TryParse<LegalDecision>(command.Decision, ignoreCase: true, out var decision))
         {
-            return Result.Failure(Error.Validation("legalCase.decision", "Ungueltige Entscheidung (KeepOnline oder FullyRemoved)."));
+            return Result.Failure(Error.Validation("legalCase.decision", "Ungültige Entscheidung (KeepOnline oder FullyRemoved)."));
         }
 
         var legalCase = await cases.GetByIdAsync(command.CaseId, cancellationToken);
@@ -395,7 +405,7 @@ public sealed class SubmitAppealCommandHandler(
         if (legalCase is null || legalCase.AppealTokenHash is null
             || !string.Equals(legalCase.AppealTokenHash, tokens.Hash(command.Token), StringComparison.Ordinal))
         {
-            return Result.Failure(Error.NotFound("appeal.invalid", "Der Fall wurde nicht gefunden oder der Link ist ungueltig."));
+            return Result.Failure(Error.NotFound("appeal.invalid", "Der Fall wurde nicht gefunden oder der Link ist ungültig."));
         }
 
         if (!legalCase.IsAppealOpen(clock.UtcNow))
@@ -457,7 +467,7 @@ public sealed class DecideAppealCommandHandler(
     {
         if (!Enum.TryParse<AppealOutcome>(command.Outcome, ignoreCase: true, out var outcome))
         {
-            return Result.Failure(Error.Validation("appeal.outcome", "Ungueltiges Ergebnis (DecisionUpheld oder DecisionReversed)."));
+            return Result.Failure(Error.Validation("appeal.outcome", "Ungültiges Ergebnis (DecisionUpheld oder DecisionReversed)."));
         }
 
         var appeal = await cases.GetAppealByIdAsync(command.AppealId, cancellationToken);
@@ -531,7 +541,7 @@ public sealed class ApplyLegalHoldCommandHandler(
     {
         if (string.IsNullOrWhiteSpace(command.Reason))
         {
-            return Result.Failure<Guid>(Error.Validation("hold.reason", "Eine Begruendung ist erforderlich."));
+            return Result.Failure<Guid>(Error.Validation("hold.reason", "Eine Begründung ist erforderlich."));
         }
 
         if (command.LegalCaseId is null && command.ReviewId is null && command.UserId is null)

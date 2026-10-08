@@ -51,7 +51,7 @@ export default function AccountPage() {
   }
 
   async function deleteAccount() {
-    if (!window.confirm("Konto endgueltig loeschen? Deine Bewertungen werden entfernt und dein Konto anonymisiert.")) {
+    if (!window.confirm("Konto endgültig löschen? Deine Bewertungen werden entfernt und dein Konto anonymisiert.")) {
       return;
     }
     const response = await fetch(`${API_BASE}/api/v1/me`, {
@@ -60,15 +60,15 @@ export default function AccountPage() {
       headers: CSRF_HEADER,
     });
     if (response.ok) {
-      setMessage("Dein Konto wurde geloescht.");
+      setMessage("Dein Konto wurde gelöscht.");
       reload();
     } else {
-      setMessage("Loeschung fehlgeschlagen.");
+      setMessage("Löschung fehlgeschlagen.");
     }
   }
 
   if (loading) {
-    return <p className="muted">Laedt...</p>;
+    return <p className="muted">Lädt...</p>;
   }
 
   return (
@@ -96,7 +96,7 @@ export default function AccountPage() {
               {review.text ? <p>{review.text}</p> : null}
               {review.status === "Published" ? (
                 <button type="button" className="danger" onClick={() => deleteReview(review.id)}>
-                  Bewertung loeschen
+                  Bewertung löschen
                 </button>
               ) : null}
             </div>
@@ -108,12 +108,12 @@ export default function AccountPage() {
               Meine Daten exportieren (JSON)
             </button>{" "}
             <button type="button" className="danger" onClick={deleteAccount}>
-              Konto loeschen
+              Konto löschen
             </button>
           </p>
           <p className="muted">
-            Die Kontoloeschung anonymisiert dein Profil und entfernt deine Bewertungen aus der Oeffentlichkeit.
-            Gesetzliche Aufbewahrungspflichten und Legal Holds bleiben unberuehrt.
+            Die Kontolöschung anonymisiert dein Profil und entfernt deine Bewertungen aus der Öffentlichkeit.
+            Gesetzliche Aufbewahrungspflichten und Legal Holds bleiben unberührt.
           </p>
         </>
       ) : null}

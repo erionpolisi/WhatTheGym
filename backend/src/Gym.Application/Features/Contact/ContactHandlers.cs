@@ -20,12 +20,22 @@ public sealed class CreateContactRequestCommandValidator : AbstractValidator<Cre
 {
     public CreateContactRequestCommandValidator()
     {
-        RuleFor(c => c.Name).NotEmpty().MaximumLength(120).WithMessage("Name ist erforderlich (max. 120 Zeichen).");
-        RuleFor(c => c.Email).NotEmpty().EmailAddress().MaximumLength(254).WithMessage("Eine gueltige E-Mail-Adresse ist erforderlich.");
-        RuleFor(c => c.Message).NotEmpty().MinimumLength(10).MaximumLength(ContactRequest.MaxMessageLength)
+        // WithMessage only applies to the preceding rule component; set it per component
+        // so messages stay German regardless of the host culture (CI/production run non-German).
+        RuleFor(c => c.Name)
+            .NotEmpty().WithMessage("Name ist erforderlich (max. 120 Zeichen).")
+            .MaximumLength(120).WithMessage("Name ist erforderlich (max. 120 Zeichen).");
+        RuleFor(c => c.Email)
+            .NotEmpty().WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.")
+            .EmailAddress().WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.")
+            .MaximumLength(254).WithMessage("Eine gültige E-Mail-Adresse ist erforderlich.");
+        RuleFor(c => c.Message)
+            .NotEmpty().WithMessage($"Die Nachricht muss zwischen 10 und {ContactRequest.MaxMessageLength} Zeichen lang sein.")
+            .MinimumLength(10).WithMessage($"Die Nachricht muss zwischen 10 und {ContactRequest.MaxMessageLength} Zeichen lang sein.")
+            .MaximumLength(ContactRequest.MaxMessageLength)
             .WithMessage($"Die Nachricht muss zwischen 10 und {ContactRequest.MaxMessageLength} Zeichen lang sein.");
         RuleFor(c => c.Message).Must(m => m is null || System.Text.RegularExpressions.Regex.Count(m, "https?://") <= 3)
-            .WithMessage("Die Nachricht enthaelt zu viele Links.");
+            .WithMessage("Die Nachricht enthält zu viele Links.");
     }
 }
 
@@ -47,7 +57,7 @@ public sealed class CreateContactRequestCommandHandler(
 
         if (!Enum.TryParse<ContactRequestType>(command.Type, ignoreCase: true, out var type))
         {
-            return Result.Failure<Guid>(Error.Validation("contact.type", "Ungueltiger Anfragetyp."));
+            return Result.Failure<Guid>(Error.Validation("contact.type", "Ungültiger Anfragetyp."));
         }
 
         Guid? gymId = null;
@@ -89,7 +99,7 @@ public sealed class ListContactRequestsQueryHandler(IContactRequestRepository co
         {
             if (!Enum.TryParse<ContactRequestStatus>(query.Status, ignoreCase: true, out var parsed))
             {
-                return Result.Failure<PagedResult<ContactRequestDto>>(Error.Validation("contact.status", "Ungueltiger Status."));
+                return Result.Failure<PagedResult<ContactRequestDto>>(Error.Validation("contact.status", "Ungültiger Status."));
             }
 
             status = parsed;
@@ -116,7 +126,7 @@ public sealed class SetContactRequestStatusCommandHandler(
     {
         if (!Enum.TryParse<ContactRequestStatus>(command.Status, ignoreCase: true, out var status))
         {
-            return Result.Failure(Error.Validation("contact.status", "Ungueltiger Status."));
+            return Result.Failure(Error.Validation("contact.status", "Ungültiger Status."));
         }
 
         var request = await contacts.GetByIdAsync(command.RequestId, cancellationToken);

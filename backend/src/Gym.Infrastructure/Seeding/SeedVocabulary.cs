@@ -35,8 +35,8 @@ public static class SeedVocabulary
         "Umkleiden",
         "Parkplatz",
         "Klimaanlage",
-        "Rund um die Uhr geoeffnet",
-        "Getraenkestation",
+        "Rund um die Uhr geöffnet",
+        "Getränkestation",
         "Personal Training",
     ];
 }

@@ -100,7 +100,7 @@ export default async function StudiosPage({ searchParams }: { searchParams: Sear
       {totalPages > 1 ? (
         <nav className="pagination" aria-label="Seitennavigation">
           {page > 1 ? (
-            <a href={`?${new URLSearchParams({ ...searchParams, page: String(page - 1) }).toString()}`}>Zurueck</a>
+            <a href={`?${new URLSearchParams({ ...searchParams, page: String(page - 1) }).toString()}`}>Zurück</a>
           ) : null}
           <span>
             Seite {page} von {totalPages}

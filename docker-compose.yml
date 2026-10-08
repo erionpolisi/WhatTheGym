@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-wtg}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wtg_dev_password}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +31,7 @@ services:
       ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-whatthegym};Username=${POSTGRES_USER:-wtg};Password=${POSTGRES_PASSWORD:-wtg_dev_password}"
       Database__MigrateOnStartup: "true"
       Seed__SeedCatalog: "true"
-      Seed__SeedDemoData: ${SEED_DEMO_DATA:-true}
+      Seed__SeedDemoData: ${SEED_DEMO_DATA:-false}
       Auth__EnableDevLogin: ${ENABLE_DEV_LOGIN:-true}
       Auth__BootstrapAdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.invalid}
       Auth__GoogleClientId: ${GOOGLE_CLIENT_ID:-}
@@ -42,6 +42,23 @@ services:
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
     ports:
       - "7001:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:7001}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_BASE_URL: http://api:8080
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:7001}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    ports:
+      - "3000:3000"
 
   # Optional database UI: docker compose --profile tools up
   pgadmin:

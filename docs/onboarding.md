@@ -14,10 +14,10 @@ No cloud accounts, Google OAuth, Resend, or DNS access are required locally.
 git clone <repo>
 cd WhatTheGym
 cp .env.example .env
-docker compose up --build          # API on http://localhost:7001 (+ Swagger)
+docker compose up --build          # Website on :3000, API/Swagger on :7001
 ```
 
-In a second terminal:
+For frontend-only development with hot reload:
 
 ```bash
 cd frontend

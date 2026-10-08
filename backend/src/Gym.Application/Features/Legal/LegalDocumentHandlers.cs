@@ -14,13 +14,13 @@ public sealed class GetActiveLegalDocumentQueryHandler(ILegalDocumentRepository 
     {
         if (!Enum.TryParse<LegalDocumentType>(query.Type, ignoreCase: true, out var type))
         {
-            return Result.Failure<LegalDocumentDto>(Error.Validation("legalDocument.type", "Ungueltiger Dokumenttyp."));
+            return Result.Failure<LegalDocumentDto>(Error.Validation("legalDocument.type", "Ungültiger Dokumenttyp."));
         }
 
         var document = await documents.GetActiveAsync(type, cancellationToken);
         if (document is null)
         {
-            return Result.Failure<LegalDocumentDto>(Error.NotFound("legalDocument.notFound", "Das Dokument ist noch nicht veroeffentlicht."));
+            return Result.Failure<LegalDocumentDto>(Error.NotFound("legalDocument.notFound", "Das Dokument ist noch nicht veröffentlicht."));
         }
 
         return ToDto(document);
@@ -38,7 +38,7 @@ public sealed class ListLegalDocumentVersionsQueryHandler(ILegalDocumentReposito
     {
         if (!Enum.TryParse<LegalDocumentType>(query.Type, ignoreCase: true, out var type))
         {
-            return Result.Failure<IReadOnlyList<LegalDocumentDto>>(Error.Validation("legalDocument.type", "Ungueltiger Dokumenttyp."));
+            return Result.Failure<IReadOnlyList<LegalDocumentDto>>(Error.Validation("legalDocument.type", "Ungültiger Dokumenttyp."));
         }
 
         var versions = await documents.ListVersionsAsync(type, cancellationToken);
@@ -58,7 +58,7 @@ public sealed class CreateLegalDocumentVersionCommandHandler(
     {
         if (!Enum.TryParse<LegalDocumentType>(command.Type, ignoreCase: true, out var type))
         {
-            return Result.Failure<Guid>(Error.Validation("legalDocument.type", "Ungueltiger Dokumenttyp."));
+            return Result.Failure<Guid>(Error.Validation("legalDocument.type", "Ungültiger Dokumenttyp."));
         }
 
         if (string.IsNullOrWhiteSpace(command.Title) || string.IsNullOrWhiteSpace(command.ContentMarkdown))
