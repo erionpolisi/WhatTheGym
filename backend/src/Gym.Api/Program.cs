@@ -153,8 +153,12 @@ if (googleConfigured)
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         options.Scope.Add("email");
-        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-        options.NonceCookie.SameSite = SameSiteMode.Lax;
+        // Google returns through a cross-site form POST. These short-lived protocol cookies
+        // must be sent on that POST; the application session cookie remains SameSite=Lax.
+        options.CorrelationCookie.SameSite = SameSiteMode.None;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.NonceCookie.SameSite = SameSiteMode.None;
+        options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
         options.ClaimActions.MapJsonKey("email_verified", "email_verified");
         options.Events.OnTicketReceived = async context =>
         {
@@ -180,6 +184,12 @@ if (googleConfigured)
             context.Principal = SessionService.BuildPrincipal(result.Value);
             var session = services.GetRequiredService<SessionService>();
             await session.IssueRefreshTokenAsync(context.HttpContext, result.Value.Id);
+        };
+        options.Events.OnRemoteFailure = context =>
+        {
+            context.Response.Redirect("/api/v1/auth/login-failed");
+            context.HandleResponse();
+            return Task.CompletedTask;
         };
     });
 }

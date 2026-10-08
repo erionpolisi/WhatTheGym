@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
+using Microsoft.AspNetCore.Hosting;
 using Xunit;
 
 namespace Gym.IntegrationTests;
@@ -31,6 +32,25 @@ public sealed class AuthContractTests(WtgApiFactory factory)
         me["displayName"]!.GetValue<string>().Should().Be("Auth Nutzerin");
         me["role"]!.GetValue<string>().Should().Be("User");
         me["id"]!.GetValue<Guid>().Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task Dev_login_is_not_available_outside_development_even_when_enabled()
+    {
+        using var stagingFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Staging");
+            builder.UseSetting("Auth:EnableDevLogin", "true");
+        });
+        var client = stagingFactory.CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/v1/auth/dev-login", new
+        {
+            email = IntegrationTestSupport.UniqueEmail("staging-dev-login"),
+            displayName = "Nicht erlaubt",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Theory]
