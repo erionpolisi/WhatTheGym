@@ -13,6 +13,9 @@ param location string = resourceGroup().location
 @description('Container image for the API, e.g. ghcr.io/<owner>/whatthegym-api:<tag> (ADR 0008 addendum: ghcr.io, no ACR)')
 param apiImage string
 
+@description('Container image for the Next.js frontend, e.g. ghcr.io/<owner>/whatthegym-web:<tag>.')
+param frontendImage string
+
 @description('Deploy Azure Database for PostgreSQL Flexible Server. When false, an external PostgreSQL (e.g. free tier provider) is used via the connection string secret.')
 param deployPostgres bool = false
 
@@ -26,6 +29,9 @@ param externalPostgresConnectionString string = ''
 
 @description('Allowed CORS origin of the frontend, e.g. https://staging.whatthegym.at')
 param frontendOrigin string
+
+@description('Optional IPv4 CIDR allowed to access both public apps. Empty allows public access.')
+param allowedIngressIpv4Cidr string = ''
 
 @description('Google OAuth client id of the BFF login.')
 param googleClientId string
@@ -91,6 +97,25 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
+resource apiIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: '${prefix}-api-identity'
+  location: location
+  tags: tags
+}
+
+resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, apiIdentity.id, 'kv-secrets-user')
+  scope: keyVault
+  properties: {
+    principalId: apiIdentity.properties.principalId
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
+    )
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // Connection secret is always present: either the managed flexible server (deployPostgres = true)
 // or the externally provided connection string. The container app references it via Key Vault.
 resource postgresConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
@@ -133,11 +158,12 @@ resource postgresDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2
 }
 
 // ---------- Container Apps (consumption, scale to zero) ----------
-resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2026-07-01' = {
   name: '${prefix}-cae'
   location: location
   tags: tags
   properties: {
+    environmentMode: 'WorkloadProfiles'
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -145,6 +171,12 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
         sharedKey: logAnalytics.listKeys().primarySharedKey
       }
     }
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
   }
 }
 
@@ -152,7 +184,12 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${prefix}-api'
   location: location
   tags: tags
-  identity: { type: 'SystemAssigned' }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${apiIdentity.id}': {}
+    }
+  }
   properties: {
     managedEnvironmentId: containerAppsEnvironment.id
     configuration: {
@@ -160,13 +197,23 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: true
         targetPort: 8080
         transport: 'http'
+        ipSecurityRestrictions: empty(allowedIngressIpv4Cidr)
+          ? []
+          : [
+              {
+                name: 'staging-owner'
+                description: 'Current staging owner public IPv4'
+                ipAddressRange: allowedIngressIpv4Cidr
+                action: 'Allow'
+              }
+            ]
       }
       secrets: concat(
         [
           {
             name: 'postgres-connection'
             keyVaultUrl: '${keyVault.properties.vaultUri}secrets/postgres-connection-string'
-            identity: 'system'
+            identity: apiIdentity.id
           }
           {
             name: 'google-client-secret'
@@ -232,37 +279,57 @@ resource apiApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
     }
   }
+  dependsOn: [
+    keyVaultSecretsUser
+  ]
 }
 
-// Grant the API's managed identity read access to Key Vault secrets.
-resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, apiApp.id, 'kv-secrets-user')
-  scope: keyVault
-  properties: {
-    principalId: apiApp.identity.principalId
-    roleDefinitionId: subscriptionResourceId(
-      'Microsoft.Authorization/roleDefinitions',
-      '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
-    )
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// ---------- Frontend: Static Web App (Free tier) ----------
-resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
+resource frontendApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${prefix}-web'
-  location: 'westeurope'
+  location: location
   tags: tags
-  sku: {
-    name: 'Free'
-    tier: 'Free'
-  }
   properties: {
-    stagingEnvironmentPolicy: 'Disabled'
-    allowConfigFileUpdates: true
+    managedEnvironmentId: containerAppsEnvironment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 3000
+        transport: 'http'
+        ipSecurityRestrictions: empty(allowedIngressIpv4Cidr)
+          ? []
+          : [
+              {
+                name: 'staging-owner'
+                description: 'Current staging owner public IPv4'
+                ipAddressRange: allowedIngressIpv4Cidr
+                action: 'Allow'
+              }
+            ]
+      }
+    }
+    template: {
+      containers: [
+        {
+          name: 'web'
+          image: frontendImage
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+          env: [
+            // Same-environment service discovery bypasses the public API IP allowlist for SSR.
+            { name: 'API_BASE_URL', value: 'http://${apiApp.name}' }
+          ]
+        }
+      ]
+      scale: {
+        minReplicas: 0
+        maxReplicas: 1
+      }
+    }
   }
 }
 
 output apiUrl string = 'https://${apiApp.properties.configuration.ingress.fqdn}'
-output staticWebAppDefaultHostname string = staticWebApp.properties.defaultHostname
+output frontendUrl string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
 output keyVaultName string = keyVault.name

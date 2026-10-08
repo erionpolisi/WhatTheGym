@@ -50,3 +50,13 @@ Cookie sessions are revalidated against the user store on every request
 (role changes, deletion, and revocation take effect immediately), and
 authenticated state-changing requests require the `X-CSRF` header or a JSON
 content type. Details and rationale in ADR 0012.
+
+## Amendment (2026-10-08): staging scale-to-zero key persistence
+
+Staging keeps `minReplicas: 0` for cost control. ASP.NET Core Data Protection
+keys currently live in the API container filesystem, so a cold replacement can
+invalidate existing session and OIDC correlation cookies. This is accepted for
+the IP-restricted staging environment while deployment is being validated.
+Before production, keys must be persisted in an Azure-backed shared store and
+protected at rest; login must then be tested across a forced scale-to-zero and
+new revision. Production must not launch with ephemeral Data Protection keys.

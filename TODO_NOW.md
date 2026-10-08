@@ -7,44 +7,36 @@ Companion to TASKS.md Phase 2; delete this file once the exit gate is met.
 
 | Phase 2 item | State |
 | --- | --- |
-| Bicep templates | ✅ Prepared, never deployed — Container Apps (scale-to-zero, 0.25 vCPU/0.5Gi), SWA Free, Key Vault, capped Log Analytics; since ADR 0012 all runtime config (Google OAuth, bootstrap admin, PublicBaseUrl, analytics secret, optional Resend key, forwarded headers) is wired as params/env/secrets and the KV secret works for both DB variants |
-| Parameters | ✅ `apiImage` points to `ghcr.io/OWNER_TO_BE_CONFIGURED/...` — fill in the GitHub owner; secure values are supplied at deploy time |
-| CI | ✅ `.github/workflows/ci.yml` builds/tests/scans (backend, frontend, Trivy) — **no image push, no deploy job exists** |
-| Deploy workflows | ❌ Don't exist (no OIDC, no ghcr push, no `az containerapp update`) |
+| Bicep templates | ✅ Staging deployed — frontend and API Container Apps (scale-to-zero, 0.25 vCPU/0.5Gi), Key Vault, capped Log Analytics; runtime config is wired as params/env/secrets |
+| Parameters | ✅ Staging images, region, domains, Google client, and admin bootstrap email are configured; secure values are supplied at deploy time |
+| CI | ✅ `.github/workflows/ci.yml` builds/tests/scans; successful `main` runs trigger the staging deployment workflow |
+| Deploy workflows | ✅ Staging workflow builds/pushes both images and updates Container Apps through GitHub OIDC; production workflow remains pending |
 | Registry auth in Bicep | ⚠️ No `registries` block — only needed if the ghcr package is private |
 | Runbook | ❌ `docs/runbook.md` doesn't exist |
 | ADR 0008 | ✅ Addendum done: ghcr.io instead of ACR + cost table (verify numbers against real billing after the first staging month) |
 | Security hardening | ✅ ADR 0012 shipped: session revalidation, CSRF (X-CSRF header or JSON content type), forwarded headers, audit-token masking, DB-unique reviews — REST clients/scripts must send `X-CSRF: 1` on body-less authenticated writes |
 
-Flag: Phase 1's exit gate isn't fully met (domain not registered, Google
-OAuth/Resend accounts missing). Fine for most of Phase 2, but **domain
-registration blocks** DNS-dependent steps — and since ADR 0012 the login is
-only testable on same-site custom domains: `SameSite=Lax` cookies do not work
-across `*.azurestaticapps.net` ↔ `*.azurecontainerapps.io`.
+Flag: Phase 1's exit gate is met except for the Resend account and verified
+sending domain. Staging DNS, managed TLS, and Google OAuth are operational.
 
 ---
 
 ## Step 0 — Unblock from Phase 1.5 (do first, has lead time)
 
-- [ ] Register `whatthegym.at` (easyname/World4You/INWX, ~15–30 EUR/yr).
+- [x] Register `whatthegym.at` (easyname/World4You/INWX, ~15–30 EUR/yr).
       DNS propagation and OAuth consent verification both take time — start now.
-- [ ] Create Google Cloud project + OAuth consent screen (external) + OAuth
+- [x] Create Google Cloud project + OAuth consent screen (external) + OAuth
       client (free, no Azure dependency)
 - [ ] Create Resend account (free tier; domain verification needs Step 0.1 DNS)
 
 ## Step 1 — Azure foundation (2.1, ~1 hour, 0 EUR)
 
-- [ ] Activate **Azure for Students**; put credit expiry date in calendar
-- [ ] Install/verify `az` CLI, `az login`
-- [ ] Create resource groups:
-      ```
-      az group create -n wtg-staging -l westeurope
-      az group create -n wtg-prod -l westeurope
-      ```
-      (Names are the convention everywhere now — TASKS, TODO_NOW, and
-      `docs/deployment-azure.md` all use `wtg-staging` / `wtg-prod`.)
-- [ ] Budget alerts in Cost Management: 1 / 5 / 10 EUR forecast on the subscription
-- [ ] Sign up for **Neon** (or Supabase) free tier, EU region → create staging
+- [x] Activate **Azure for Students**; put credit expiry date in calendar
+- [x] Install/verify `az` CLI, `az login`
+- [x] Create the `wtg-staging` resource group. Create `wtg-prod` only when the
+      application is ready for the production rollout.
+- [x] Budget alerts in Cost Management: 1 / 5 / 10 EUR forecast on the subscription
+- [x] Sign up for **Neon** (or Supabase) free tier, EU region → create staging
       database → keep connection string for Step 3
 
 ## Step 2 — Repo changes for ghcr.io + deploy pipeline (main coding work)
@@ -53,11 +45,11 @@ across `*.azurestaticapps.net` ↔ `*.azurecontainerapps.io`.
       `parameters.production.json` (`ghcr.io/<your-user>/whatthegym-api:<tag>`)
 - [ ] If ghcr package will be private (recommended): add `registries` block +
       PAT secret to the Container App in Bicep; if public, no change needed
-- [ ] Set up **GitHub OIDC → Azure** federated identity (no static secrets):
+- [x] Set up **GitHub OIDC → Azure** federated identity (no static secrets):
       `az ad app create` + service principal + federated credential for
       `repo:<you>/WhatTheGym:ref:refs/heads/main` (and one for the prod
       workflow/tag), Contributor on the two RGs
-- [ ] New workflow `deploy-staging.yml`: on `main` push, after CI →
+- [x] New workflow `deploy-staging.yml`: on `main` push, after CI →
       `docker build` → push to ghcr.io with `GITHUB_TOKEN` →
       `az containerapp update -n wtg-staging-api -g wtg-staging --image ghcr.io/...:<sha>`
 - [ ] New workflow `deploy-production.yml`: `workflow_dispatch` (input: image

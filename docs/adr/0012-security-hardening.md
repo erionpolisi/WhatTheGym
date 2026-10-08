@@ -82,6 +82,12 @@ documented in `docs/deployment-azure.md` and must be revisited (minReplicas 1
 or a scheduled trigger) if legal notification latency becomes a compliance
 concern.
 
+Scale-to-zero also replaces the API container filesystem. Staging currently
+accepts that this can invalidate ASP.NET Core Data Protection cookies after a
+cold replacement. ADR 0003 records the mandatory production follow-up:
+persist and protect the key ring in Azure, then rehearse login across a cold
+start and revision replacement.
+
 ## Consequences
 
 - Staging/production Bicep now fails fast on missing auth/mail/analytics

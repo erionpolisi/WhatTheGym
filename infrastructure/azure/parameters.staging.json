@@ -3,13 +3,15 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "environmentName": { "value": "staging" },
-    "apiImage": { "value": "ghcr.io/erionpolisi/whatthegym-api:staging-5979f3b" },
+    "location": { "value": "germanywestcentral" },
+    "apiImage": { "value": "ghcr.io/erionpolisi/whatthegym-api:staging-auth-20261008" },
+    "frontendImage": { "value": "ghcr.io/erionpolisi/whatthegym-web:staging-auth-20261008" },
     "deployPostgres": { "value": false },
     "externalPostgresConnectionString": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
     "frontendOrigin": { "value": "https://staging.whatthegym.at" },
-    "googleClientId": { "value": "GOOGLE_CLIENT_ID_TO_BE_CONFIGURED" },
+    "googleClientId": { "value": "505244859145-clbp2iurv5qucqaqcq6t0v4eeeed1g23.apps.googleusercontent.com" },
     "googleClientSecret": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
-    "bootstrapAdminEmail": { "value": "ADMIN_EMAIL_TO_BE_CONFIGURED" },
+    "bootstrapAdminEmail": { "value": "whatthegym1@gmail.com" },
     "publicBaseUrl": { "value": "https://staging.whatthegym.at" },
     "analyticsHashSecret": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" },
     "resendApiKey": { "value": "SET_VIA_SECURE_PARAMETER_OR_KEYVAULT" }
