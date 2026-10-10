@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Gym.Application.Features.Legal;
 
 public sealed record ProcessingActivityDto(
@@ -16,73 +18,43 @@ public sealed record ProcessingActivityDto(
 /// </summary>
 public static class ProcessingActivitiesRecord
 {
-    public const string Version = "1.0";
+    private static readonly ProcessingActivitiesSeed Data = Load();
+
+    public static readonly string Version = Require(Data.Version, "version");
 
     public static readonly IReadOnlyList<ProcessingActivityDto> Activities =
-    [
-        new(
-            "Kontoverwaltung",
-            "Registrierung und Anmeldung über Google, Verwaltung von Rollen und Profil.",
-            "Art. 6 Abs. 1 lit. b DSGVO (Vertrag/Nutzungsverhaeltnis)",
-            ["Google-Subject", "E-Mail-Adresse", "Anzeigename", "Verifizierungsstatus", "Login-Zeitpunkte"],
-            ["User", "RefreshToken"],
-            "Bis zur Kontolöschung; danach Anonymisierung. Refresh-Tokens rotieren und verfallen nach 30 Tagen.",
-            ["Google LLC (Authentifizierung)"]),
-        new(
-            "Bewertungen",
-            "Veröffentlichung nicht-anonymer Studio-Bewertungen inklusive Bearbeitungshistorie.",
-            "Art. 6 Abs. 1 lit. b und f DSGVO",
-            ["Nutzer-ID", "Bewertungsinhalte", "Kategoriebewertungen", "Zeitstempel", "Bearbeitungsverlauf"],
-            ["Review", "ReviewRevision"],
-            "Bewertungen bis zur Löschung durch Nutzer/Moderation; Revisionsdaten 3 Jahre nach Entfernung der Bewertung, sofern kein Legal Hold besteht.",
-            []),
-        new(
-            "Rechtsfälle und Meldungen",
-            "Bearbeitung von Meldungen zu Bewertungen, Entscheidungen, Einsprüche und revisionssichere Falldokumentation.",
-            "Art. 6 Abs. 1 lit. c und f DSGVO (rechtliche Verpflichtungen, Rechtsverteidigung)",
-            ["Name und E-Mail der meldenden Person", "Fallbegründung", "Entscheidungen", "Einspruchstexte", "Audit-Ereignisse", "Benachrichtigungstexte"],
-            ["LegalCase", "LegalCaseAppeal", "LegalCaseEvent", "LegalHold"],
-            "Fall-Audit-Ereignisse 7 Jahre nach Fallabschluss; Einsprüche mindestens 6 Monate nach Entscheidung; Legal Holds pausieren Löschung.",
-            []),
-        new(
-            "Kontaktanfragen",
-            "Bearbeitung allgemeiner Anfragen, Studio-Vorschläge und Datenkorrekturen.",
-            "Art. 6 Abs. 1 lit. b und f DSGVO",
-            ["Name", "E-Mail-Adresse", "Nachrichteninhalt"],
-            ["ContactRequest"],
-            "Bis zur Erledigung zuzüglich angemessener Nachweisfrist.",
-            []),
-        new(
-            "Transaktionale E-Mails",
-            "Versand rechtlich erforderlicher Benachrichtigungen über einen persistenten Postausgang.",
-            "Art. 6 Abs. 1 lit. c und f DSGVO",
-            ["Empfänger-E-Mail", "Betreff", "Nachrichtentext"],
-            ["OutboxEmail"],
-            "Versandte/fehlgeschlagene Mails werden nach 90 Tagen gelöscht; rechtlich relevante Texte bleiben im Fall-Audit.",
-            ["Resend Inc. (E-Mail-Versand)"]),
-        new(
-            "Reichweitenmessung (PII-frei)",
-            "Anonyme Nutzungsstatistik einschließlich externer Studio-Website-Klicks ohne IP-Speicherung und ohne Fingerprinting.",
-            "Art. 6 Abs. 1 lit. f DSGVO",
-            ["Ereignistyp (Allowlist)", "Studio-Pfad", "Ziel-Domain", "kurzlebiger rotierender Session-Hash"],
-            ["AnalyticsEvent"],
-            "Rohereignisse maximal 400 Tage.",
-            []),
-    ];
+        Require(Data.Activities, "activities");
 
     /// <summary>Entities that persist personal data; used by tests to enforce record coverage.</summary>
     public static readonly IReadOnlyList<string> PersonalDataEntities =
-    [
-        "User",
-        "RefreshToken",
-        "Review",
-        "ReviewRevision",
-        "LegalCase",
-        "LegalCaseAppeal",
-        "LegalCaseEvent",
-        "LegalHold",
-        "ContactRequest",
-        "OutboxEmail",
-        "AnalyticsEvent",
-    ];
+        Require(Data.PersonalDataEntities, "personalDataEntities");
+
+    private static ProcessingActivitiesSeed Load()
+    {
+        const string resourceName = "Gym.Application.Features.Legal.Data.processing-activities.json";
+        using var stream = typeof(ProcessingActivitiesRecord).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Embedded processing-activities resource '{resourceName}' was not found.");
+
+        try
+        {
+            return JsonSerializer.Deserialize<ProcessingActivitiesSeed>(stream)
+                ?? throw new InvalidOperationException($"Embedded processing-activities resource '{resourceName}' contains null data.");
+        }
+        catch (JsonException exception)
+        {
+            throw new InvalidOperationException($"Embedded processing-activities resource '{resourceName}' is malformed.", exception);
+        }
+    }
+
+    private static T Require<T>(T? value, string dataName) where T : class =>
+        value ?? throw new InvalidOperationException($"Embedded processing-activities data '{dataName}' is missing or null.");
+}
+
+internal sealed class ProcessingActivitiesSeed
+{
+    public string? Version { get; init; }
+
+    public IReadOnlyList<ProcessingActivityDto>? Activities { get; init; }
+
+    public IReadOnlyList<string>? PersonalDataEntities { get; init; }
 }

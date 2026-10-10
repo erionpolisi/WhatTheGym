@@ -2,12 +2,12 @@
 
 ## Vienna gym catalogue
 
-`Gym.Infrastructure.Seeding.ViennaCatalog` seeds 11 chains, 12 amenities and
-92 studios across Vienna's districts (rebuilt 2026-08-31 from official chain
-sources; see "Catalog rebuild" below). Chains and amenities live in
-`SeedVocabulary` (shared vocabulary, ADR 0011). Seeding is idempotent (keyed
-by slug) and deterministic (fixed timestamps), so repeated startups never
-duplicate data.
+`Gym.Infrastructure/Seeding/Data/catalog.json` seeds 11 chains, 12 amenities
+and 92 studios across Vienna's districts (rebuilt 2026-08-31 from official
+chain sources; see "Catalog rebuild" below). It is an embedded resource loaded
+through the existing `ViennaCatalog` and `SeedVocabulary` APIs (shared
+vocabulary, ADR 0011). Seeding is idempotent (keyed by slug) and deterministic
+(fixed timestamps), so repeated startups never duplicate data.
 
 **Provenance:** 81 of 92 entries were verified against machine-readable
 official sources on 2026-08-31 (studio pages/sitemaps of fitinn.at,
@@ -59,11 +59,11 @@ Full re-research replacing the original ~50-entry best-effort list:
 
 ## Regional catalogs (inert reference data, ADR 0011)
 
-`Gym.Infrastructure.Seeding.Regional.*` holds one catalog per remaining
+`Gym.Infrastructure/Seeding/Data/catalog.json` holds one catalog per remaining
 Bundesland (~122 entries researched 2026-08-31 from the same official chain
 sources; entries with an empty address have a confirmed branch without a
-machine-readable street address). They are compiled but referenced by
-nothing: not seeded, not tested, not exposed. Counts: Niederoesterreich 43,
+machine-readable street address). They are embedded but referenced by nothing:
+not seeded, not tested, not exposed. Counts: Niederoesterreich 43,
 Oberoesterreich 22, Steiermark 17, Salzburg 16, Kaernten 10, Tirol 8,
 Vorarlberg 4, Burgenland 2. Chains not yet covered there (McFIT Graz/Linz,
 Happy Fit, INJOY, Kieser, regional independents) can be appended when

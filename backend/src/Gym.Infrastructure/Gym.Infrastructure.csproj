@@ -14,4 +14,8 @@
     <InternalsVisibleTo Include="Gym.IntegrationTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Seeding\Data\*.json" />
+  </ItemGroup>
+
 </Project>

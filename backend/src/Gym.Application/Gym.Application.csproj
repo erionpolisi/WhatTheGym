@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Features\Legal\Data\*.json" />
+  </ItemGroup>
+
 </Project>
