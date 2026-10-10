@@ -10,7 +10,16 @@
     { "Name": "Mrs.Sporty", "Website": "https://www.mrssporty.at" },
     { "Name": "Club Danube", "Website": "https://www.clubdanube.at" },
     { "Name": "MYGYM", "Website": "https://www.mygym.at" },
-    { "Name": "JOHN REED", "Website": "https://johnreed.fitness" }
+    { "Name": "JOHN REED", "Website": "https://johnreed.fitness" },
+    { "Name": "Gold's Gym", "Website": "https://golds-gym.at" },
+    { "Name": "EVO Fitness", "Website": "https://www.evofitness.com" },
+    { "Name": "Kieser Training", "Website": "https://www.kieser.com" },
+    { "Name": "Manhattan Fitness Club", "Website": "https://www.manhattan.at" },
+    { "Name": "GET UP Fitness OG", "Website": "http://www.get-up.at" },
+    { "Name": "MH76 Training", "Website": "https://www.mh76training.at" },
+    { "Name": "INJOY Health CLub Wien", "Website": "https://www.injoy-wien.at" }
+
+
   ],
   "Amenities": [
     "Freihanteln", "Kraftmaschinen", "Cardio-Bereich", "Kursprogramm", "Sauna", "Duschen",
