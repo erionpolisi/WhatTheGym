@@ -8,18 +8,21 @@
     { "Name": "Fit Fabrik", "Website": "https://www.fitfabrik.at" },
     { "Name": "Kieser Training", "Website": "https://www.kieser.com" },
     { "Name": "Mrs.Sporty", "Website": "https://www.mrssporty.at" },
-    { "Name": "Club Danube", "Website": "https://www.clubdanube.at" },
     { "Name": "MYGYM", "Website": "https://www.mygym.at" },
     { "Name": "JOHN REED", "Website": "https://johnreed.fitness" },
     { "Name": "Gold's Gym", "Website": "https://golds-gym.at" },
     { "Name": "EVO Fitness", "Website": "https://www.evofitness.com" },
-    { "Name": "Kieser Training", "Website": "https://www.kieser.com" },
     { "Name": "Manhattan Fitness Club", "Website": "https://www.manhattan.at" },
     { "Name": "GET UP Fitness OG", "Website": "http://www.get-up.at" },
     { "Name": "MH76 Training", "Website": "https://www.mh76training.at" },
-    { "Name": "INJOY Health CLub Wien", "Website": "https://www.injoy-wien.at" }
-
-
+    { "Name": "INJOY Health CLub Wien", "Website": "https://www.injoy-wien.at" },
+    { "Name": "ISC Gym", "Website": "https://www.isc-gym.at" },
+    { "Name": "Bodystyle", "Website": "https://www.bodystyle.at" },
+    { "Name": "Speedfit", "Website": "https://speedfit.at" },
+    { "Name": "Fitness-Club 39", "Website": "https://www.fitness-club39.at" },
+    { "Name": "Marco-Polo Sportcenter", "Website": "https://marco-polo.co.at" },
+    { "Name": "CrossFit Viertel Zwei", "Website": "https://crossfitviertelzwei.com" },
+    { "Name": "DASGYM", "Website": "https://www.dasgym.com" }
   ],
   "Amenities": [
     "Freihanteln", "Kraftmaschinen", "Cardio-Bereich", "Kursprogramm", "Sauna", "Duschen",
@@ -110,14 +113,18 @@
     { "Name": "McFIT Wien Ottakring", "ChainSlug": "mcfit", "District": 16, "Address": "Thaliastraße 125", "PostalCode": "1160" },
     { "Name": "McFIT Wien Floridsdorf", "ChainSlug": "mcfit", "District": 21, "Address": "Brünner Straße 25", "PostalCode": "1210" },
     { "Name": "McFIT Wien Donaustadt", "ChainSlug": "mcfit", "District": 22, "Address": "Stadlauer Straße 41", "PostalCode": "1220" },
-    { "Name": "Club Danube Erdberg", "ChainSlug": "club-danube", "District": 3, "Address": "Franzosengraben 2", "PostalCode": "1030" },
-    { "Name": "Club Danube Ottakring", "ChainSlug": "club-danube", "District": 16, "Address": "Sandleitengasse 39", "PostalCode": "1160" },
-    { "Name": "Club Danube Donauzentrum", "ChainSlug": "club-danube", "District": 22, "Address": "Wagramer Straße 81", "PostalCode": "1220" },
-    { "Name": "Club Danube Alterlaa", "ChainSlug": "club-danube", "District": 23, "Address": "Anton-Baumgartner-Straße 44", "PostalCode": "1230" },
     { "Name": "Kieser Training Wien Alsergrund", "ChainSlug": "kieser-training", "District": 9, "Address": "Nußdorfer Straße 4", "PostalCode": "1090" },
     { "Name": "Kieser Training Wien Hietzing", "ChainSlug": "kieser-training", "District": 13, "Address": "Lainzer Straße 2", "PostalCode": "1130" },
+    { "Name": "INJOY Wien", "ChainSlug": null, "District": 3, "Address": "Schnirchgasse 12", "PostalCode": "1030" },
     { "Name": "CrossFit Vienna The Starship", "ChainSlug": null, "District": 3, "Address": "Rennweg 97-99", "PostalCode": "1030" },
-    { "Name": "Trainingslager Wien", "ChainSlug": null, "District": 7, "Address": "Kaiserstraße 43", "PostalCode": "1070" }
+    { "Name": "ISC Gym", "ChainSlug": "isc-gym", "District": 6, "Address": "Mariahilfer Straße 47", "PostalCode": "1060" },
+    { "Name": "Bodystyle Fitness Studio", "ChainSlug": "bodystyle", "District": 6, "Address": "Webgasse 35", "PostalCode": "1060" },
+    { "Name": "Speedfit23", "ChainSlug": "speedfit", "District": 23, "Address": "Altmannsdorfer Straße 182A", "PostalCode": "1230" },
+    { "Name": "Fitness-Club 39", "ChainSlug": "fitness-club-39", "District": 9, "Address": "Porzellangasse 39-41", "PostalCode": "1090" },
+    { "Name": "Marco-Polo Sportcenter", "ChainSlug": "marco-polo-sportcenter", "District": 21, "Address": "Ruthnergasse 170A", "PostalCode": "1210" },
+    { "Name": "CrossFit Viertel Zwei", "ChainSlug": "crossfit-viertel-zwei", "District": 2, "Address": "Trabrennstraße 2C", "PostalCode": "1020" },
+    { "Name": "DASGYM", "ChainSlug": "dasgym", "District": 2, "Address": "Handelskai 340", "PostalCode": "1020" },
+    { "Name": "Manhattan Club Wien", "ChainSlug": "manhattan-fitness-club", "District": 19, "Address": "Heiligenstädter Lände 17", "PostalCode": "1190" }
   ],
   "RegionalCatalogs": {
     "Burgenland": [
