@@ -92,6 +92,8 @@ public interface IGymChainRepository
 
     Task<IReadOnlyList<GymChain>> ListAllAsync(CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<GymChain>> ListWithGymsAsync(CancellationToken cancellationToken);
+
     Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken);
 
     Task<int> CountGymsAsync(Guid chainId, CancellationToken cancellationToken);

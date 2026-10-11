@@ -99,7 +99,8 @@ public sealed class ListChainsQueryHandler(IGymChainRepository chains) : IQueryH
 {
     public async Task<Result<IReadOnlyList<ChainDto>>> Handle(ListChainsQuery query, CancellationToken cancellationToken)
     {
-        var all = await chains.ListAllAsync(cancellationToken);
+        // The public catalog is Vienna-only, so chains without a Vienna studio must not appear as empty filters.
+        var all = await chains.ListWithGymsAsync(cancellationToken);
         return Result.Success<IReadOnlyList<ChainDto>>(
             all.Select(c => new ChainDto(c.Id, c.Name, c.Slug, c.Website)).ToList());
     }

@@ -31,6 +31,10 @@ internal sealed class AppFakeChainRepository : IGymChainRepository
     public Task<IReadOnlyList<GymChain>> ListAllAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<GymChain>>(Chains.ToList());
 
+    public Task<IReadOnlyList<GymChain>> ListWithGymsAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<GymChain>>(
+            Chains.Where(c => GymCounts.GetValueOrDefault(c.Id) > 0).ToList());
+
     public Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken) =>
         Task.FromResult(ExistingSlugs.Contains(slug) || Chains.Any(c => c.Slug == slug));
 
@@ -219,6 +223,5 @@ internal static class AppTestData
         return review;
     }
 }
-
 
 
