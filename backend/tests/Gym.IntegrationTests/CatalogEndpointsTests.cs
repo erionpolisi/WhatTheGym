@@ -77,6 +77,17 @@ public class CatalogEndpointsTests(WtgApiFactory factory)
     }
 
     [Fact]
+    public async Task Chain_filter_only_contains_chains_with_vienna_gyms()
+    {
+        var client = factory.CreateClient();
+
+        var chains = await client.GetJsonAsync("/api/v1/chains");
+
+        chains.AsArray().Should().Contain(c => c!["slug"]!.GetValue<string>() == "fitinn");
+        chains.AsArray().Should().NotContain(c => c!["slug"]!.GetValue<string>() == "mygym");
+    }
+
+    [Fact]
     public async Task Gym_detail_returns_summary_with_basis_none_without_reviews()
     {
         var client = factory.CreateClient();
