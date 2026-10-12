@@ -79,7 +79,7 @@
     { "Name": "John Harris UNIQA Tower", "ChainSlug": "john-harris-fitness", "District": 2, "Address": "Untere Donaustraße 21", "PostalCode": "1020" },
     { "Name": "John Harris Sofiensäle", "ChainSlug": "john-harris-fitness", "District": 3, "Address": "Marxergasse 17", "PostalCode": "1030" },
     { "Name": "John Harris Margaretenplatz", "ChainSlug": "john-harris-fitness", "District": 5, "Address": "Strobachgasse 7-9", "PostalCode": "1050" },
-    { "Name": "John Harris Hauptbahnhof", "ChainSlug": "john-harris-fitness", "District": 10, "Address": "Wiedner Guertel 9", "PostalCode": "1100" },
+    { "Name": "John Harris Hauptbahnhof", "ChainSlug": "john-harris-fitness", "District": 10, "Address": "Wiedner Gürtel 9", "PostalCode": "1100" },
     { "Name": "John Harris DC Tower", "ChainSlug": "john-harris-fitness", "District": 22, "Address": "Donau-City-Straße 7", "PostalCode": "1220" },
     { "Name": "Holmes Place Börseplatz", "ChainSlug": "holmes-place", "District": 1, "Address": "Wipplingerstraße 30", "PostalCode": "1010" },
     { "Name": "Holmes Place Hütteldorf", "ChainSlug": "holmes-place", "District": 14, "Address": "Hütteldorfer Straße 130a", "PostalCode": "1140" },
