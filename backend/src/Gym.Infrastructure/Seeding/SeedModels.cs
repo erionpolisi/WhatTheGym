@@ -1,9 +1,15 @@
 namespace Gym.Infrastructure.Seeding;
 
 /// <summary>Seed entry for a Vienna gym; maps 1:1 to the seeded domain model (district-based).</summary>
-public sealed record SeedGym(string Name, string? ChainSlug, int District, string Address, string PostalCode);
+public sealed record SeedGym(
+    string Name,
+    string? ChainSlug,
+    int District,
+    string Address,
+    string PostalCode,
+    DateOnly? LocationVerifiedOn = null);
 
-public sealed record ChainSeed(string Name, string? Website);
+public sealed record ChainSeed(string Name, string? Website, DateOnly? WebsiteVerifiedOn = null);
 
 /// <summary>
 /// Seed entry for a gym outside Vienna. Reference data only: the MVP domain is Vienna-scoped
