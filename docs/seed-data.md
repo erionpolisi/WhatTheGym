@@ -2,10 +2,10 @@
 
 ## Vienna gym catalogue
 
-`Gym.Infrastructure/Seeding/Data/catalog.json` currently seeds 23 chains,
-12 amenities and 96 studios across Vienna's districts (rebuilt 2026-08-31
+`Gym.Infrastructure/Seeding/Data/catalog.json` currently seeds 21 chains,
+12 amenities and 108 studios across Vienna's districts (rebuilt 2026-08-31
 from official chain sources and supplemented from WKO Firmen A-Z on
-2026-10-10 and individual official websites through 2026-10-11; see "Catalog
+2026-10-10 and individual official websites through 2026-10-13; see "Catalog
 rebuild" below). It is an embedded resource loaded
 through the existing `ViennaCatalog` and `SeedVocabulary` APIs (shared
 vocabulary, ADR 0011). Seeding is idempotent (keyed by slug) and deterministic
@@ -14,9 +14,8 @@ vocabulary, ADR 0011). Seeding is idempotent (keyed by slug) and deterministic
 **Provenance:** Entries were verified against machine-readable official
 sources or WKO Firmen A-Z (studio pages/sitemaps of fitinn.at,
 clever-fit.com, mrssporty.at, johnharris.at, holmesplace.at, fitfabrik.at,
-johnreed.fitness, crossfitvienna.at, and WKO-listed studio websites). Seven
-entries (McFIT ×5, Kieser ×2) remain unverified; re-verify
-before production import (ADR 0009).
+johnreed.fitness, mcfit.com, evofitness.at, golds-gym.at, crossfitvienna.at,
+and WKO-listed studio websites).
 
 The 2026-10-10 WKO pass inspected all 324 Vienna results through the site's
 stateful "Mehr laden" pagination. Only entries with a WKO-listed website were
@@ -55,15 +54,19 @@ Full re-research replacing the original ~50-entry best-effort list:
 | --- | --- | --- | --- |
 | FitInn | 12 (10 wrong addresses) | 31 | complete Vienna network from fitinn.at studio pages |
 | clever fit | 5 (3 nonexistent branches) | 13 | from clever-fit.com de-AT sitemap + JSON-LD addresses |
-| Mrs.Sporty | 4 (3 not in club list) | 16 | complete list from mrssporty.at club finder |
+| Mrs.Sporty | 4 (3 not in club list) | 13 | active clubs from mrssporty.at; three closed Vienna club pages removed on 2026-10-13 |
 | John Harris | 4 (2 wrong) | 8 | embedded studio JSON on johnharris.at |
 | Fit Fabrik | 5 (all wrong) | 7 | fitfabrik.at studio pages |
 | Holmes Place | 3 (all 3 addresses wrong) | 3 | JSON-LD on club pages (Wipplingerstr. 30 / Huetteldorfer Str. 130a / Wehlistr. 66) |
 | JOHN REED | 0 | 1 | new chain; Wien Oper, Kaerntner Ring 5 |
-| McFIT | 5 | 5 | kept unverified (site not script-readable) |
+| McFIT | 5 | 11 | replaced from the official McFIT studio API on 2026-10-12 |
 | Club Danube | 4 | 4 | retained in 2026-08, then removed after the abandoned domain was repurposed for casino SEO content |
-| Kieser Training | 3 | 2 | Innere Stadt removed (address now verified as JOHN REED) |
+| Kieser Training | 3 | 0 | removed after Vienna disappeared from the official Kieser studio locator |
 | MYGYM | 2 | 0 | chain has NO Vienna branches (Salzburg-based) - removed |
+| EVO Fitness | 0 | 9 | active Vienna clubs from the official API; two opening-soon clubs excluded |
+| Gold's Gym | 0 | 1 | Wien Columbusplatz from the official club page |
+| GET UP Fitness | 0 | 1 | Trabrennstrasse 4 from the official website |
+| MH76 Training | 0 | 0 | chain removed; official imprint identifies it as a trainer-room rental platform |
 | Independents | 3 | 2 | CrossFit Vienna moved to Rennweg 97 (verified); Doorbreaker removed (domain dead); Trainingslager was retained then and removed during the 2026-10-10 cleanup |
 | **Total** | **50** | **92** | |
 
