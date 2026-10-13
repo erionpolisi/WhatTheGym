@@ -29,6 +29,28 @@ available through the existing data model.
 Opening hours are intentionally not seeded — they are optional and must come
 from official data entered by an admin. No Google Maps integration.
 
+## Catalog verification CLI
+
+Run the interactive catalog tool from `backend/`:
+
+```powershell
+dotnet run --project tools\Gym.CatalogCli
+```
+
+The CLI reads and atomically updates the embedded source file
+`src/Gym.Infrastructure/Seeding/Data/catalog.json`. It lists numbered chains
+and their websites, then numbered Vienna locations for the selected chain.
+Selecting a location opens a normal Google Maps search URL in the default
+browser; the tool does not use the Google Maps API or require credentials.
+
+Website verification is stored as `WebsiteVerifiedOn` on a chain and address
+verification as `LocationVerifiedOn` on a Vienna gym. Confirming a verification
+uses today's date by default and accepts an optional `YYYY-MM-DD` override.
+Changing a website or location address clears the corresponding verification
+date. The first version can edit and add chains and locations but deliberately
+does not delete them. These JSON fields prepare later database persistence;
+the CLI itself only changes the seed source.
+
 ## Legal documents
 
 Version 1 of Impressum, Datenschutzerklaerung and Nutzungsbedingungen is
