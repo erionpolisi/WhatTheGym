@@ -14,6 +14,7 @@ try
         Console.In,
         Console.Out,
         () => DateOnly.FromDateTime(DateTime.Today),
+        new TerminalFormatter(useColors: !Console.IsOutputRedirected),
         ClearScreen);
     application.Run();
     return 0;

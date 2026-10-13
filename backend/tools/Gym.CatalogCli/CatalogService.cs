@@ -100,6 +100,15 @@ internal sealed class CatalogService(CatalogDocument catalog)
             .ThenBy(gym => gym.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
+    public VerificationSummary GetLocationVerificationSummary(CatalogChain chain, DateOnly today)
+    {
+        var gyms = GetGyms(chain);
+        return new VerificationSummary(
+            gyms.Count(gym => gym.LocationVerifiedOn is null),
+            gyms.Count(gym => gym.LocationVerifiedOn is { } verifiedOn
+                               && VerificationStatus.IsStale(verifiedOn, today)));
+    }
+
     public static string CreateGoogleMapsUrl(CatalogGym gym)
     {
         var query = Uri.EscapeDataString($"{gym.Address}, {gym.PostalCode} Wien");

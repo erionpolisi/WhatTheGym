@@ -9,6 +9,7 @@ internal sealed class ConsoleCatalogApplication(
     TextReader input,
     TextWriter output,
     Func<DateOnly> today,
+    TerminalFormatter terminal,
     Action clearScreen)
 {
     private readonly CatalogService _service = new(catalogFile.Load(catalogPath));
@@ -19,17 +20,21 @@ internal sealed class ConsoleCatalogApplication(
 
         while (true)
         {
+            var currentDate = today();
             var chains = _service.Catalog.Chains
                 .OrderBy(chain => chain.Name, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
             output.WriteLine();
             output.WriteLine("Ketten");
+            output.WriteLine($"{terminal.Red("Rot")}: nicht verifiziert | {terminal.Orange("Orange")}: älter als ein Monat");
             for (var index = 0; index < chains.Length; index++)
             {
                 var listedChain = chains[index];
+                var summary = _service.GetLocationVerificationSummary(listedChain, currentDate);
                 output.WriteLine(
-                    $"{index + 1,2}. {listedChain.Name} | {listedChain.Website ?? "-"} | geprüft: {FormatDate(listedChain.WebsiteVerifiedOn)}");
+                    $"{index + 1,2}. {listedChain.Name} | {listedChain.Website ?? "-"} | geprüft: {FormatDate(listedChain.WebsiteVerifiedOn, currentDate)}"
+                    + terminal.VerificationCounts(summary));
             }
 
             output.WriteLine();
@@ -61,9 +66,13 @@ internal sealed class ConsoleCatalogApplication(
     {
         while (true)
         {
+            var currentDate = today();
             var gyms = _service.GetGyms(chain);
+            var summary = _service.GetLocationVerificationSummary(chain, currentDate);
             output.WriteLine();
-            output.WriteLine($"{chain.Name} | {chain.Website ?? "-"} | Website geprüft: {FormatDate(chain.WebsiteVerifiedOn)}");
+            output.WriteLine(
+                $"{chain.Name} | {chain.Website ?? "-"} | Website geprüft: {FormatDate(chain.WebsiteVerifiedOn, currentDate)}"
+                + terminal.VerificationCounts(summary));
             output.WriteLine("Standorte");
 
             if (gyms.Count == 0)
@@ -76,7 +85,8 @@ internal sealed class ConsoleCatalogApplication(
                 {
                     var gym = gyms[index];
                     output.WriteLine(
-                        $"{index + 1,2}. {gym.Name} | {gym.Address}, {gym.PostalCode} Wien | geprüft: {FormatDate(gym.LocationVerifiedOn)}");
+                        $"{index + 1,2}. {gym.Name} | {gym.Address}, {gym.PostalCode} Wien"
+                        + $" | geprüft: {FormatDate(gym.LocationVerifiedOn, currentDate)}");
                 }
             }
 
@@ -130,10 +140,11 @@ internal sealed class ConsoleCatalogApplication(
 
         while (true)
         {
+            var currentDate = today();
             output.WriteLine();
             output.WriteLine($"{gym.Name}");
             output.WriteLine($"{gym.Address}, {gym.PostalCode} Wien ({gym.District}. Bezirk)");
-            output.WriteLine($"Standort geprüft: {FormatDate(gym.LocationVerifiedOn)}");
+            output.WriteLine($"Standort geprüft: {FormatDate(gym.LocationVerifiedOn, currentDate)}");
             output.WriteLine("[M] Maps erneut öffnen | [V] Standort verifizieren | [E] bearbeiten | [B] zurück");
 
             var command = ReadCommand();
@@ -339,7 +350,18 @@ internal sealed class ConsoleCatalogApplication(
         output.WriteLine("Gespeichert.");
     }
 
-    private static string FormatDate(DateOnly? date) => date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "-";
+    private string FormatDate(DateOnly? date, DateOnly currentDate)
+    {
+        if (date is null)
+        {
+            return terminal.Red("-");
+        }
+
+        var formattedDate = date.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        return VerificationStatus.IsStale(date.Value, currentDate)
+            ? terminal.Orange(formattedDate)
+            : formattedDate;
+    }
 
     private static bool TrySelect<T>(string command, IReadOnlyList<T> items, out T item)
     {

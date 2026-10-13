@@ -72,6 +72,54 @@ public sealed class CatalogFileTests : IDisposable
         Assert.Contains("unbekannte Kette", exception.Message);
     }
 
+    [Fact]
+    public void Location_verification_summary_separates_unverified_and_stale_locations()
+    {
+        var catalog = CreateCatalog();
+        catalog.ViennaGyms.Add(
+            new CatalogGym
+            {
+                Name = "Example Gym Wien Mitte",
+                ChainSlug = "example-gym",
+                District = 3,
+                Address = "Testgasse 2",
+                PostalCode = "1030",
+                LocationVerifiedOn = new DateOnly(2026, 9, 12),
+            });
+        catalog.ViennaGyms.Add(
+            new CatalogGym
+            {
+                Name = "Example Gym Wien West",
+                ChainSlug = "example-gym",
+                District = 15,
+                Address = "Testweg 3",
+                PostalCode = "1150",
+                LocationVerifiedOn = new DateOnly(2026, 9, 13),
+            });
+        var service = new CatalogService(catalog);
+
+        var summary = service.GetLocationVerificationSummary(
+            catalog.Chains[0],
+            new DateOnly(2026, 10, 13));
+
+        Assert.Equal(new VerificationSummary(UnverifiedCount: 1, StaleCount: 1), summary);
+    }
+
+    [Fact]
+    public void Terminal_formatter_applies_requested_colors_when_enabled()
+    {
+        var formatter = new TerminalFormatter(useColors: true);
+
+        Assert.Equal("\u001b[31m(2)\u001b[0m", formatter.Red("(2)"));
+        Assert.Equal("\u001b[38;5;208m2026-09-12\u001b[0m", formatter.Orange("2026-09-12"));
+        Assert.Equal(
+            " | \u001b[31m(2)\u001b[0m",
+            formatter.VerificationCounts(new VerificationSummary(UnverifiedCount: 2, StaleCount: 0)));
+        Assert.Equal(
+            string.Empty,
+            formatter.VerificationCounts(new VerificationSummary(UnverifiedCount: 0, StaleCount: 0)));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory))
