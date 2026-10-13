@@ -49,7 +49,9 @@ uses today's date by default and accepts an optional `YYYY-MM-DD` override.
 Changing a website or location address clears the corresponding verification
 date. The first version can edit and add chains and locations but deliberately
 does not delete them. These JSON fields prepare later database persistence;
-the CLI itself only changes the seed source.
+the CLI itself only changes the seed source. In an interactive terminal,
+unverified dates and their per-chain location counts are red. Dates older than
+one calendar month and their counts are orange.
 
 ## Legal documents
 
