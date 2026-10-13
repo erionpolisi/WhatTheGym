@@ -13,7 +13,8 @@ try
         new BrowserLauncher(),
         Console.In,
         Console.Out,
-        () => DateOnly.FromDateTime(DateTime.Today));
+        () => DateOnly.FromDateTime(DateTime.Today),
+        ClearScreen);
     application.Run();
     return 0;
 }
@@ -21,6 +22,14 @@ catch (Exception exception) when (exception is IOException or UnauthorizedAccess
 {
     Console.Error.WriteLine($"Fehler: {exception.Message}");
     return 1;
+}
+
+static void ClearScreen()
+{
+    if (!Console.IsOutputRedirected)
+    {
+        Console.Clear();
+    }
 }
 
 internal static class CatalogPathResolver

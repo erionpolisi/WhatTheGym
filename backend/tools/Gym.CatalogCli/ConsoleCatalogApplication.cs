@@ -8,7 +8,8 @@ internal sealed class ConsoleCatalogApplication(
     IBrowserLauncher browser,
     TextReader input,
     TextWriter output,
-    Func<DateOnly> today)
+    Func<DateOnly> today,
+    Action clearScreen)
 {
     private readonly CatalogService _service = new(catalogFile.Load(catalogPath));
 
@@ -241,7 +242,7 @@ internal sealed class ConsoleCatalogApplication(
         while (true)
         {
             output.Write($"Prüfdatum [{defaultDate:yyyy-MM-dd}]: ");
-            var value = input.ReadLine()?.Trim();
+            var value = ReadLine()?.Trim();
             if (string.IsNullOrEmpty(value))
             {
                 return defaultDate;
@@ -261,7 +262,7 @@ internal sealed class ConsoleCatalogApplication(
         while (true)
         {
             output.Write(current is null ? "Bezirk (1-23): " : $"Bezirk [{current}] (1-23): ");
-            var value = input.ReadLine()?.Trim();
+            var value = ReadLine()?.Trim();
             if (string.IsNullOrEmpty(value) && current is not null)
             {
                 return current.Value;
@@ -282,7 +283,7 @@ internal sealed class ConsoleCatalogApplication(
         while (true)
         {
             output.Write($"{label}: ");
-            var value = input.ReadLine()?.Trim();
+            var value = ReadLine()?.Trim();
             if (!string.IsNullOrEmpty(value))
             {
                 return value;
@@ -295,21 +296,28 @@ internal sealed class ConsoleCatalogApplication(
     private string? ReadOptional(string label)
     {
         output.Write($"{label}: ");
-        var value = input.ReadLine()?.Trim();
+        var value = ReadLine()?.Trim();
         return string.IsNullOrEmpty(value) ? null : value;
     }
 
     private string ReadWithDefault(string label, string current)
     {
         output.Write($"{label} [{current}]: ");
-        var value = input.ReadLine()?.Trim();
+        var value = ReadLine()?.Trim();
         return string.IsNullOrEmpty(value) ? current : value;
     }
 
     private string ReadCommand()
     {
         output.Write("> ");
-        return input.ReadLine()?.Trim() ?? "q";
+        return ReadLine()?.Trim() ?? "q";
+    }
+
+    private string? ReadLine()
+    {
+        var value = input.ReadLine();
+        clearScreen();
+        return value;
     }
 
     private void ExecuteAndSave(Action operation)
