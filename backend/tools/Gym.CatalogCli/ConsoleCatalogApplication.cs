@@ -161,6 +161,7 @@ internal sealed class ConsoleCatalogApplication(
             {
                 gym.LocationVerifiedOn = ReadVerificationDate();
                 Save();
+                return;
             }
             else if (command.Equals("e", StringComparison.OrdinalIgnoreCase))
             {
