@@ -3,9 +3,9 @@
 ## Vienna gym catalogue
 
 `Gym.Infrastructure/Seeding/Data/catalog.json` currently seeds 21 chains,
-12 amenities and 108 studios across Vienna's districts (rebuilt 2026-08-31
+12 amenities and 109 studios across Vienna's districts (rebuilt 2026-08-31
 from official chain sources and supplemented from WKO Firmen A-Z on
-2026-10-10 and individual official websites through 2026-10-13; see "Catalog
+2026-10-10 and individual official websites through 2026-10-14; see "Catalog
 rebuild" below). It is an embedded resource loaded
 through the existing `ViennaCatalog` and `SeedVocabulary` APIs (shared
 vocabulary, ADR 0011). Seeding is idempotent (keyed by slug) and deterministic
@@ -57,6 +57,11 @@ Vienna gym entries may optionally set `TemporarilyClosed` to `true`. Missing
 values default to an active gym. The seeder maps this flag to the existing
 `GymStatus.TemporarilyClosed`, while the CLI highlights it in orange and allows
 the status to be toggled without deleting the location.
+
+Chains may optionally define `Tags`. `WomenOnly` marks a chain whose locations
+are exclusively for women; the CLI displays it as `Nur für Frauen`. Mrs.Sporty
+currently carries this tag. The metadata remains in the seed catalogue until a
+future frontend requirement deliberately adds it to the persisted/API model.
 
 ## Legal documents
 
