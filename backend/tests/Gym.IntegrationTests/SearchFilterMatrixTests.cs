@@ -63,8 +63,8 @@ public sealed class SearchFilterMatrixTests(WtgApiFactory factory)
     [InlineData("fitinn")]
     [InlineData("mcfit")]
     [InlineData("clever-fit")]
-    [InlineData("club-danube")]
-    [InlineData("kieser-training")]
+    [InlineData("john-reed")]
+    [InlineData("fitness-first")]
     public async Task Chain_filter_returns_only_requested_chain(string chainSlug)
     {
         var client = factory.CreateClient();
@@ -143,10 +143,10 @@ public sealed class SearchFilterMatrixTests(WtgApiFactory factory)
     [InlineData("fitin", "FitInn")]
     [InlineData("favoriten", "Favoriten")]
     [InlineData("Favoritenstrasse", "Favoriten")]
-    [InlineData("donaustadt", "Donaustadt")]
+    [InlineData("stadlau", "Stadlau")]
     [InlineData("gasometer", "Gasometer")]
     [InlineData("mcfit", "McFIT")]
-    [InlineData("kieser", "Kieser")]
+    [InlineData("schottentor", "Schottentor")]
     [InlineData("clever", "Clever")]
     [InlineData("club", "Club")]
     [InlineData("", "")]

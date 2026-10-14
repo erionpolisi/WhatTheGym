@@ -29,7 +29,7 @@ public sealed class HardeningTests(WtgApiFactory factory)
     }
 
     [Theory]
-    [InlineData("/api/v1/gyms/kieser-training-wien-alsergrund")]
+    [InlineData("/api/v1/gyms/holmes-place-boerseplatz")]
     [InlineData("/api/v1/legal/documents/imprint")]
     [InlineData("/api/v1/legal/documents/privacyPolicy")]
     [InlineData("/api/v1/legal/documents/termsOfUse")]

@@ -31,13 +31,13 @@ public class CatalogEndpointsTests(WtgApiFactory factory)
     }
 
     [Fact]
-    public async Task Seeded_catalog_contains_about_fifty_vienna_gyms()
+    public async Task Seeded_catalog_contains_complete_vienna_gyms()
     {
         var client = factory.CreateClient();
 
         var json = await client.GetJsonAsync("/api/v1/gyms?pageSize=100");
 
-        json["totalCount"]!.GetValue<int>().Should().BeGreaterThanOrEqualTo(45);
+        json["totalCount"]!.GetValue<int>().Should().BeGreaterThanOrEqualTo(100);
         json["items"]!.AsArray().Should().NotBeEmpty();
     }
 
@@ -106,11 +106,12 @@ public class CatalogEndpointsTests(WtgApiFactory factory)
     public async Task Gym_detail_supports_etags()
     {
         var client = factory.CreateClient();
-        var first = await client.GetAsync(new Uri("/api/v1/gyms/kieser-training-wien-alsergrund", UriKind.Relative));
+        const string path = "/api/v1/gyms/holmes-place-boerseplatz";
+        var first = await client.GetAsync(new Uri(path, UriKind.Relative));
         first.StatusCode.Should().Be(HttpStatusCode.OK);
         var etag = first.Headers.ETag!.ToString();
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("/api/v1/gyms/kieser-training-wien-alsergrund", UriKind.Relative));
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(path, UriKind.Relative));
         request.Headers.TryAddWithoutValidation("If-None-Match", etag);
         var second = await client.SendAsync(request);
 

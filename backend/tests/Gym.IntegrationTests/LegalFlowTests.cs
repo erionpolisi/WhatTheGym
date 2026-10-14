@@ -89,7 +89,7 @@ public class LegalFlowTests(WtgApiFactory factory)
     [Fact]
     public async Task Fast_track_hides_content_and_full_removal_supports_tokenized_appeal()
     {
-        const string slug = "mcfit-wien-landstrasse";
+        const string slug = "mcfit-wien-leopoldstadt";
         var (reviewId, _) = await CreateReviewAsync(slug, "author-removed@example.invalid");
         var anonymous = factory.CreateClient();
         var (caseNumber, _, caseId) = await ReportAsync(anonymous, reviewId);
