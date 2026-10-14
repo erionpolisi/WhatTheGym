@@ -1,4 +1,6 @@
 using Gym.CatalogCli;
+using Gym.Domain.Common;
+using Gym.Domain.Entities;
 using Gym.Domain.Enums;
 using Xunit;
 
@@ -123,6 +125,54 @@ public sealed class CatalogFileTests : IDisposable
         Assert.Equal(
             string.Empty,
             formatter.VerificationCounts(new VerificationSummary(UnverifiedCount: 0, StaleCount: 0)));
+    }
+
+    [Fact]
+    public void Database_projection_is_deterministic_and_contains_only_portable_catalog_data()
+    {
+        Directory.CreateDirectory(_directory);
+        var firstChain = GymChain.Create(
+            "Zeta",
+            "zeta",
+            "https://zeta.example",
+            DateTimeOffset.UtcNow,
+            TrainingType.Strength | TrainingType.Cardio,
+            TargetAudience.General);
+        var secondChain = GymChain.Create(
+            "Alpha",
+            "alpha",
+            null,
+            DateTimeOffset.UtcNow,
+            TrainingType.Functional,
+            TargetAudience.WomenOnly);
+        var gym = GymEntry.Create(
+            "Zeta Wien",
+            "zeta-wien",
+            firstChain.Id,
+            2,
+            "Teststraße 1",
+            "1020",
+            null,
+            null,
+            null,
+            GymStatus.TemporarilyClosed,
+            DateTimeOffset.UtcNow).Value;
+        gym.SetCatalogFacetOverrides(TrainingType.GroupClasses, null, DateTimeOffset.UtcNow);
+        var document = DatabaseCatalogExporter.CreateDocument(
+            [firstChain, secondChain],
+            [gym],
+            [Amenity.Create("Duschen", Slug.Generate("Duschen"), DateTimeOffset.UtcNow)]);
+        var path = Path.Combine(_directory, "catalog-DB.json");
+
+        new CatalogFile().Save(path, document);
+        var json = File.ReadAllText(path);
+
+        Assert.Equal(["Alpha", "Zeta"], document.Chains.Select(chain => chain.Name));
+        Assert.Equal(GymStatus.TemporarilyClosed, document.ViennaGyms[0].Status);
+        Assert.Equal([TrainingType.GroupClasses], document.ViennaGyms[0].TrainingTypes);
+        Assert.DoesNotContain("\"Id\"", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreatedAtUtc", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdatedAtUtc", json, StringComparison.Ordinal);
     }
 
     public void Dispose()
