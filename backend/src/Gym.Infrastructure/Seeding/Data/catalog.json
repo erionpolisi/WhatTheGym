@@ -48,6 +48,7 @@
     {"Name":"FitInn Wien Hütteldorf","ChainSlug":"fitinn","District":14,"Address":"Deutschordenstraße 3","PostalCode":"1140"},
     {"Name":"FitInn Wien Johnstraße","ChainSlug":"fitinn","District":15,"Address":"Johnstraße 65","PostalCode":"1150"},
     {"Name":"FitInn Wien Meiselmarkt","ChainSlug":"fitinn","District":15,"Address":"Hütteldorfer Straße 81b","PostalCode":"1150"},
+    {"Name":"FitInn Wien Meiselmarkt","ChainSlug":"fitinn","District":15,"Address":"Hütteldorfer Straße 81b","PostalCode":"1150","TemporarilyClosed":true},
     {"Name":"FitInn Wien Kendlerstraße","ChainSlug":"fitinn","District":16,"Address":"Kendlerstraße 47","PostalCode":"1160"},
     {"Name":"FitInn Wien Ottakringer Straße","ChainSlug":"fitinn","District":17,"Address":"Ottakringer Straße 72","PostalCode":"1170"},
     {"Name":"FitInn Wien Q19","ChainSlug":"fitinn","District":19,"Address":"Kreilplatz 1","PostalCode":"1190"},

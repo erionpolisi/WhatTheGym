@@ -73,6 +73,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         foreach (var seed in ViennaCatalog.Gyms)
         {
             var slug = Slug.Generate(seed.Name);
+            var status = seed.TemporarilyClosed == true ? GymStatus.TemporarilyClosed : GymStatus.Active;
             var existing = await context.Gyms.FirstOrDefaultAsync(g => g.Slug == slug, ct);
             if (existing is not null)
             {
@@ -92,6 +93,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                         existing.Phone,
                         existing.Description,
                         SeedStamp);
+                    existing.ChangeStatus(status, SeedStamp);
                 }
 
                 continue;
@@ -106,7 +108,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 chainId is not null ? chainsBySlug[seed.ChainSlug!].Website : null,
                 phone: null,
                 description: null,
-                GymStatus.Active,
+                status,
                 SeedStamp);
             if (gymResult.IsFailure)
             {

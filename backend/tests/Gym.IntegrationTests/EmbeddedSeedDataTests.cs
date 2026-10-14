@@ -22,6 +22,7 @@ public sealed class EmbeddedSeedDataTests
         Assert.All(
             ViennaCatalog.Gyms.Where(gym => gym.ChainSlug is not null),
             gym => Assert.Contains(gym.ChainSlug!, chainSlugs));
+        Assert.True(ViennaCatalog.Gyms.Single(gym => gym.Name == "FitInn Wien Meiselmarkt").TemporarilyClosed);
         Assert.Equal(3, LegalDocumentDrafts.All.Count);
         Assert.Equal(3, EmbeddedSeedData.Demo.Users!.Count);
         Assert.Equal(3, EmbeddedSeedData.Demo.Ratings!.Count);

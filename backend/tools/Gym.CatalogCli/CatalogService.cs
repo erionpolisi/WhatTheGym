@@ -93,6 +93,11 @@ internal sealed class CatalogService(CatalogDocument catalog)
         gym.PostalCode = normalizedPostalCode;
     }
 
+    public static void ToggleTemporaryClosure(CatalogGym gym)
+    {
+        gym.TemporarilyClosed = gym.TemporarilyClosed == true ? null : true;
+    }
+
     public IReadOnlyList<CatalogGym> GetGyms(CatalogChain chain) =>
         Catalog.ViennaGyms
             .Where(gym => string.Equals(gym.ChainSlug, Slug.Generate(chain.Name), StringComparison.Ordinal))

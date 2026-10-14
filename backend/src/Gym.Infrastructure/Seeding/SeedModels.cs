@@ -7,7 +7,8 @@ public sealed record SeedGym(
     int District,
     string Address,
     string PostalCode,
-    DateOnly? LocationVerifiedOn = null);
+    DateOnly? LocationVerifiedOn = null,
+    bool? TemporarilyClosed = null);
 
 public sealed record ChainSeed(string Name, string? Website, DateOnly? WebsiteVerifiedOn = null);
 

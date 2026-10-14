@@ -37,6 +37,9 @@ internal sealed class CatalogGym
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateOnly? LocationVerifiedOn { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? TemporarilyClosed { get; set; }
 }
 
 internal sealed class RegionalCatalogGym

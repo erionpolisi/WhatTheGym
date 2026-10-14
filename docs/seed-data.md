@@ -53,6 +53,11 @@ the CLI itself only changes the seed source. In an interactive terminal,
 unverified dates and their per-chain location counts are red. Dates older than
 one calendar month and their counts are orange.
 
+Vienna gym entries may optionally set `TemporarilyClosed` to `true`. Missing
+values default to an active gym. The seeder maps this flag to the existing
+`GymStatus.TemporarilyClosed`, while the CLI highlights it in orange and allows
+the status to be toggled without deleting the location.
+
 ## Legal documents
 
 Version 1 of Impressum, Datenschutzerklaerung and Nutzungsbedingungen is

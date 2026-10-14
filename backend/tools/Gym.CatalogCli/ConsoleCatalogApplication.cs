@@ -86,7 +86,8 @@ internal sealed class ConsoleCatalogApplication(
                     var gym = gyms[index];
                     output.WriteLine(
                         $"{index + 1,2}. {gym.Name} | {gym.Address}, {gym.PostalCode} Wien"
-                        + $" | geprüft: {FormatDate(gym.LocationVerifiedOn, currentDate)}");
+                        + $" | geprüft: {FormatDate(gym.LocationVerifiedOn, currentDate)}"
+                        + FormatClosureStatus(gym));
                 }
             }
 
@@ -145,7 +146,9 @@ internal sealed class ConsoleCatalogApplication(
             output.WriteLine($"{gym.Name}");
             output.WriteLine($"{gym.Address}, {gym.PostalCode} Wien ({gym.District}. Bezirk)");
             output.WriteLine($"Standort geprüft: {FormatDate(gym.LocationVerifiedOn, currentDate)}");
-            output.WriteLine("[M] Maps erneut öffnen | [V] Standort verifizieren | [E] bearbeiten | [B] zurück");
+            output.WriteLine($"Status: {(gym.TemporarilyClosed == true ? terminal.Orange("vorübergehend geschlossen") : "aktiv")}");
+            output.WriteLine("[M] Maps erneut öffnen | [V] Standort verifizieren | [S] Status ändern");
+            output.WriteLine("[E] bearbeiten | [B] zurück");
 
             var command = ReadCommand();
             if (command.Equals("b", StringComparison.OrdinalIgnoreCase))
@@ -166,6 +169,12 @@ internal sealed class ConsoleCatalogApplication(
             else if (command.Equals("e", StringComparison.OrdinalIgnoreCase))
             {
                 EditGym(gym);
+            }
+            else if (command.Equals("s", StringComparison.OrdinalIgnoreCase))
+            {
+                CatalogService.ToggleTemporaryClosure(gym);
+                Save();
+                return;
             }
             else
             {
@@ -363,6 +372,11 @@ internal sealed class ConsoleCatalogApplication(
             ? terminal.Orange(formattedDate)
             : formattedDate;
     }
+
+    private string FormatClosureStatus(CatalogGym gym) =>
+        gym.TemporarilyClosed == true
+            ? $" | {terminal.Orange("vorübergehend geschlossen")}"
+            : string.Empty;
 
     private static bool TrySelect<T>(string command, IReadOnlyList<T> items, out T item)
     {

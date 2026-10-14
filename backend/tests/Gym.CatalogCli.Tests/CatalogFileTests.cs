@@ -15,6 +15,7 @@ public sealed class CatalogFileTests : IDisposable
         var catalog = CreateCatalog();
         catalog.Chains[0].WebsiteVerifiedOn = new DateOnly(2026, 10, 13);
         catalog.ViennaGyms[0].LocationVerifiedOn = new DateOnly(2026, 10, 12);
+        catalog.ViennaGyms[0].TemporarilyClosed = true;
         var file = new CatalogFile();
 
         file.Save(path, catalog);
@@ -22,6 +23,7 @@ public sealed class CatalogFileTests : IDisposable
 
         Assert.Equal(new DateOnly(2026, 10, 13), loaded.Chains[0].WebsiteVerifiedOn);
         Assert.Equal(new DateOnly(2026, 10, 12), loaded.ViennaGyms[0].LocationVerifiedOn);
+        Assert.True(loaded.ViennaGyms[0].TemporarilyClosed);
         Assert.Equal("Regional Gym", loaded.RegionalCatalogs["Burgenland"][0].Name);
     }
 
