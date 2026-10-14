@@ -38,3 +38,6 @@ Thumbs.db
 .neon
 .agents/
 skills-lock.json
+
+# Local database catalog snapshot
+backend/src/Gym.Infrastructure/Seeding/Data/catalog-DB.json
