@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Gym.Domain.Enums;
 
 namespace Gym.CatalogCli;
 
@@ -22,8 +23,9 @@ internal sealed class CatalogChain
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateOnly? WebsiteVerifiedOn { get; set; }
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public List<string>? Tags { get; set; }
+    public List<TrainingType> TrainingTypes { get; set; } = [];
+
+    public TargetAudience TargetAudience { get; set; } = TargetAudience.General;
 }
 
 internal sealed class CatalogGym
@@ -43,6 +45,15 @@ internal sealed class CatalogGym
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? TemporarilyClosed { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public GymStatus? Status { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<TrainingType>? TrainingTypes { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public TargetAudience? TargetAudience { get; set; }
 }
 
 internal sealed class RegionalCatalogGym

@@ -1,4 +1,5 @@
 using Gym.CatalogCli;
+using Gym.Domain.Enums;
 using Xunit;
 
 namespace Gym.CatalogCli.Tests;
@@ -14,7 +15,7 @@ public sealed class CatalogFileTests : IDisposable
         var path = Path.Combine(_directory, "catalog.json");
         var catalog = CreateCatalog();
         catalog.Chains[0].WebsiteVerifiedOn = new DateOnly(2026, 10, 13);
-        catalog.Chains[0].Tags = ["WomenOnly"];
+        catalog.Chains[0].TargetAudience = TargetAudience.WomenOnly;
         catalog.ViennaGyms[0].LocationVerifiedOn = new DateOnly(2026, 10, 12);
         catalog.ViennaGyms[0].TemporarilyClosed = true;
         var file = new CatalogFile();
@@ -23,7 +24,7 @@ public sealed class CatalogFileTests : IDisposable
         var loaded = file.Load(path);
 
         Assert.Equal(new DateOnly(2026, 10, 13), loaded.Chains[0].WebsiteVerifiedOn);
-        Assert.Equal(["WomenOnly"], loaded.Chains[0].Tags);
+        Assert.Equal(TargetAudience.WomenOnly, loaded.Chains[0].TargetAudience);
         Assert.Equal(new DateOnly(2026, 10, 12), loaded.ViennaGyms[0].LocationVerifiedOn);
         Assert.True(loaded.ViennaGyms[0].TemporarilyClosed);
         Assert.Equal("Regional Gym", loaded.RegionalCatalogs["Burgenland"][0].Name);
@@ -136,7 +137,12 @@ public sealed class CatalogFileTests : IDisposable
     {
         Chains =
         [
-            new CatalogChain { Name = "Example Gym", Website = "https://example.com" },
+            new CatalogChain
+            {
+                Name = "Example Gym",
+                Website = "https://example.com",
+                TrainingTypes = [TrainingType.Strength, TrainingType.Cardio],
+            },
         ],
         Amenities = ["Duschen"],
         ViennaGyms =

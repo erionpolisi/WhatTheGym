@@ -35,14 +35,30 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
     private async Task SeedCatalogAsync(CancellationToken ct)
     {
         var chainsBySlug = new Dictionary<string, GymChain>(StringComparer.Ordinal);
-        foreach (var (name, website) in SeedVocabulary.Chains)
+        foreach (var seed in SeedVocabulary.ChainSeeds)
         {
-            var slug = Slug.Generate(name);
+            var slug = Slug.Generate(seed.Name);
+            var trainingTypes = ToTrainingTypeFlags(seed.TrainingTypes);
             var existing = await context.GymChains.FirstOrDefaultAsync(c => c.Slug == slug, ct);
             if (existing is null)
             {
-                existing = GymChain.Create(name, slug, website, SeedStamp);
+                existing = GymChain.Create(
+                    seed.Name,
+                    slug,
+                    seed.Website,
+                    SeedStamp,
+                    trainingTypes,
+                    seed.TargetAudience);
                 context.GymChains.Add(existing);
+            }
+            else if (existing.CreatedAtUtc == SeedStamp && existing.UpdatedAtUtc == SeedStamp)
+            {
+                existing.Update(
+                    seed.Name,
+                    seed.Website,
+                    SeedStamp,
+                    trainingTypes,
+                    seed.TargetAudience);
             }
 
             chainsBySlug[slug] = existing;
@@ -73,7 +89,8 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         foreach (var seed in ViennaCatalog.Gyms)
         {
             var slug = Slug.Generate(seed.Name);
-            var status = seed.TemporarilyClosed == true ? GymStatus.TemporarilyClosed : GymStatus.Active;
+            var status = seed.Status
+                ?? (seed.TemporarilyClosed == true ? GymStatus.TemporarilyClosed : GymStatus.Active);
             var existing = await context.Gyms.FirstOrDefaultAsync(g => g.Slug == slug, ct);
             if (existing is not null)
             {
@@ -94,6 +111,10 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                         existing.Description,
                         SeedStamp);
                     existing.ChangeStatus(status, SeedStamp);
+                    existing.SetCatalogFacetOverrides(
+                        seed.TrainingTypes is null ? null : ToTrainingTypeFlags(seed.TrainingTypes),
+                        seed.TargetAudience,
+                        SeedStamp);
                 }
 
                 continue;
@@ -117,6 +138,10 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
             }
 
             gymResult.Value.SetAmenities(defaultAmenities, SeedStamp);
+            gymResult.Value.SetCatalogFacetOverrides(
+                seed.TrainingTypes is null ? null : ToTrainingTypeFlags(seed.TrainingTypes),
+                seed.TargetAudience,
+                SeedStamp);
             context.Gyms.Add(gymResult.Value);
             created++;
         }
@@ -124,6 +149,10 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         await context.SaveChangesAsync(ct);
         logger.LogInformation("Catalogue seed done ({Created} new gyms).", created);
     }
+
+    private static TrainingType ToTrainingTypeFlags(IReadOnlyList<TrainingType>? trainingTypes) =>
+        trainingTypes?.Aggregate(TrainingType.None, (current, trainingType) => current | trainingType)
+        ?? TrainingType.None;
 
     private async Task SeedLegalDocumentsAsync(CancellationToken ct)
     {

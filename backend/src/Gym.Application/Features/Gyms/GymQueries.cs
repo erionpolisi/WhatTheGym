@@ -71,7 +71,9 @@ public sealed class SearchGymsQueryHandler(IGymSearchQuery search) : IQueryHandl
             .Select(r => new GymListItemDto(
                 r.Id, r.Name, r.Slug, r.District, r.AddressLine, r.PostalCode, r.Status.ToString(),
                 r.ChainName, r.ChainSlug, r.ReviewCount, r.TotalScore, r.MembershipScore, r.StudioScore,
-                ScoreSummaryDto.ToBasisString(r.ScoreBasis)))
+                ScoreSummaryDto.ToBasisString(r.ScoreBasis),
+                CatalogFacetDtoMapper.TrainingTypes(r.TrainingTypes),
+                r.TargetAudience.ToString()))
             .ToList();
 
         return new PagedResult<GymListItemDto>(items, rows.Page, rows.PageSize, rows.TotalCount);
@@ -109,7 +111,15 @@ public sealed class GetGymBySlugQueryHandler(
             gym.Phone,
             gym.Description,
             gym.Status.ToString(),
-            gym.Chain is null ? null : new ChainDto(gym.Chain.Id, gym.Chain.Name, gym.Chain.Slug, gym.Chain.Website),
+            gym.Chain is null
+                ? null
+                : new ChainDto(
+                    gym.Chain.Id,
+                    gym.Chain.Name,
+                    gym.Chain.Slug,
+                    gym.Chain.Website,
+                    CatalogFacetDtoMapper.TrainingTypes(gym.Chain.TrainingTypes),
+                    gym.Chain.TargetAudience.ToString()),
             gymAmenities.Select(a => new AmenityDto(a.Id, a.Name, a.Slug)).ToList(),
             gym.OpeningHours
                 .OrderBy(h => h.IsoDayOfWeek)
@@ -117,7 +127,9 @@ public sealed class GetGymBySlugQueryHandler(
                 .ToList(),
             SummaryMapper.ToDto(summary),
             gym.CreatedAtUtc,
-            gym.UpdatedAtUtc);
+            gym.UpdatedAtUtc,
+            CatalogFacetDtoMapper.TrainingTypes(gym.EffectiveTrainingTypes),
+            gym.EffectiveTargetAudience.ToString());
 
         return dto;
     }

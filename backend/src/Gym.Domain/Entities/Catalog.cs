@@ -17,24 +17,43 @@ public sealed class GymChain : Entity
 
     public string? Website { get; private set; }
 
+    public TrainingType TrainingTypes { get; private set; }
+
+    public TargetAudience TargetAudience { get; private set; }
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     public DateTimeOffset UpdatedAtUtc { get; private set; }
 
-    public static GymChain Create(string name, string slug, string? website, DateTimeOffset utcNow) => new()
+    public static GymChain Create(
+        string name,
+        string slug,
+        string? website,
+        DateTimeOffset utcNow,
+        TrainingType trainingTypes = TrainingType.None,
+        TargetAudience targetAudience = TargetAudience.General) => new()
     {
         Id = Guid.NewGuid(),
         Name = name.Trim(),
         Slug = slug,
         Website = TextSanitizer.Sanitize(website),
+        TrainingTypes = trainingTypes,
+        TargetAudience = targetAudience,
         CreatedAtUtc = utcNow,
         UpdatedAtUtc = utcNow,
     };
 
-    public void Update(string name, string? website, DateTimeOffset utcNow)
+    public void Update(
+        string name,
+        string? website,
+        DateTimeOffset utcNow,
+        TrainingType? trainingTypes = null,
+        TargetAudience? targetAudience = null)
     {
         Name = name.Trim();
         Website = TextSanitizer.Sanitize(website);
+        TrainingTypes = trainingTypes ?? TrainingTypes;
+        TargetAudience = targetAudience ?? TargetAudience;
         UpdatedAtUtc = utcNow;
     }
 }
@@ -139,6 +158,15 @@ public sealed class GymEntry : Entity
 
     public GymStatus Status { get; private set; }
 
+    public TrainingType? TrainingTypesOverride { get; private set; }
+
+    public TargetAudience? TargetAudienceOverride { get; private set; }
+
+    public TrainingType EffectiveTrainingTypes => TrainingTypesOverride ?? Chain?.TrainingTypes ?? TrainingType.None;
+
+    public TargetAudience EffectiveTargetAudience =>
+        TargetAudienceOverride ?? Chain?.TargetAudience ?? TargetAudience.General;
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     public DateTimeOffset UpdatedAtUtc { get; private set; }
@@ -235,6 +263,16 @@ public sealed class GymEntry : Entity
     public void ChangeStatus(GymStatus status, DateTimeOffset utcNow)
     {
         Status = status;
+        UpdatedAtUtc = utcNow;
+    }
+
+    public void SetCatalogFacetOverrides(
+        TrainingType? trainingTypesOverride,
+        TargetAudience? targetAudienceOverride,
+        DateTimeOffset utcNow)
+    {
+        TrainingTypesOverride = trainingTypesOverride;
+        TargetAudienceOverride = targetAudienceOverride;
         UpdatedAtUtc = utcNow;
     }
 

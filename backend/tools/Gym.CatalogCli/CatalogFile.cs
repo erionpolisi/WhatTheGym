@@ -1,7 +1,9 @@
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Gym.Domain.Common;
+using Gym.Domain.Enums;
 
 namespace Gym.CatalogCli;
 
@@ -11,6 +13,7 @@ internal sealed class CatalogFile
     {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) },
     };
 
     public CatalogDocument Load(string path)
@@ -63,11 +66,17 @@ internal sealed class CatalogFile
                 throw new InvalidOperationException($"Die Website von '{chain.Name}' ist keine gültige HTTP(S)-URL.");
             }
 
-            if (chain.Tags is not null
-                && (chain.Tags.Any(string.IsNullOrWhiteSpace)
-                    || chain.Tags.Distinct(StringComparer.Ordinal).Count() != chain.Tags.Count))
+            if (chain.TrainingTypes.Count == 0
+                || chain.TrainingTypes.Contains(TrainingType.None)
+                || chain.TrainingTypes.Any(value => !Enum.IsDefined(value))
+                || chain.TrainingTypes.Distinct().Count() != chain.TrainingTypes.Count)
             {
-                throw new InvalidOperationException($"Die Tags von '{chain.Name}' sind leer oder nicht eindeutig.");
+                throw new InvalidOperationException($"Die Trainingsarten von '{chain.Name}' fehlen oder sind nicht eindeutig.");
+            }
+
+            if (!Enum.IsDefined(chain.TargetAudience))
+            {
+                throw new InvalidOperationException($"Die Zielgruppe von '{chain.Name}' ist ungültig.");
             }
         }
 
@@ -100,6 +109,27 @@ internal sealed class CatalogFile
             {
                 throw new InvalidOperationException(
                     $"Der Standort '{gym.Name}' verweist auf die unbekannte Kette '{gym.ChainSlug}'.");
+            }
+
+            if (gym.Status is not null && gym.TemporarilyClosed is not null)
+            {
+                throw new InvalidOperationException(
+                    $"Der Standort '{gym.Name}' darf nicht gleichzeitig Status und TemporarilyClosed setzen.");
+            }
+
+            if (gym.TrainingTypes is { } trainingTypes
+                && (trainingTypes.Count == 0
+                    || trainingTypes.Contains(TrainingType.None)
+                    || trainingTypes.Any(value => !Enum.IsDefined(value))
+                    || trainingTypes.Distinct().Count() != trainingTypes.Count))
+            {
+                throw new InvalidOperationException(
+                    $"Die Trainingsarten von '{gym.Name}' sind leer oder ungültig.");
+            }
+
+            if (gym.TargetAudience is { } targetAudience && !Enum.IsDefined(targetAudience))
+            {
+                throw new InvalidOperationException($"Die Zielgruppe von '{gym.Name}' ist ungültig.");
             }
         }
     }

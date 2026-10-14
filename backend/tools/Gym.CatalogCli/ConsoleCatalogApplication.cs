@@ -1,4 +1,5 @@
 using System.Globalization;
+using Gym.Domain.Enums;
 
 namespace Gym.CatalogCli;
 
@@ -33,7 +34,7 @@ internal sealed class ConsoleCatalogApplication(
                 var listedChain = chains[index];
                 var summary = _service.GetLocationVerificationSummary(listedChain, currentDate);
                 output.WriteLine(
-                    $"{index + 1,2}. {listedChain.Name}{FormatChainTags(listedChain)}"
+                    $"{index + 1,2}. {listedChain.Name}{FormatChainAudience(listedChain)}"
                     + $" | {listedChain.Website ?? "-"} | geprüft: {FormatDate(listedChain.WebsiteVerifiedOn, currentDate)}"
                     + terminal.VerificationCounts(summary));
             }
@@ -72,7 +73,7 @@ internal sealed class ConsoleCatalogApplication(
             var summary = _service.GetLocationVerificationSummary(chain, currentDate);
             output.WriteLine();
             output.WriteLine(
-                $"{chain.Name}{FormatChainTags(chain)}"
+                $"{chain.Name}{FormatChainAudience(chain)}"
                 + $" | {chain.Website ?? "-"} | Website geprüft: {FormatDate(chain.WebsiteVerifiedOn, currentDate)}"
                 + terminal.VerificationCounts(summary));
             output.WriteLine("Standorte");
@@ -148,7 +149,7 @@ internal sealed class ConsoleCatalogApplication(
             output.WriteLine($"{gym.Name}");
             output.WriteLine($"{gym.Address}, {gym.PostalCode} Wien ({gym.District}. Bezirk)");
             output.WriteLine($"Standort geprüft: {FormatDate(gym.LocationVerifiedOn, currentDate)}");
-            output.WriteLine($"Status: {(gym.TemporarilyClosed == true ? terminal.Orange("vorübergehend geschlossen") : "aktiv")}");
+            output.WriteLine($"Status: {FormatStatus(gym)}");
             output.WriteLine("[M] Maps erneut öffnen | [V] Standort verifizieren | [S] Status ändern");
             output.WriteLine("[E] bearbeiten | [B] zurück");
 
@@ -190,8 +191,10 @@ internal sealed class ConsoleCatalogApplication(
         output.WriteLine();
         var name = ReadRequired("Name");
         var website = ReadOptional("Website (optional)");
+        var trainingTypes = ReadTrainingTypes(current: null);
+        var targetAudience = ReadTargetAudience(current: null);
 
-        ExecuteAndSave(() => _service.AddChain(name, website));
+        ExecuteAndSave(() => _service.AddChain(name, website, trainingTypes, targetAudience));
     }
 
     private void EditChain(CatalogChain chain)
@@ -201,8 +204,10 @@ internal sealed class ConsoleCatalogApplication(
         var name = ReadWithDefault("Name", chain.Name);
         var websiteInput = ReadWithDefault("Website", chain.Website ?? "-");
         var website = websiteInput == "-" ? null : websiteInput;
+        var trainingTypes = ReadTrainingTypes(chain.TrainingTypes);
+        var targetAudience = ReadTargetAudience(chain.TargetAudience);
 
-        ExecuteAndSave(() => _service.UpdateChain(chain, name, website));
+        ExecuteAndSave(() => _service.UpdateChain(chain, name, website, trainingTypes, targetAudience));
     }
 
     private void AddGym(CatalogChain chain)
@@ -301,6 +306,64 @@ internal sealed class ConsoleCatalogApplication(
         }
     }
 
+    private IReadOnlyList<TrainingType> ReadTrainingTypes(IReadOnlyList<TrainingType>? current)
+    {
+        var allowed = Enum.GetValues<TrainingType>().Where(value => value != TrainingType.None).ToArray();
+        var currentText = current is null ? null : string.Join(", ", current);
+
+        while (true)
+        {
+            output.Write(currentText is null
+                ? $"Trainingsarten ({string.Join(", ", allowed)}): "
+                : $"Trainingsarten [{currentText}]: ");
+            var value = ReadLine()?.Trim();
+            if (string.IsNullOrEmpty(value) && current is not null)
+            {
+                return current;
+            }
+
+            var parsed = (value ?? string.Empty)
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(item => Enum.TryParse<TrainingType>(item, ignoreCase: true, out var result)
+                    && Enum.IsDefined(result)
+                    && result != TrainingType.None
+                        ? result
+                        : TrainingType.None)
+                .ToArray();
+            if (parsed.Length > 0
+                && !parsed.Contains(TrainingType.None)
+                && parsed.Distinct().Count() == parsed.Length)
+            {
+                return parsed;
+            }
+
+            output.WriteLine("Bitte mindestens eine gültige, eindeutige Trainingsart eingeben.");
+        }
+    }
+
+    private TargetAudience ReadTargetAudience(TargetAudience? current)
+    {
+        while (true)
+        {
+            output.Write(current is null
+                ? "Zielgruppe [General] (General/WomenOnly): "
+                : $"Zielgruppe [{current}] (General/WomenOnly): ");
+            var value = ReadLine()?.Trim();
+            if (string.IsNullOrEmpty(value))
+            {
+                return current ?? TargetAudience.General;
+            }
+
+            if (Enum.TryParse<TargetAudience>(value, ignoreCase: true, out var targetAudience)
+                && Enum.IsDefined(targetAudience))
+            {
+                return targetAudience;
+            }
+
+            output.WriteLine("Bitte General oder WomenOnly eingeben.");
+        }
+    }
+
     private string ReadRequired(string label)
     {
         while (true)
@@ -376,21 +439,29 @@ internal sealed class ConsoleCatalogApplication(
     }
 
     private string FormatClosureStatus(CatalogGym gym) =>
-        gym.TemporarilyClosed == true
-            ? $" | {terminal.Orange("vorübergehend geschlossen")}"
-            : string.Empty;
-
-    private static string FormatChainTags(CatalogChain chain)
-    {
-        if (chain.Tags is null || chain.Tags.Count == 0)
+        CatalogService.ResolveStatus(gym) switch
         {
-            return string.Empty;
-        }
+            Gym.Domain.Enums.GymStatus.TemporarilyClosed =>
+                $" | {terminal.Orange("vorübergehend geschlossen")}",
+            Gym.Domain.Enums.GymStatus.PermanentlyClosed => " | dauerhaft geschlossen",
+            Gym.Domain.Enums.GymStatus.Draft => " | Entwurf",
+            _ => string.Empty,
+        };
 
-        var labels = chain.Tags.Select(tag =>
-            string.Equals(tag, "WomenOnly", StringComparison.Ordinal) ? "Nur für Frauen" : tag);
-        return $" [{string.Join(", ", labels)}]";
-    }
+    private string FormatStatus(CatalogGym gym) =>
+        CatalogService.ResolveStatus(gym) switch
+        {
+            Gym.Domain.Enums.GymStatus.TemporarilyClosed =>
+                terminal.Orange("vorübergehend geschlossen"),
+            Gym.Domain.Enums.GymStatus.PermanentlyClosed => "dauerhaft geschlossen",
+            Gym.Domain.Enums.GymStatus.Draft => "Entwurf",
+            _ => "aktiv",
+        };
+
+    private static string FormatChainAudience(CatalogChain chain) =>
+        chain.TargetAudience == TargetAudience.WomenOnly
+            ? " [Nur für Frauen]"
+            : string.Empty;
 
     private static bool TrySelect<T>(string command, IReadOnlyList<T> items, out T item)
     {

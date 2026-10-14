@@ -7,7 +7,7 @@ internal static class EmbeddedSeedData
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        Converters = { new JsonStringEnumConverter() },
+        Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) },
     };
 
     public static readonly CatalogSeedData Catalog = Load<CatalogSeedData>("Gym.Infrastructure.Seeding.Data.catalog.json");

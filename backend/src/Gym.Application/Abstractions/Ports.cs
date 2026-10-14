@@ -73,7 +73,9 @@ public sealed record GymSearchRow(
     double? TotalScore,
     double? MembershipScore,
     double? StudioScore,
-    ScoreBasis ScoreBasis);
+    ScoreBasis ScoreBasis,
+    TrainingType TrainingTypes = TrainingType.None,
+    TargetAudience TargetAudience = TargetAudience.General);
 
 public interface IGymSearchQuery
 {

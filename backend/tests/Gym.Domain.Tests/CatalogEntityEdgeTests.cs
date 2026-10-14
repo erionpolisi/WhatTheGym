@@ -185,4 +185,40 @@ public sealed class CatalogEntityEdgeTests
         amenity.Name.Should().Be("Kurse");
         amenity.Slug.Should().Be("sauna");
     }
+
+    [Fact]
+    public void Gym_inherits_chain_catalog_facets_until_location_overrides_replace_them()
+    {
+        var chain = GymChain.Create(
+            "Kette",
+            "kette",
+            null,
+            DomainTestHelpers.Now,
+            TrainingType.Strength | TrainingType.Cardio,
+            TargetAudience.WomenOnly);
+        var gym = GymEntry.Create(
+            "Gym",
+            "gym",
+            chain.Id,
+            1,
+            "Strasse 1",
+            "1010",
+            null,
+            null,
+            null,
+            GymStatus.Active,
+            DomainTestHelpers.Now).Value;
+        typeof(GymEntry).GetProperty(nameof(GymEntry.Chain))!.SetValue(gym, chain);
+
+        gym.EffectiveTrainingTypes.Should().Be(TrainingType.Strength | TrainingType.Cardio);
+        gym.EffectiveTargetAudience.Should().Be(TargetAudience.WomenOnly);
+
+        gym.SetCatalogFacetOverrides(
+            TrainingType.Functional | TrainingType.GroupClasses,
+            TargetAudience.General,
+            DomainTestHelpers.Now.AddMinutes(1));
+
+        gym.EffectiveTrainingTypes.Should().Be(TrainingType.Functional | TrainingType.GroupClasses);
+        gym.EffectiveTargetAudience.Should().Be(TargetAudience.General);
+    }
 }

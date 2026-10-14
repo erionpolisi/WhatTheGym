@@ -6,7 +6,11 @@ internal sealed class CatalogService(CatalogDocument catalog)
 {
     public CatalogDocument Catalog { get; } = catalog;
 
-    public CatalogChain AddChain(string name, string? website)
+    public CatalogChain AddChain(
+        string name,
+        string? website,
+        IReadOnlyList<Gym.Domain.Enums.TrainingType> trainingTypes,
+        Gym.Domain.Enums.TargetAudience targetAudience)
     {
         var normalizedName = RequireText(name, "Name");
         var normalizedWebsite = NormalizeWebsite(website);
@@ -16,12 +20,19 @@ internal sealed class CatalogService(CatalogDocument catalog)
         {
             Name = normalizedName,
             Website = normalizedWebsite,
+            TrainingTypes = trainingTypes.ToList(),
+            TargetAudience = targetAudience,
         };
         Catalog.Chains.Add(chain);
         return chain;
     }
 
-    public void UpdateChain(CatalogChain chain, string name, string? website)
+    public void UpdateChain(
+        CatalogChain chain,
+        string name,
+        string? website,
+        IReadOnlyList<Gym.Domain.Enums.TrainingType>? trainingTypes = null,
+        Gym.Domain.Enums.TargetAudience? targetAudience = null)
     {
         var normalizedName = RequireText(name, "Name");
         var normalizedWebsite = NormalizeWebsite(website);
@@ -36,6 +47,15 @@ internal sealed class CatalogService(CatalogDocument catalog)
 
         chain.Name = normalizedName;
         chain.Website = normalizedWebsite;
+        if (trainingTypes is not null)
+        {
+            chain.TrainingTypes = trainingTypes.ToList();
+        }
+
+        if (targetAudience is not null)
+        {
+            chain.TargetAudience = targetAudience.Value;
+        }
 
         if (!string.Equals(oldSlug, newSlug, StringComparison.Ordinal))
         {
@@ -95,8 +115,22 @@ internal sealed class CatalogService(CatalogDocument catalog)
 
     public static void ToggleTemporaryClosure(CatalogGym gym)
     {
+        if (gym.Status is not null)
+        {
+            gym.Status = gym.Status == Gym.Domain.Enums.GymStatus.TemporarilyClosed
+                ? Gym.Domain.Enums.GymStatus.Active
+                : Gym.Domain.Enums.GymStatus.TemporarilyClosed;
+            return;
+        }
+
         gym.TemporarilyClosed = gym.TemporarilyClosed == true ? null : true;
     }
+
+    public static Gym.Domain.Enums.GymStatus ResolveStatus(CatalogGym gym) =>
+        gym.Status
+        ?? (gym.TemporarilyClosed == true
+            ? Gym.Domain.Enums.GymStatus.TemporarilyClosed
+            : Gym.Domain.Enums.GymStatus.Active);
 
     public IReadOnlyList<CatalogGym> GetGyms(CatalogChain chain) =>
         Catalog.ViennaGyms

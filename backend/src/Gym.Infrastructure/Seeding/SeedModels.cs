@@ -1,3 +1,5 @@
+using Gym.Domain.Enums;
+
 namespace Gym.Infrastructure.Seeding;
 
 /// <summary>Seed entry for a Vienna gym; maps 1:1 to the seeded domain model (district-based).</summary>
@@ -8,13 +10,17 @@ public sealed record SeedGym(
     string Address,
     string PostalCode,
     DateOnly? LocationVerifiedOn = null,
-    bool? TemporarilyClosed = null);
+    bool? TemporarilyClosed = null,
+    IReadOnlyList<TrainingType>? TrainingTypes = null,
+    TargetAudience? TargetAudience = null,
+    GymStatus? Status = null);
 
 public sealed record ChainSeed(
     string Name,
     string? Website,
     DateOnly? WebsiteVerifiedOn = null,
-    IReadOnlyList<string>? Tags = null);
+    IReadOnlyList<TrainingType>? TrainingTypes = null,
+    TargetAudience TargetAudience = TargetAudience.General);
 
 /// <summary>
 /// Seed entry for a gym outside Vienna. Reference data only: the MVP domain is Vienna-scoped

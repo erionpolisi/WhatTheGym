@@ -6,9 +6,12 @@ namespace Gym.Infrastructure.Seeding;
 /// </summary>
 public static class SeedVocabulary
 {
+    public static readonly IReadOnlyList<ChainSeed> ChainSeeds =
+        EmbeddedSeedData.Require(EmbeddedSeedData.Catalog.Chains, "catalog.chains");
+
     /// <summary>Gym chains operating in Austria that seeded or reference data points to.</summary>
     public static readonly IReadOnlyList<(string Name, string? Website)> Chains =
-        EmbeddedSeedData.Require(EmbeddedSeedData.Catalog.Chains, "catalog.chains")
+        ChainSeeds
             .Select(chain => (chain.Name, chain.Website))
             .ToArray();
 
