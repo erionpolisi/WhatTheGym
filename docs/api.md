@@ -9,10 +9,10 @@ Errors are RFC 7807 ProblemDetails with a stable `code` extension.
 | Method | Route | Notes |
 | ------ | ----- | ----- |
 | GET | `/gyms` | Search: `term`, `district`, `chain`, `minTotalScore`, `minMembershipScore`, `minStudioScore`, `sort` (`score`\|`name`\|`newest`\|relevance), `page`, `pageSize` |
-| GET | `/gyms/{slug}` | Detail incl. chain, amenities, opening hours, score summary; ETag + cache headers |
+| GET | `/gyms/{slug}` | Detail incl. chain, effective training types/target audience, amenities, opening hours and score summary; ETag + cache headers |
 | GET | `/gyms/{slug}/summary` | Score summary (see docs/scoring.md) |
 | GET | `/gyms/{slug}/reviews` | Published reviews, paged, never anonymous |
-| GET | `/chains`, `/amenities` | Catalogue lookups |
+| GET | `/chains`, `/amenities` | Catalogue lookups; chains include controlled training-type and target-audience defaults |
 | POST | `/reviews/{id}/report` | Review report → LegalCase; honeypot `website`; rate limited |
 | GET | `/legal/cases/{caseNumber}/status?token=` | Tokenized case status |
 | POST | `/legal/cases/{caseNumber}/appeal` | Tokenized appeal (≥ 6 months) |
@@ -57,8 +57,8 @@ Swagger UI injects it automatically; anonymous requests are unaffected.
 | Method | Route |
 | ------ | ----- |
 | POST | `/moderation/reviews/{id}/restore` |
-| GET/POST/PUT/PATCH | `/admin/gyms...` (list incl. drafts, create, update, status) |
-| POST/PUT/DELETE | `/admin/chains...`, `/admin/amenities...` |
+| GET/POST/PUT/PATCH | `/admin/gyms...` (list incl. drafts, create, update, status and nullable catalogue-facet overrides) |
+| POST/PUT/DELETE | `/admin/chains...` (incl. catalogue defaults), `/admin/amenities...` |
 | GET/PUT | `/admin/users`, `/admin/users/{id}/role` |
 | GET/PUT | `/admin/contact-requests...` |
 | POST | `/admin/legal-cases/{id}/classify\|start-review\|decide\|close` |
@@ -71,3 +71,8 @@ Swagger UI injects it automatically; anonymous requests are unaffected.
 Pagination is stable (`page`, `pageSize` ≤ 100, ordered by deterministic keys);
 gym detail and legal documents support `ETag`/`If-None-Match` with
 `Cache-Control`.
+
+The current `/gyms` query parameters remain unchanged. Controlled training
+types and target audience are persisted and exposed now as the foundation for
+a later deterministic filter/recommendation iteration; no AI inference or
+price filter is involved.
