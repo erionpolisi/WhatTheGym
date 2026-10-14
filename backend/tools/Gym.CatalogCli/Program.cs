@@ -30,6 +30,8 @@ static void ClearScreen()
     if (!Console.IsOutputRedirected)
     {
         Console.Clear();
+        Console.Write("\u001b[3J\u001b[H");
+        Console.Out.Flush();
     }
 }
 
