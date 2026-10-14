@@ -13,6 +13,8 @@ public sealed class EmbeddedSeedDataTests
         Assert.NotEmpty(SeedVocabulary.Chains);
         Assert.NotEmpty(SeedVocabulary.Amenities);
         Assert.NotEmpty(ViennaCatalog.Gyms);
+        Assert.Equal(23, SeedVocabulary.Chains.Count);
+        Assert.Equal(113, ViennaCatalog.Gyms.Count);
         Assert.Equal(
             SeedVocabulary.Chains.Count,
             SeedVocabulary.Chains.Select(chain => Slug.Generate(chain.Name)).Distinct().Count());
@@ -27,6 +29,8 @@ public sealed class EmbeddedSeedDataTests
         Assert.Equal(
             TargetAudience.WomenOnly,
             SeedVocabulary.ChainSeeds.Single(chain => chain.Name == "Mrs.Sporty").TargetAudience);
+        Assert.Contains(ViennaCatalog.Gyms, gym => gym.Name == "Fitness First Wien-Liesing");
+        Assert.Contains(ViennaCatalog.Gyms, gym => gym.Name == "Anytime Fitness WIEN FABRIK 1230");
         Assert.Equal(3, LegalDocumentDrafts.All.Count);
         Assert.Equal(3, EmbeddedSeedData.Demo.Users!.Count);
         Assert.Equal(3, EmbeddedSeedData.Demo.Ratings!.Count);

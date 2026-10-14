@@ -20,7 +20,9 @@
     {"Name":"Fitness-Club 39","Website":"https://www.fitness-club39.at","WebsiteVerifiedOn":"2026-10-14","TrainingTypes":["Strength","Cardio"],"TargetAudience":"General"},
     {"Name":"Marco-Polo Sportcenter","Website":"https://marco-polo.co.at","WebsiteVerifiedOn":"2026-10-14","TrainingTypes":["Strength","Cardio","PersonalTraining"],"TargetAudience":"General"},
     {"Name":"CrossFit Viertel Zwei","Website":"https://crossfitviertelzwei.com","WebsiteVerifiedOn":"2026-10-13","TrainingTypes":["Strength","Cardio","Functional","GroupClasses","CrossFit","PersonalTraining"],"TargetAudience":"General"},
-    {"Name":"DASGYM","Website":"https://www.dasgym.com","WebsiteVerifiedOn":"2026-10-13","TrainingTypes":["Strength","Cardio","Functional","GroupClasses"],"TargetAudience":"General"}
+    {"Name":"DASGYM","Website":"https://www.dasgym.com","WebsiteVerifiedOn":"2026-10-13","TrainingTypes":["Strength","Cardio","Functional","GroupClasses"],"TargetAudience":"General"},
+    {"Name":"Fitness First","Website":"https://www.fitnessfirst.de/clubs/wien","WebsiteVerifiedOn":"2026-10-14","TrainingTypes":["Strength","Cardio","Functional","GroupClasses","PersonalTraining","Wellness"],"TargetAudience":"General"},
+    {"Name":"Anytime Fitness","Website":"https://af-austria.at","WebsiteVerifiedOn":"2026-10-14","TrainingTypes":["Strength","Cardio","Functional","GroupClasses","PersonalTraining"],"TargetAudience":"General"}
   ],
   "Amenities": [
     "Freihanteln", "Kraftmaschinen", "Cardio-Bereich", "Kursprogramm", "Sauna", "Duschen",
@@ -135,7 +137,11 @@
     {"Name":"Marco-Polo Sportcenter","ChainSlug":"marco-polo-sportcenter","District":21,"Address":"Ruthnergasse 170A","PostalCode":"1210","LocationVerifiedOn":"2026-10-14"},
     {"Name":"CrossFit Viertel Zwei","ChainSlug":"crossfit-viertel-zwei","District":2,"Address":"Trabrennstraße 2C","PostalCode":"1020","LocationVerifiedOn":"2026-10-13"},
     {"Name":"DASGYM","ChainSlug":"dasgym","District":2,"Address":"Handelskai 340","PostalCode":"1020","LocationVerifiedOn":"2026-10-13"},
-    {"Name":"Manhattan Club Wien","ChainSlug":"manhattan-fitness-club","District":19,"Address":"Heiligenstädter Lände 17","PostalCode":"1190","LocationVerifiedOn":"2026-10-14"}
+    {"Name":"Manhattan Club Wien","ChainSlug":"manhattan-fitness-club","District":19,"Address":"Heiligenstädter Lände 17","PostalCode":"1190","LocationVerifiedOn":"2026-10-14"},
+    {"Name":"Fitness First Wien Landstraße","ChainSlug":"fitness-first","District":3,"Address":"Schnirchgasse 13","PostalCode":"1030","LocationVerifiedOn":"2026-10-14"},
+    {"Name":"Fitness First Wien-Floridsdorf","ChainSlug":"fitness-first","District":21,"Address":"Brünnerstraße 75","PostalCode":"1210","LocationVerifiedOn":"2026-10-14"},
+    {"Name":"Fitness First Wien-Liesing","ChainSlug":"fitness-first","District":23,"Address":"Sterngasse 11","PostalCode":"1230","LocationVerifiedOn":"2026-10-14"},
+    {"Name":"Anytime Fitness WIEN FABRIK 1230","ChainSlug":"anytime-fitness","District":23,"Address":"Breitenfurter Straße 176","PostalCode":"1230","LocationVerifiedOn":"2026-10-14"}
   ],
   "RegionalCatalogs": {
     "Burgenland": [
@@ -197,7 +203,8 @@
       {"Name":"Mrs.Sporty Waidhofen an der Thaya","ChainSlug":"mrs-sporty","City":"Waidhofen an der Thaya","PostalCode":"3830","Address":"","Website":null},
       {"Name":"Mrs.Sporty Wolkersdorf","ChainSlug":"mrs-sporty","City":"Wolkersdorf","PostalCode":"2120","Address":"Hofgartenstrasse 28","Website":null},
       {"Name":"Mrs.Sporty Zwettl","ChainSlug":"mrs-sporty","City":"Zwettl","PostalCode":"3910","Address":"Hamerlingstrasse 1","Website":null},
-      {"Name":"MYGYM Hollabrunn","ChainSlug":"mygym","City":"Hollabrunn","PostalCode":"2020","Address":"Gewerbering 11","Website":null}
+      {"Name":"MYGYM Hollabrunn","ChainSlug":"mygym","City":"Hollabrunn","PostalCode":"2020","Address":"Gewerbering 11","Website":null},
+      {"Name":"Fitness First Vösendorf","ChainSlug":"fitness-first","City":"Vösendorf","PostalCode":"2331","Address":"Nordring 2-10","Website":"https://www.fitnessfirst.de/clubs/voesendorf"}
     ],
     "Oberoesterreich": [
       {"Name":"clever fit Linz Wegscheid","ChainSlug":"clever-fit","City":"Linz","PostalCode":"4030","Address":"Baeckermuehlweg 59","Website":null},
