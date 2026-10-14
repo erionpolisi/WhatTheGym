@@ -23,6 +23,13 @@ public sealed class GymChainRepository(AppDbContext context) : IGymChainReposito
     public async Task<IReadOnlyList<GymChain>> ListAllAsync(CancellationToken ct) =>
         await context.GymChains.AsNoTracking().OrderBy(c => c.Name).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<GymChain>> ListWithGymsAsync(CancellationToken ct) =>
+        await context.GymChains
+            .AsNoTracking()
+            .Where(c => context.Gyms.Any(g => g.ChainId == c.Id))
+            .OrderBy(c => c.Name)
+            .ToListAsync(ct);
+
     public Task<bool> SlugExistsAsync(string slug, CancellationToken ct) =>
         context.GymChains.AnyAsync(c => c.Slug == slug, ct);
 

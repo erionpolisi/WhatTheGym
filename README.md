@@ -21,7 +21,8 @@ docker compose up --build
 - Optional pgAdmin: `docker compose --profile tools up` → http://localhost:5050
 
 Migrations apply automatically and seed the official Vienna catalogue
-(~50 studios) and legal document drafts. Demo reviews are disabled by default.
+(113 studios with inherited training-type and target-audience facets) and legal
+document drafts. Demo reviews are disabled by default.
 
 For frontend-only development with hot reload:
 

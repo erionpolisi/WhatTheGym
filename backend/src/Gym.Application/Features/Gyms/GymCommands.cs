@@ -10,6 +10,25 @@ namespace Gym.Application.Features.Gyms;
 
 public sealed record OpeningHourInput(int IsoDayOfWeek, string OpensAt, string ClosesAt);
 
+internal static class CatalogFacetValidation
+{
+    public static Result<TrainingType> Validate(IReadOnlyList<TrainingType>? trainingTypes)
+    {
+        if (trainingTypes is null
+            || trainingTypes.Count == 0
+            || trainingTypes.Contains(TrainingType.None)
+            || trainingTypes.Any(value => !Enum.IsDefined(value))
+            || trainingTypes.Distinct().Count() != trainingTypes.Count)
+        {
+            return Result.Failure<TrainingType>(
+                Error.Validation("gym.trainingTypes", "Mindestens eine eindeutige Trainingsart ist erforderlich."));
+        }
+
+        var flags = trainingTypes.Aggregate(TrainingType.None, (current, value) => current | value);
+        return flags;
+    }
+}
+
 public sealed record CreateGymCommand(
     string Name,
     Guid? ChainId,
@@ -21,7 +40,9 @@ public sealed record CreateGymCommand(
     string? Description,
     string Status,
     IReadOnlyList<Guid> AmenityIds,
-    IReadOnlyList<OpeningHourInput> OpeningHours);
+    IReadOnlyList<OpeningHourInput> OpeningHours,
+    IReadOnlyList<TrainingType>? TrainingTypesOverride = null,
+    TargetAudience? TargetAudienceOverride = null);
 
 public sealed record UpdateGymCommand(
     Guid GymId,
@@ -34,7 +55,9 @@ public sealed record UpdateGymCommand(
     string? Phone,
     string? Description,
     IReadOnlyList<Guid> AmenityIds,
-    IReadOnlyList<OpeningHourInput> OpeningHours);
+    IReadOnlyList<OpeningHourInput> OpeningHours,
+    IReadOnlyList<TrainingType>? TrainingTypesOverride = null,
+    TargetAudience? TargetAudienceOverride = null);
 
 public sealed record ChangeGymStatusCommand(Guid GymId, string Status);
 
@@ -126,6 +149,16 @@ public sealed class CreateGymCommandHandler(
 
         var gym = gymResult.Value;
 
+        var facetResult = ApplyCatalogFacetOverrides(
+            gym,
+            command.TrainingTypesOverride,
+            command.TargetAudienceOverride,
+            clock.UtcNow);
+        if (facetResult.IsFailure)
+        {
+            return Result.Failure<Guid>(facetResult.Error);
+        }
+
         var amenitySetResult = await ApplyAmenitiesAndHours(gym, command.AmenityIds, command.OpeningHours, amenities, clock, cancellationToken);
         if (amenitySetResult.IsFailure)
         {
@@ -136,6 +169,34 @@ public sealed class CreateGymCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
         await searchIndex.IndexGymAsync(gym.Id, cancellationToken);
         return gym.Id;
+    }
+
+    internal static Result ApplyCatalogFacetOverrides(
+        GymEntry gym,
+        IReadOnlyList<TrainingType>? trainingTypesOverride,
+        TargetAudience? targetAudienceOverride,
+        DateTimeOffset utcNow)
+    {
+        if (targetAudienceOverride is { } audience && !Enum.IsDefined(audience))
+        {
+            return Result.Failure(
+                Error.Validation("gym.targetAudience", "Ungültige Zielgruppe."));
+        }
+
+        TrainingType? trainingTypeFlags = null;
+        if (trainingTypesOverride is not null)
+        {
+            var validation = CatalogFacetValidation.Validate(trainingTypesOverride);
+            if (validation.IsFailure)
+            {
+                return validation;
+            }
+
+            trainingTypeFlags = validation.Value;
+        }
+
+        gym.SetCatalogFacetOverrides(trainingTypeFlags, targetAudienceOverride, utcNow);
+        return Result.Success();
     }
 
     internal static async Task<Result> ApplyAmenitiesAndHours(
@@ -220,6 +281,16 @@ public sealed class UpdateGymCommandHandler(
         if (applyResult.IsFailure)
         {
             return applyResult;
+        }
+
+        var facetResult = CreateGymCommandHandler.ApplyCatalogFacetOverrides(
+            gym,
+            command.TrainingTypesOverride,
+            command.TargetAudienceOverride,
+            clock.UtcNow);
+        if (facetResult.IsFailure)
+        {
+            return facetResult;
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

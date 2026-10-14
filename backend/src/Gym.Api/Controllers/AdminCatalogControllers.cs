@@ -6,6 +6,7 @@ using Gym.Application.Features.Amenities;
 using Gym.Application.Features.Chains;
 using Gym.Application.Features.Gyms;
 using Gym.Application.Features.Reviews;
+using Gym.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +28,9 @@ public sealed class AdminGymsController : ControllerBase
         string? Description,
         string? Status,
         IReadOnlyList<Guid>? AmenityIds,
-        IReadOnlyList<OpeningHourInput>? OpeningHours);
+        IReadOnlyList<OpeningHourInput>? OpeningHours,
+        IReadOnlyList<TrainingType>? TrainingTypesOverride,
+        TargetAudience? TargetAudienceOverride);
 
     /// <summary>Admin search across all gyms including drafts.</summary>
     [HttpGet]
@@ -55,7 +58,8 @@ public sealed class AdminGymsController : ControllerBase
             new CreateGymCommand(
                 request.Name, request.ChainId, request.District, request.AddressLine, request.PostalCode,
                 request.Website, request.Phone, request.Description, request.Status ?? "Draft",
-                request.AmenityIds ?? [], request.OpeningHours ?? []),
+                request.AmenityIds ?? [], request.OpeningHours ?? [],
+                request.TrainingTypesOverride, request.TargetAudienceOverride),
             cancellationToken);
         return result.Map(id => new { id }).ToCreatedResult(this);
     }
@@ -71,7 +75,8 @@ public sealed class AdminGymsController : ControllerBase
             new UpdateGymCommand(
                 gymId, request.Name, request.ChainId, request.District, request.AddressLine, request.PostalCode,
                 request.Website, request.Phone, request.Description,
-                request.AmenityIds ?? [], request.OpeningHours ?? []),
+                request.AmenityIds ?? [], request.OpeningHours ?? [],
+                request.TrainingTypesOverride, request.TargetAudienceOverride),
             cancellationToken);
         return result.ToActionResult(this);
     }
@@ -95,7 +100,11 @@ public sealed class AdminGymsController : ControllerBase
 [Authorize(Policy = "Admin")]
 public sealed class AdminChainsController : ControllerBase
 {
-    public sealed record ChainRequest(string Name, string? Website);
+    public sealed record ChainRequest(
+        string Name,
+        string? Website,
+        IReadOnlyList<TrainingType>? TrainingTypes,
+        TargetAudience? TargetAudience);
 
     [HttpPost]
     public async Task<ActionResult> Create(
@@ -103,7 +112,9 @@ public sealed class AdminChainsController : ControllerBase
         [FromBody] ChainRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(new CreateChainCommand(request.Name, request.Website), cancellationToken);
+        var result = await handler.Handle(
+            new CreateChainCommand(request.Name, request.Website, request.TrainingTypes, request.TargetAudience),
+            cancellationToken);
         return result.Map(id => new { id }).ToCreatedResult(this);
     }
 
@@ -114,7 +125,14 @@ public sealed class AdminChainsController : ControllerBase
         [FromBody] ChainRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await handler.Handle(new UpdateChainCommand(chainId, request.Name, request.Website), cancellationToken);
+        var result = await handler.Handle(
+            new UpdateChainCommand(
+                chainId,
+                request.Name,
+                request.Website,
+                request.TrainingTypes,
+                request.TargetAudience),
+            cancellationToken);
         return result.ToActionResult(this);
     }
 

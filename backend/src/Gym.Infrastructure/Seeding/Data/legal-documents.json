@@ -1,0 +1,19 @@
+{
+  "Documents": [
+    {
+      "Type": "Imprint",
+      "Title": "Impressum",
+      "Content": "# Impressum\n\nMedieninhaber und Herausgeber: WhatTheGym (Platzhalter - vor Veröffentlichung ergänzen)\nSitz: Wien, Österreich\nKontakt: kontakt@whatthegym.at\n\nPlattform zur Bewertung von Fitnessstudios in Wien.\nOffenlegung gemäß Paragraf 25 MedienG folgt vor Produktivbetrieb.\n\n---\n\n**ENTWURF - anwaltlich prüfen lassen**\n"
+    },
+    {
+      "Type": "PrivacyPolicy",
+      "Title": "Datenschutzerklärung",
+      "Content": "# Datenschutzerklärung\n\nWir verarbeiten personenbezogene Daten ausschließlich gemäß DSGVO.\n\n- Anmeldung erfolgt über Google (Auth-Code-Flow); es werden keine Passwörter gespeichert.\n- Bewertungen sind nicht anonym und werden mit dem Anzeigenamen veröffentlicht.\n- Meldungen zu Bewertungen werden als Rechtsfall mit revisionssicherem Verlauf dokumentiert.\n- Die Reichweitenmessung ist PII-frei: keine IP-Speicherung, kein Fingerprinting.\n- Betroffenenrechte: Auskunft (Datenexport), Löschung (Kontolöschung mit Anonymisierung),\n  Beschwerde bei der Datenschutzbehörde.\n\nDetails zu allen Verarbeitungen enthält das Verzeichnis von Verarbeitungstätigkeiten\n(öffentlich abrufbar über die API).\n\n---\n\n**ENTWURF - anwaltlich prüfen lassen**\n"
+    },
+    {
+      "Type": "TermsOfUse",
+      "Title": "Nutzungsbedingungen",
+      "Content": "# Nutzungsbedingungen\n\n1. Bewertungen müssen auf eigenen Erfahrungen beruhen und wahrheitsgemäß sein.\n2. Rechtswidrige Inhalte (Beleidigung, Verleumdung, Verletzung von Rechten Dritter) sind untersagt.\n3. Gemeldete Inhalte bleiben während der Prüfung grundsätzlich online; offensichtlich\n   rechtswidrige Inhalte können im Schnellverfahren vorübergehend ausgeblendet werden.\n4. Entscheidungen können mindestens sechs Monate lang angefochten werden.\n5. Konten können jederzeit gelöscht werden; Inhalte werden entsprechend den\n   Aufbewahrungsregeln anonymisiert oder entfernt.\n\n---\n\n**ENTWURF - anwaltlich prüfen lassen**\n"
+    }
+  ]
+}

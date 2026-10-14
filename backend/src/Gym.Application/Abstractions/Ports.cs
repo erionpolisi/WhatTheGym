@@ -73,7 +73,9 @@ public sealed record GymSearchRow(
     double? TotalScore,
     double? MembershipScore,
     double? StudioScore,
-    ScoreBasis ScoreBasis);
+    ScoreBasis ScoreBasis,
+    TrainingType TrainingTypes = TrainingType.None,
+    TargetAudience TargetAudience = TargetAudience.General);
 
 public interface IGymSearchQuery
 {
@@ -91,6 +93,8 @@ public interface IGymChainRepository
     Task<GymChain?> GetBySlugAsync(string slug, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<GymChain>> ListAllAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<GymChain>> ListWithGymsAsync(CancellationToken cancellationToken);
 
     Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken);
 

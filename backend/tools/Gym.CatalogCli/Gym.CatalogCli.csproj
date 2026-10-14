@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Gym.Domain\Gym.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Gym.Infrastructure\Gym.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gym.CatalogCli.Tests" />
+  </ItemGroup>
+
+</Project>

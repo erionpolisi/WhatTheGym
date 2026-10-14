@@ -4,12 +4,22 @@ using Gym.Application.Contracts;
 using Gym.Application.Features.Gyms;
 using Gym.Domain.Common;
 using Gym.Domain.Entities;
+using Gym.Domain.Enums;
 
 namespace Gym.Application.Features.Chains;
 
-public sealed record CreateChainCommand(string Name, string? Website);
+public sealed record CreateChainCommand(
+    string Name,
+    string? Website,
+    IReadOnlyList<TrainingType>? TrainingTypes,
+    TargetAudience? TargetAudience);
 
-public sealed record UpdateChainCommand(Guid ChainId, string Name, string? Website);
+public sealed record UpdateChainCommand(
+    Guid ChainId,
+    string Name,
+    string? Website,
+    IReadOnlyList<TrainingType>? TrainingTypes,
+    TargetAudience? TargetAudience);
 
 public sealed record DeleteChainCommand(Guid ChainId);
 
@@ -32,11 +42,28 @@ public sealed class CreateChainCommandHandler(
             return Result.Failure<Guid>(Error.Validation("chain.website", "Die Website muss eine absolute http(s)-URL sein."));
         }
 
+        var facets = CatalogFacetValidation.Validate(command.TrainingTypes);
+        if (facets.IsFailure)
+        {
+            return Result.Failure<Guid>(facets.Error);
+        }
+
+        if (command.TargetAudience is not { } targetAudience || !Enum.IsDefined(targetAudience))
+        {
+            return Result.Failure<Guid>(Error.Validation("chain.targetAudience", "Ungültige Zielgruppe."));
+        }
+
         var slug = await SlugUniquifier.EnsureUniqueAsync(
             Slug.Generate(command.Name),
             s => chains.SlugExistsAsync(s, cancellationToken));
 
-        var chain = GymChain.Create(command.Name, slug, command.Website, clock.UtcNow);
+        var chain = GymChain.Create(
+            command.Name,
+            slug,
+            command.Website,
+            clock.UtcNow,
+            facets.Value,
+            targetAudience);
         chains.Add(chain);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return chain.Id;
@@ -66,7 +93,18 @@ public sealed class UpdateChainCommandHandler(
             return Result.Failure(Error.Validation("chain.website", "Die Website muss eine absolute http(s)-URL sein."));
         }
 
-        chain.Update(command.Name, command.Website, clock.UtcNow);
+        var facets = CatalogFacetValidation.Validate(command.TrainingTypes);
+        if (facets.IsFailure)
+        {
+            return Result.Failure(facets.Error);
+        }
+
+        if (command.TargetAudience is not { } targetAudience || !Enum.IsDefined(targetAudience))
+        {
+            return Result.Failure(Error.Validation("chain.targetAudience", "Ungültige Zielgruppe."));
+        }
+
+        chain.Update(command.Name, command.Website, clock.UtcNow, facets.Value, targetAudience);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
@@ -99,8 +137,15 @@ public sealed class ListChainsQueryHandler(IGymChainRepository chains) : IQueryH
 {
     public async Task<Result<IReadOnlyList<ChainDto>>> Handle(ListChainsQuery query, CancellationToken cancellationToken)
     {
-        var all = await chains.ListAllAsync(cancellationToken);
+        // The public catalog is Vienna-only, so chains without a Vienna studio must not appear as empty filters.
+        var all = await chains.ListWithGymsAsync(cancellationToken);
         return Result.Success<IReadOnlyList<ChainDto>>(
-            all.Select(c => new ChainDto(c.Id, c.Name, c.Slug, c.Website)).ToList());
+            all.Select(c => new ChainDto(
+                c.Id,
+                c.Name,
+                c.Slug,
+                c.Website,
+                CatalogFacetDtoMapper.TrainingTypes(c.TrainingTypes),
+                c.TargetAudience.ToString())).ToList());
     }
 }

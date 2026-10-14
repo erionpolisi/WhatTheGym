@@ -88,7 +88,24 @@ public sealed class PagingAndSearchHandlerTests
 
         var result = await new SearchGymsQueryHandler(search).Handle(new SearchGymsQuery(null, null, null, null, null, null, null, 1, 20), CancellationToken.None);
 
-        result.Value.Items.Should().ContainSingle().Which.Should().BeEquivalentTo(new GymListItemDto(id, "Fit", "fit", 2, "Adresse", "1020", "Active", "Kette", "kette", 3, 4.2, 4.1, 4.3, "both"));
+        result.Value.Items.Should().ContainSingle().Which.Should().BeEquivalentTo(
+            new GymListItemDto(
+                id,
+                "Fit",
+                "fit",
+                2,
+                "Adresse",
+                "1020",
+                "Active",
+                "Kette",
+                "kette",
+                3,
+                4.2,
+                4.1,
+                4.3,
+                "both",
+                [],
+                "General"));
     }
 }
 
@@ -120,7 +137,13 @@ public sealed class CatalogHandlerBehaviorTests
         var unit = new FakeUnitOfWork();
         var sut = new CreateChainCommandHandler(chains, unit, new FakeClock(AppTestData.Now));
 
-        var result = await sut.Handle(new CreateChainCommand(name!, "https://example.at"), CancellationToken.None);
+        var result = await sut.Handle(
+            new CreateChainCommand(
+                name!,
+                "https://example.at",
+                [TrainingType.Strength, TrainingType.Cardio],
+                TargetAudience.General),
+            CancellationToken.None);
 
         result.IsSuccess.Should().Be(expectedSuccess);
         if (expectedSuccess)
@@ -141,9 +164,35 @@ public sealed class CatalogHandlerBehaviorTests
         chains.ExistingSlugs.UnionWith(["fit-wien", "fit-wien-2"]);
 
         await new CreateChainCommandHandler(chains, new FakeUnitOfWork(), new FakeClock(AppTestData.Now))
-            .Handle(new CreateChainCommand("Fit Wien", null), CancellationToken.None);
+            .Handle(
+                new CreateChainCommand(
+                    "Fit Wien",
+                    null,
+                    [TrainingType.Strength],
+                    TargetAudience.General),
+                CancellationToken.None);
 
         chains.Chains.Single().Slug.Should().Be("fit-wien-3");
+    }
+
+    [Theory]
+    [InlineData(TrainingType.None, TargetAudience.General, "gym.trainingTypes")]
+    [InlineData(TrainingType.Strength, (TargetAudience)99, "chain.targetAudience")]
+    public async Task Create_chain_rejects_uncontrolled_catalog_facets(
+        TrainingType trainingType,
+        TargetAudience targetAudience,
+        string expectedCode)
+    {
+        var result = await new CreateChainCommandHandler(
+                new AppFakeChainRepository(),
+                new FakeUnitOfWork(),
+                new FakeClock(AppTestData.Now))
+            .Handle(
+                new CreateChainCommand("Fit Wien", null, [trainingType], targetAudience),
+                CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be(expectedCode);
     }
 
     [Theory]
@@ -245,6 +294,41 @@ public sealed class CatalogHandlerBehaviorTests
         gyms.Gyms.Single().AmenityIds.Should().Equal([amenity.Id]);
         gyms.Gyms.Single().OpeningHours.Should().ContainSingle(h => h.IsoDayOfWeek == 1);
         unit.SaveCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Create_gym_persists_complete_location_catalog_overrides()
+    {
+        var gyms = new InMemoryGymRepository();
+        var command = new CreateGymCommand(
+            "Neues Gym",
+            null,
+            5,
+            "Gasse 1",
+            "1050",
+            null,
+            null,
+            null,
+            "Active",
+            [],
+            [],
+            [TrainingType.Functional, TrainingType.GroupClasses],
+            TargetAudience.WomenOnly);
+
+        var result = await new CreateGymCommandHandler(
+                gyms,
+                new AppFakeChainRepository(),
+                new AppFakeAmenityRepository(),
+                new FakeSearchIndex(),
+                new FakeUnitOfWork(),
+                new FakeClock(AppTestData.Now),
+                new CreateGymCommandValidator())
+            .Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        gyms.Gyms.Single().TrainingTypesOverride.Should()
+            .Be(TrainingType.Functional | TrainingType.GroupClasses);
+        gyms.Gyms.Single().TargetAudienceOverride.Should().Be(TargetAudience.WomenOnly);
     }
 
     [Theory]
@@ -554,4 +638,3 @@ public sealed class ContactAnalyticsAndLegalDocumentHandlerTests
     private static RecordAnalyticsEventCommandHandler AnalyticsSut(AppFakeAnalyticsStore store) =>
         new(store, new AppFakeSessionBucketHasher(), new FakeUnitOfWork(), new FakeClock(AppTestData.Now), Options.Create(new AnalyticsOptions()));
 }
-

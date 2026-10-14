@@ -9,7 +9,7 @@ namespace Gym.IntegrationTests;
 [Collection("api")]
 public class ModerationTests(WtgApiFactory factory)
 {
-    private const string GymSlug = "club-danube-erdberg";
+    private const string GymSlug = "fitness-first-wien-landstrasse";
 
     [Fact]
     public async Task Moderator_removes_review_reversibly_and_admin_restores_it()

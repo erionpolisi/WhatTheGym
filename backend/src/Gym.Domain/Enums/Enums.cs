@@ -21,6 +21,26 @@ public enum GymStatus
     PermanentlyClosed,
 }
 
+[Flags]
+public enum TrainingType
+{
+    None = 0,
+    Strength = 1 << 0,
+    Cardio = 1 << 1,
+    Functional = 1 << 2,
+    GroupClasses = 1 << 3,
+    CrossFit = 1 << 4,
+    CircuitTraining = 1 << 5,
+    PersonalTraining = 1 << 6,
+    Wellness = 1 << 7,
+}
+
+public enum TargetAudience
+{
+    General,
+    WomenOnly,
+}
+
 public enum ReviewStatus
 {
     Published,

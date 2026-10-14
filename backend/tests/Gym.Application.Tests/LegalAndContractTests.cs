@@ -100,6 +100,15 @@ public class ReportReviewCommandHandlerTests
 public class ProcessingActivitiesTests
 {
     [Fact]
+    public void Embedded_record_loads_expected_version_and_shape()
+    {
+        ProcessingActivitiesRecord.Version.Should().Be("1.0");
+        ProcessingActivitiesRecord.Activities.Should().HaveCount(6);
+        ProcessingActivitiesRecord.PersonalDataEntities.Should().HaveCount(11);
+        ProcessingActivitiesRecord.Activities[0].Name.Should().Be("Kontoverwaltung");
+    }
+
+    [Fact]
     public void Every_personal_data_entity_is_covered_by_an_activity()
     {
         var coveredEntities = ProcessingActivitiesRecord.Activities

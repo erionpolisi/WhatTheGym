@@ -1,0 +1,63 @@
+{
+  "Version": "1.0",
+  "Activities": [
+    {
+      "Name": "Kontoverwaltung",
+      "Purpose": "Registrierung und Anmeldung über Google, Verwaltung von Rollen und Profil.",
+      "LegalBasis": "Art. 6 Abs. 1 lit. b DSGVO (Vertrag/Nutzungsverhaeltnis)",
+      "DataCategories": ["Google-Subject", "E-Mail-Adresse", "Anzeigename", "Verifizierungsstatus", "Login-Zeitpunkte"],
+      "Entities": ["User", "RefreshToken"],
+      "Retention": "Bis zur Kontolöschung; danach Anonymisierung. Refresh-Tokens rotieren und verfallen nach 30 Tagen.",
+      "Recipients": ["Google LLC (Authentifizierung)"]
+    },
+    {
+      "Name": "Bewertungen",
+      "Purpose": "Veröffentlichung nicht-anonymer Studio-Bewertungen inklusive Bearbeitungshistorie.",
+      "LegalBasis": "Art. 6 Abs. 1 lit. b und f DSGVO",
+      "DataCategories": ["Nutzer-ID", "Bewertungsinhalte", "Kategoriebewertungen", "Zeitstempel", "Bearbeitungsverlauf"],
+      "Entities": ["Review", "ReviewRevision"],
+      "Retention": "Bewertungen bis zur Löschung durch Nutzer/Moderation; Revisionsdaten 3 Jahre nach Entfernung der Bewertung, sofern kein Legal Hold besteht.",
+      "Recipients": []
+    },
+    {
+      "Name": "Rechtsfälle und Meldungen",
+      "Purpose": "Bearbeitung von Meldungen zu Bewertungen, Entscheidungen, Einsprüche und revisionssichere Falldokumentation.",
+      "LegalBasis": "Art. 6 Abs. 1 lit. c und f DSGVO (rechtliche Verpflichtungen, Rechtsverteidigung)",
+      "DataCategories": ["Name und E-Mail der meldenden Person", "Fallbegründung", "Entscheidungen", "Einspruchstexte", "Audit-Ereignisse", "Benachrichtigungstexte"],
+      "Entities": ["LegalCase", "LegalCaseAppeal", "LegalCaseEvent", "LegalHold"],
+      "Retention": "Fall-Audit-Ereignisse 7 Jahre nach Fallabschluss; Einsprüche mindestens 6 Monate nach Entscheidung; Legal Holds pausieren Löschung.",
+      "Recipients": []
+    },
+    {
+      "Name": "Kontaktanfragen",
+      "Purpose": "Bearbeitung allgemeiner Anfragen, Studio-Vorschläge und Datenkorrekturen.",
+      "LegalBasis": "Art. 6 Abs. 1 lit. b und f DSGVO",
+      "DataCategories": ["Name", "E-Mail-Adresse", "Nachrichteninhalt"],
+      "Entities": ["ContactRequest"],
+      "Retention": "Bis zur Erledigung zuzüglich angemessener Nachweisfrist.",
+      "Recipients": []
+    },
+    {
+      "Name": "Transaktionale E-Mails",
+      "Purpose": "Versand rechtlich erforderlicher Benachrichtigungen über einen persistenten Postausgang.",
+      "LegalBasis": "Art. 6 Abs. 1 lit. c und f DSGVO",
+      "DataCategories": ["Empfänger-E-Mail", "Betreff", "Nachrichtentext"],
+      "Entities": ["OutboxEmail"],
+      "Retention": "Versandte/fehlgeschlagene Mails werden nach 90 Tagen gelöscht; rechtlich relevante Texte bleiben im Fall-Audit.",
+      "Recipients": ["Resend Inc. (E-Mail-Versand)"]
+    },
+    {
+      "Name": "Reichweitenmessung (PII-frei)",
+      "Purpose": "Anonyme Nutzungsstatistik einschließlich externer Studio-Website-Klicks ohne IP-Speicherung und ohne Fingerprinting.",
+      "LegalBasis": "Art. 6 Abs. 1 lit. f DSGVO",
+      "DataCategories": ["Ereignistyp (Allowlist)", "Studio-Pfad", "Ziel-Domain", "kurzlebiger rotierender Session-Hash"],
+      "Entities": ["AnalyticsEvent"],
+      "Retention": "Rohereignisse maximal 400 Tage.",
+      "Recipients": []
+    }
+  ],
+  "PersonalDataEntities": [
+    "User", "RefreshToken", "Review", "ReviewRevision", "LegalCase", "LegalCaseAppeal",
+    "LegalCaseEvent", "LegalHold", "ContactRequest", "OutboxEmail", "AnalyticsEvent"
+  ]
+}

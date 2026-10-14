@@ -4,7 +4,13 @@ using Gym.Domain.Scoring;
 
 namespace Gym.Application.Contracts;
 
-public sealed record ChainDto(Guid Id, string Name, string Slug, string? Website);
+public sealed record ChainDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    string? Website,
+    IReadOnlyList<string> TrainingTypes,
+    string TargetAudience);
 
 public sealed record AmenityDto(Guid Id, string Name, string Slug);
 
@@ -64,7 +70,9 @@ public sealed record GymListItemDto(
     double? TotalScore,
     double? MembershipScore,
     double? StudioScore,
-    string ScoreBasis);
+    string ScoreBasis,
+    IReadOnlyList<string> TrainingTypes,
+    string TargetAudience);
 
 public sealed record GymDetailDto(
     Guid Id,
@@ -84,7 +92,18 @@ public sealed record GymDetailDto(
     IReadOnlyList<OpeningHourDto> OpeningHours,
     ScoreSummaryDto Score,
     DateTimeOffset CreatedAtUtc,
-    DateTimeOffset UpdatedAtUtc);
+    DateTimeOffset UpdatedAtUtc,
+    IReadOnlyList<string> TrainingTypes,
+    string TargetAudience);
+
+public static class CatalogFacetDtoMapper
+{
+    public static IReadOnlyList<string> TrainingTypes(TrainingType trainingTypes) =>
+        Enum.GetValues<TrainingType>()
+            .Where(value => value != TrainingType.None && trainingTypes.HasFlag(value))
+            .Select(value => value.ToString())
+            .ToArray();
+}
 
 public sealed record RatingsDto(
     int? PriceValue,

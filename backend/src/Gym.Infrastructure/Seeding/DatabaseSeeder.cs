@@ -35,14 +35,30 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
     private async Task SeedCatalogAsync(CancellationToken ct)
     {
         var chainsBySlug = new Dictionary<string, GymChain>(StringComparer.Ordinal);
-        foreach (var (name, website) in SeedVocabulary.Chains)
+        foreach (var seed in SeedVocabulary.ChainSeeds)
         {
-            var slug = Slug.Generate(name);
+            var slug = Slug.Generate(seed.Name);
+            var trainingTypes = ToTrainingTypeFlags(seed.TrainingTypes);
             var existing = await context.GymChains.FirstOrDefaultAsync(c => c.Slug == slug, ct);
             if (existing is null)
             {
-                existing = GymChain.Create(name, slug, website, SeedStamp);
+                existing = GymChain.Create(
+                    seed.Name,
+                    slug,
+                    seed.Website,
+                    SeedStamp,
+                    trainingTypes,
+                    seed.TargetAudience);
                 context.GymChains.Add(existing);
+            }
+            else if (existing.CreatedAtUtc == SeedStamp && existing.UpdatedAtUtc == SeedStamp)
+            {
+                existing.Update(
+                    seed.Name,
+                    seed.Website,
+                    SeedStamp,
+                    trainingTypes,
+                    seed.TargetAudience);
             }
 
             chainsBySlug[slug] = existing;
@@ -73,6 +89,8 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         foreach (var seed in ViennaCatalog.Gyms)
         {
             var slug = Slug.Generate(seed.Name);
+            var status = seed.Status
+                ?? (seed.TemporarilyClosed == true ? GymStatus.TemporarilyClosed : GymStatus.Active);
             var existing = await context.Gyms.FirstOrDefaultAsync(g => g.Slug == slug, ct);
             if (existing is not null)
             {
@@ -92,6 +110,11 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                         existing.Phone,
                         existing.Description,
                         SeedStamp);
+                    existing.ChangeStatus(status, SeedStamp);
+                    existing.SetCatalogFacetOverrides(
+                        seed.TrainingTypes is null ? null : ToTrainingTypeFlags(seed.TrainingTypes),
+                        seed.TargetAudience,
+                        SeedStamp);
                 }
 
                 continue;
@@ -106,7 +129,7 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 chainId is not null ? chainsBySlug[seed.ChainSlug!].Website : null,
                 phone: null,
                 description: null,
-                GymStatus.Active,
+                status,
                 SeedStamp);
             if (gymResult.IsFailure)
             {
@@ -115,6 +138,10 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
             }
 
             gymResult.Value.SetAmenities(defaultAmenities, SeedStamp);
+            gymResult.Value.SetCatalogFacetOverrides(
+                seed.TrainingTypes is null ? null : ToTrainingTypeFlags(seed.TrainingTypes),
+                seed.TargetAudience,
+                SeedStamp);
             context.Gyms.Add(gymResult.Value);
             created++;
         }
@@ -122,6 +149,10 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
         await context.SaveChangesAsync(ct);
         logger.LogInformation("Catalogue seed done ({Created} new gyms).", created);
     }
+
+    private static TrainingType ToTrainingTypeFlags(IReadOnlyList<TrainingType>? trainingTypes) =>
+        trainingTypes?.Aggregate(TrainingType.None, (current, trainingType) => current | trainingType)
+        ?? TrainingType.None;
 
     private async Task SeedLegalDocumentsAsync(CancellationToken ct)
     {
@@ -142,17 +173,22 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
 
     private async Task SeedDemoDataAsync(CancellationToken ct)
     {
-        if (await context.Users.AnyAsync(u => u.GoogleSubject == "dev-demo-1", ct))
+        var demoSeed = EmbeddedSeedData.Demo;
+        var demoUserSeeds = EmbeddedSeedData.Require(demoSeed.Users, "demo.users");
+        if (demoUserSeeds.Count == 0)
+        {
+            throw new InvalidOperationException("Embedded seed data 'demo.users' must contain at least one user.");
+        }
+
+        if (await context.Users.AnyAsync(u => u.GoogleSubject == demoUserSeeds[0].GoogleSubject, ct))
         {
             return;
         }
 
-        var demoUsers = new[]
-        {
-            User.CreateFromGoogle("dev-demo-1", "demo1@example.invalid", true, "Anna Beispiel", SeedStamp),
-            User.CreateFromGoogle("dev-demo-2", "demo2@example.invalid", true, "Ben Muster", SeedStamp),
-            User.CreateFromGoogle("dev-demo-3", "demo3@example.invalid", true, "Clara Test", SeedStamp),
-        };
+        var demoUsers = demoUserSeeds
+            .Select(user => User.CreateFromGoogle(
+                user.GoogleSubject, user.Email, user.EmailVerified, user.DisplayName, SeedStamp))
+            .ToArray();
         context.Users.AddRange(demoUsers);
 
         var gyms = await context.Gyms.OrderBy(g => g.Slug).Take(6).ToListAsync(ct);
@@ -162,22 +198,13 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
             return;
         }
 
-        // Owned-type instances must be unique per review; use factories, never shared instances.
-        var demoRatings = new Func<ReviewRatings>[]
+        var demoRatings = EmbeddedSeedData.Require(demoSeed.Ratings, "demo.ratings");
+        var demoTexts = EmbeddedSeedData.Require(demoSeed.Texts, "demo.texts");
+        if (demoRatings.Count == 0 || demoRatings.Count != demoTexts.Count)
         {
-            // Both areas rated.
-            () => new ReviewRatings { PriceValue = 4, ContractTerms = 3, Billing = 4, CancellationExperience = 2, Equipment = 5, Cleanliness = 4, Staff = 4, Crowding = 3, ChangingRoom = 4, Showers = 4, Atmosphere = 5 },
-            // Studio only.
-            () => new ReviewRatings { Equipment = 3, Cleanliness = 2, Staff = 4, Crowding = 2, Atmosphere = 3 },
-            // Membership only.
-            () => new ReviewRatings { PriceValue = 5, ContractTerms = 4, Billing = 5, CancellationExperience = 4 },
-        };
-        var demoTexts = new[]
-        {
-            "Gute Geräteauswahl und faire Preise. Zu Stoßzeiten wird es allerdings eng.",
-            "Sauberkeit könnte besser sein, das Team ist aber sehr freundlich.",
-            "Unkomplizierte Anmeldung und transparente Abrechnung.",
-        };
+            throw new InvalidOperationException(
+                "Embedded seed data 'demo.ratings' and 'demo.texts' must contain the same non-zero number of entries.");
+        }
 
         var reviews = new List<Review>();
         for (var gymIndex = 0; gymIndex < gyms.Count; gymIndex++)
@@ -187,11 +214,11 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 // Not every user reviews every gym; keep a deterministic pattern.
                 if ((gymIndex + userIndex) % 2 == 0)
                 {
-                    var variant = (gymIndex + userIndex) % demoRatings.Length;
+                    var variant = (gymIndex + userIndex) % demoRatings.Count;
                     var reviewResult = Review.Create(
                         gyms[gymIndex].Id,
                         demoUsers[userIndex].Id,
-                        demoRatings[variant](),
+                        CloneRatings(demoRatings[variant]),
                         demoTexts[variant],
                         SeedStamp.AddDays(gymIndex + userIndex));
                     if (reviewResult.IsSuccess)
@@ -234,73 +261,41 @@ public sealed class DatabaseSeeder(AppDbContext context, ILogger<DatabaseSeeder>
                 .SqlQuery<long>($"SELECT nextval('legal_case_seq') AS \"Value\"")
                 .ToListAsync(ct);
             var demoCaseNumber = $"WTG-{SeedStamp.Year}-{next[0]:D6}";
+            var legalCase = EmbeddedSeedData.Require(demoSeed.LegalCase, "demo.legalCase");
             var caseResult = LegalCase.Create(
                 demoCaseNumber,
                 reviews[0].Id,
-                LegalCaseCategory.Other,
-                "Demo Melder",
-                "melder@example.invalid",
-                "Demo-Fall für lokale Entwicklung: Diese Meldung dient nur zu Testzwecken.",
-                new string('0', 64),
+                legalCase.Category,
+                legalCase.ReporterName,
+                legalCase.ReporterEmail,
+                legalCase.Description,
+                legalCase.ReportTokenHash,
                 SeedStamp);
             if (caseResult.IsSuccess)
             {
                 context.LegalCases.Add(caseResult.Value);
                 context.LegalCaseEvents.Add(LegalCaseEvent.Create(
-                    caseResult.Value.Id, 1, LegalCaseEventType.CaseCreated, LegalActorType.Reporter, null,
-                    "{\"seed\":true}", SeedStamp));
+                    caseResult.Value.Id, 1, legalCase.EventType, legalCase.ActorType, null,
+                    legalCase.MetadataJson, SeedStamp));
             }
         }
 
         await context.SaveChangesAsync(ct);
         logger.LogInformation("Demo data seed done ({Reviews} reviews).", reviews.Count);
     }
-}
 
-internal static class LegalDocumentDrafts
-{
-    private const string Marker = "\n\n---\n\n**ENTWURF - anwaltlich prüfen lassen**\n";
-
-    public static readonly IReadOnlyList<(LegalDocumentType Type, string Title, string Content)> All =
-    [
-        (LegalDocumentType.Imprint, "Impressum",
-            """
-            # Impressum
-
-            Medieninhaber und Herausgeber: WhatTheGym (Platzhalter - vor Veröffentlichung ergänzen)
-            Sitz: Wien, Österreich
-            Kontakt: kontakt@whatthegym.at
-
-            Plattform zur Bewertung von Fitnessstudios in Wien.
-            Offenlegung gemäß Paragraf 25 MedienG folgt vor Produktivbetrieb.
-            """ + Marker),
-        (LegalDocumentType.PrivacyPolicy, "Datenschutzerklärung",
-            """
-            # Datenschutzerklärung
-
-            Wir verarbeiten personenbezogene Daten ausschließlich gemäß DSGVO.
-
-            - Anmeldung erfolgt über Google (Auth-Code-Flow); es werden keine Passwörter gespeichert.
-            - Bewertungen sind nicht anonym und werden mit dem Anzeigenamen veröffentlicht.
-            - Meldungen zu Bewertungen werden als Rechtsfall mit revisionssicherem Verlauf dokumentiert.
-            - Die Reichweitenmessung ist PII-frei: keine IP-Speicherung, kein Fingerprinting.
-            - Betroffenenrechte: Auskunft (Datenexport), Löschung (Kontolöschung mit Anonymisierung),
-              Beschwerde bei der Datenschutzbehörde.
-
-            Details zu allen Verarbeitungen enthält das Verzeichnis von Verarbeitungstätigkeiten
-            (öffentlich abrufbar über die API).
-            """ + Marker),
-        (LegalDocumentType.TermsOfUse, "Nutzungsbedingungen",
-            """
-            # Nutzungsbedingungen
-
-            1. Bewertungen müssen auf eigenen Erfahrungen beruhen und wahrheitsgemäß sein.
-            2. Rechtswidrige Inhalte (Beleidigung, Verleumdung, Verletzung von Rechten Dritter) sind untersagt.
-            3. Gemeldete Inhalte bleiben während der Prüfung grundsätzlich online; offensichtlich
-               rechtswidrige Inhalte können im Schnellverfahren vorübergehend ausgeblendet werden.
-            4. Entscheidungen können mindestens sechs Monate lang angefochten werden.
-            5. Konten können jederzeit gelöscht werden; Inhalte werden entsprechend den
-               Aufbewahrungsregeln anonymisiert oder entfernt.
-            """ + Marker),
-    ];
+    private static ReviewRatings CloneRatings(ReviewRatings ratings) => new()
+    {
+        PriceValue = ratings.PriceValue,
+        ContractTerms = ratings.ContractTerms,
+        Billing = ratings.Billing,
+        CancellationExperience = ratings.CancellationExperience,
+        Equipment = ratings.Equipment,
+        Cleanliness = ratings.Cleanliness,
+        Staff = ratings.Staff,
+        Crowding = ratings.Crowding,
+        ChangingRoom = ratings.ChangingRoom,
+        Showers = ratings.Showers,
+        Atmosphere = ratings.Atmosphere,
+    };
 }

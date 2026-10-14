@@ -5,11 +5,18 @@ use `Europe/Vienna`. Country code is `AT`.
 
 ## Catalogue
 
-- **GymChain** — name, stable unique slug, optional website.
+- **GymChain** — name, stable unique slug, optional website, controlled default
+  `TrainingTypes` flags and `TargetAudience` (`General` or `WomenOnly`).
 - **GymEntry** (table `Gyms`) — name, stable unique SEO slug, optional chain,
   Vienna district (1–23), address, postal code (1xxx), optional website/phone/
   description, status (`Draft`, `Active`, `TemporarilyClosed`,
   `PermanentlyClosed`), amenity ids (uuid[]), optional official opening hours.
+  It may replace the chain's complete training-type set and/or target audience;
+  a `null` override inherits the corresponding chain value.
+  - Training types: `Strength`, `Cardio`, `Functional`, `GroupClasses`,
+    `CrossFit`, `CircuitTraining`, `PersonalTraining`, `Wellness`.
+  - Public catalogue DTOs expose effective inherited values, while admin DTOs
+    retain raw defaults and nullable location overrides.
   - Public visibility: every status except `Draft`.
   - Reviews accepted: `Active` and `TemporarilyClosed` only.
 - **Amenity** — name + slug; assignment via `GymEntry.AmenityIds`.

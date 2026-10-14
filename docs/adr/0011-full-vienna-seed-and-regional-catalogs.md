@@ -17,17 +17,18 @@ explicitly NOT integrated.
   (official chain studio finders, sitemaps, WKO where fetchable). Every entry
   carries a confidence level in docs/seed-data.md. The former ~50 cap is
   removed from CONSTRAINTS.md.
-- **Regional catalogs**: eight static classes under
-  `Gym.Infrastructure/Seeding/Regional/` (Burgenland, Carinthia, LowerAustria,
-  UpperAustria, Salzburg, Styria, Tyrol, Vorarlberg) hold `RegionalSeedGym`
-  records (city-based, since the domain's district model is Vienna-only).
-  They are compiled (so they cannot rot silently) but are referenced by
-  nothing: no seeder, no tests, no API. Wiring them up is a future, separate
-  decision that will also need domain changes (region/city on Gym).
-- **SOLID cleanup**: chains and amenities moved from `ViennaCatalog` into
-  `SeedVocabulary` (single source of truth — they are platform-wide, not
-  Vienna-specific). Seed record types moved to `SeedModels.cs`. Catalogs now
-  hold exactly one thing: their region's gym list (SRP).
+- **Regional catalogs**: eight JSON lists in the embedded
+  `Gym.Infrastructure/Seeding/Data/catalog.json` resource (Burgenland,
+  Carinthia, LowerAustria, UpperAustria, Salzburg, Styria, Tyrol, Vorarlberg)
+  hold `RegionalSeedGym` records (city-based, since the domain's district model
+  is Vienna-only). They are embedded (so missing or malformed data fails fast)
+  but are referenced by nothing: no seeder, no tests, no API. Wiring them up is
+  a future, separate decision that will also need domain changes (region/city
+  on Gym).
+- **Seed vocabulary and models**: chains and amenities remain a single shared
+  vocabulary in the same embedded JSON resource; `SeedVocabulary`,
+  `ViennaCatalog`, and the regional catalog APIs retain their typed accessors.
+  Seed record types remain in `SeedModels.cs`.
 - **Drift expectation**: gym data ages (openings/closures). Catalogs carry
   the research date; docs/seed-data.md remains the verification ledger and
   re-verification before production import stays mandatory (ADR 0009).

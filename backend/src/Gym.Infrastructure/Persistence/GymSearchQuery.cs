@@ -38,6 +38,10 @@ public sealed class GymSearchRowFlat
 
     public string ScoreBasis { get; init; } = "None";
 
+    public int TrainingTypes { get; init; }
+
+    public string TargetAudience { get; init; } = "General";
+
     public long TotalCount { get; init; }
 }
 
@@ -66,6 +70,8 @@ public sealed class GymSearchQuery(AppDbContext context) : IGymSearchQuery
                    COALESCE(s."ReviewCount", 0) AS "ReviewCount",
                    s."TotalScore", s."MembershipScore", s."StudioScore",
                    COALESCE(s."ScoreBasis", 'None') AS "ScoreBasis",
+                   COALESCE(g."TrainingTypesOverride", c."TrainingTypes", 0) AS "TrainingTypes",
+                   COALESCE(g."TargetAudienceOverride", c."TargetAudience", 'General') AS "TargetAudience",
                    COUNT(*) OVER() AS "TotalCount",
                    CASE WHEN @term IS NULL THEN 0
                         ELSE ts_rank(g."SearchVector", plainto_tsquery('german', @term))
@@ -113,7 +119,9 @@ public sealed class GymSearchQuery(AppDbContext context) : IGymSearchQuery
                 Enum.Parse<GymStatus>(r.Status),
                 r.ChainName, r.ChainSlug, r.ReviewCount,
                 r.TotalScore, r.MembershipScore, r.StudioScore,
-                Enum.Parse<ScoreBasis>(r.ScoreBasis)))
+                Enum.Parse<ScoreBasis>(r.ScoreBasis),
+                (TrainingType)r.TrainingTypes,
+                Enum.Parse<TargetAudience>(r.TargetAudience)))
             .ToList();
 
         return new PagedResult<GymSearchRow>(items, criteria.Page, criteria.PageSize, total);

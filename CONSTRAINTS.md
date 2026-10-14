@@ -9,6 +9,9 @@ German (`de-AT`). Code, comments, and commits use English.
 The MVP lets users find gyms, inspect complete rating breakdowns, create
 verified Google-account reviews, report reviews, and submit contact requests.
 It must be locally runnable, tested, documented, and deployable later.
+Reviews and score summaries remain the comparison core. A moderated community
+Q&A may later complement them for variable, location-specific information; it
+does not replace reviews and is not part of the current data-model migration.
 
 Do not build mobile apps, payments, affiliate/lead features, studio dashboards,
 AI features, image upload/storage, microservices, brokers, Kubernetes, PostGIS,
@@ -82,7 +85,12 @@ interface. Do not store, show, filter, or rank by membership prices.
   area and exposes `scoreBasis`. Include total, both areas, every category,
   and underlying review counts in score responses. Missing data is `null`,
   never zero. Materialize summary updates and provide a rebuild command.
-- Search/filter only by district, total score, area score, chain, and branch.
+- Gym chains own controlled defaults for training types and target audience;
+  locations inherit them unless they provide a complete replacement override.
+  Public catalogue responses expose effective inherited values. These stable
+  facets may support deterministic filters and recommendations alongside
+  district, total score, area score, chain, and branch. Do not infer facts with
+  AI or turn volatile community answers into catalogue metadata automatically.
   No price or location-radius behavior in this MVP.
 - Only Admins create gyms. Public gym/data suggestions use `ContactRequest`.
   Seed all verifiable real official Vienna gym data; seed demo reviews/cases
@@ -90,6 +98,9 @@ interface. Do not store, show, filter, or rank by membership prices.
   catalogs for the rest of Austria exist as inert, compiled reference data
   only (never seeded, tested, or exposed) until expansion is decided
   (ADR 0011).
+- The versioned JSON catalogue is the seed source. Database-to-JSON export is
+  an explicit maintenance snapshot, never automatic bidirectional sync, and
+  excludes identifiers, timestamps, personal data, reviews, and secrets.
 
 ## Reports, Legal, Privacy, and Email
 

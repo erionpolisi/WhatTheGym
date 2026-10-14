@@ -2,23 +2,81 @@
 
 ## Vienna gym catalogue
 
-`Gym.Infrastructure.Seeding.ViennaCatalog` seeds 11 chains, 12 amenities and
-92 studios across Vienna's districts (rebuilt 2026-08-31 from official chain
-sources; see "Catalog rebuild" below). Chains and amenities live in
-`SeedVocabulary` (shared vocabulary, ADR 0011). Seeding is idempotent (keyed
-by slug) and deterministic (fixed timestamps), so repeated startups never
-duplicate data.
+`Gym.Infrastructure/Seeding/Data/catalog.json` currently seeds 23 chains,
+12 amenities and 113 studios across Vienna's districts (rebuilt 2026-08-31
+from official chain sources and supplemented from WKO Firmen A-Z on
+2026-10-10 and individual official websites through 2026-10-14; see "Catalog
+rebuild" below). It is an embedded resource loaded
+through the existing `ViennaCatalog` and `SeedVocabulary` APIs (shared
+vocabulary, ADR 0011). Seeding is idempotent (keyed by slug) and deterministic
+(fixed timestamps), so repeated startups never duplicate data.
 
-**Provenance:** 81 of 92 entries were verified against machine-readable
-official sources on 2026-08-31 (studio pages/sitemaps of fitinn.at,
+**Provenance:** Entries were verified against machine-readable official
+sources or WKO Firmen A-Z (studio pages/sitemaps of fitinn.at,
 clever-fit.com, mrssporty.at, johnharris.at, holmesplace.at, fitfabrik.at,
-johnreed.fitness, crossfitvienna.at). 11 entries (McFIT ×5, Club Danube ×4,
-Kieser ×2, Trainingslager) are marked unverified in the catalog comments —
-their chain sites were not script-readable; re-verify before production
-import (ADR 0009).
+johnreed.fitness, mcfit.com, evofitness.at, golds-gym.at, crossfitvienna.at,
+fitnessfirst.de, af-austria.at, and WKO-listed studio websites).
+
+The 2026-10-10 WKO pass inspected all 324 Vienna results through the site's
+stateful "Mehr laden" pagination. Only entries with a WKO-listed website were
+considered. Existing addresses, hotels, equipment sellers, non-gym businesses,
+inactive/liquidating companies, EMS-only studios, Pilates/therapy offers and
+private-session concepts were excluded. The catalogue targets conventional,
+customer-facing gyms suitable for a broad audience. Verified independent
+studios are represented by one chain entry so their official website remains
+available through the existing data model.
 
 Opening hours are intentionally not seeded — they are optional and must come
 from official data entered by an admin. No Google Maps integration.
+
+## Catalog verification CLI
+
+Run the interactive catalog tool from `backend/`:
+
+```powershell
+dotnet run --project tools\Gym.CatalogCli
+```
+
+The CLI reads and atomically updates the embedded source file
+`src/Gym.Infrastructure/Seeding/Data/catalog.json`. It lists numbered chains
+and their websites, then numbered Vienna locations for the selected chain.
+Selecting a location opens a normal Google Maps search URL in the default
+browser; the tool does not use the Google Maps API or require credentials.
+
+Website verification is stored as `WebsiteVerifiedOn` on a chain and address
+verification as `LocationVerifiedOn` on a Vienna gym. Confirming a verification
+uses today's date by default and accepts an optional `YYYY-MM-DD` override.
+Changing a website or location address clears the corresponding verification
+date. The first version can edit and add chains and locations but deliberately
+does not delete them. These JSON fields prepare later database persistence;
+the CLI itself only changes the seed source. In an interactive terminal,
+unverified dates and their per-chain location counts are red. Dates older than
+one calendar month and their counts are orange.
+
+Vienna gym entries may optionally set `TemporarilyClosed` to `true`. Missing
+values default to an active gym. The seeder maps this flag to the existing
+`GymStatus.TemporarilyClosed`, while the CLI highlights it in orange and allows
+the status to be toggled without deleting the location.
+
+Every chain defines controlled `TrainingTypes` and `TargetAudience` defaults.
+Vienna locations inherit these values unless `TrainingTypes` or
+`TargetAudience` supplies a complete replacement override. Mrs.Sporty uses
+`WomenOnly`; all other current chains use `General`. The values are persisted
+and public catalogue responses expose the effective inherited result.
+
+The explicit reverse maintenance flow exports the runtime catalogue from
+PostgreSQL into `catalog-DB.json` beside the seed source:
+
+```powershell
+$env:ConnectionStrings__Postgres = "Host=localhost;Port=5432;Database=whatthegym;Username=wtg;Password=..."
+dotnet run --project tools\Gym.CatalogCli -- export-db
+```
+
+The export is atomically replaced and deterministically ordered. It preserves
+chain defaults, location overrides and gym status but intentionally omits
+database IDs, timestamps, verification dates, reviews, personal data and
+secrets. It is a reviewable snapshot, not automatic bidirectional sync and
+never overwrites `catalog.json`.
 
 ## Legal documents
 
@@ -45,25 +103,31 @@ Full re-research replacing the original ~50-entry best-effort list:
 | --- | --- | --- | --- |
 | FitInn | 12 (10 wrong addresses) | 31 | complete Vienna network from fitinn.at studio pages |
 | clever fit | 5 (3 nonexistent branches) | 13 | from clever-fit.com de-AT sitemap + JSON-LD addresses |
-| Mrs.Sporty | 4 (3 not in club list) | 16 | complete list from mrssporty.at club finder |
+| Mrs.Sporty | 4 (3 not in club list) | 13 | active clubs from mrssporty.at; three closed Vienna club pages removed on 2026-10-13 |
 | John Harris | 4 (2 wrong) | 8 | embedded studio JSON on johnharris.at |
 | Fit Fabrik | 5 (all wrong) | 7 | fitfabrik.at studio pages |
 | Holmes Place | 3 (all 3 addresses wrong) | 3 | JSON-LD on club pages (Wipplingerstr. 30 / Huetteldorfer Str. 130a / Wehlistr. 66) |
 | JOHN REED | 0 | 1 | new chain; Wien Oper, Kaerntner Ring 5 |
-| McFIT | 5 | 5 | kept unverified (site not script-readable) |
-| Club Danube | 4 | 4 | kept unverified (site JS-only) |
-| Kieser Training | 3 | 2 | Innere Stadt removed (address now verified as JOHN REED) |
+| McFIT | 5 | 11 | replaced from the official McFIT studio API on 2026-10-12 |
+| Club Danube | 4 | 4 | retained in 2026-08, then removed after the abandoned domain was repurposed for casino SEO content |
+| Kieser Training | 3 | 0 | removed after Vienna disappeared from the official Kieser studio locator |
 | MYGYM | 2 | 0 | chain has NO Vienna branches (Salzburg-based) - removed |
-| Independents | 3 | 2 | CrossFit Vienna moved to Rennweg 97 (verified); Doorbreaker removed (domain dead); Trainingslager kept unverified |
+| EVO Fitness | 0 | 9 | active Vienna clubs from the official API; two opening-soon clubs excluded |
+| Gold's Gym | 0 | 1 | Wien Columbusplatz from the official club page |
+| Fitness First | 0 | 3 | Wien Landstraße, Floridsdorf and Liesing from official club pages |
+| Anytime Fitness | 0 | 1 | WIEN FABRIK 1230 from the official Austrian site |
+| GET UP Fitness | 0 | 1 | Trabrennstrasse 4 from the official website |
+| MH76 Training | 0 | 0 | chain removed; official imprint identifies it as a trainer-room rental platform |
+| Independents | 3 | 2 | CrossFit Vienna moved to Rennweg 97 (verified); Doorbreaker removed (domain dead); Trainingslager was retained then and removed during the 2026-10-10 cleanup |
 | **Total** | **50** | **92** | |
 
 ## Regional catalogs (inert reference data, ADR 0011)
 
-`Gym.Infrastructure.Seeding.Regional.*` holds one catalog per remaining
-Bundesland (~122 entries researched 2026-08-31 from the same official chain
+`Gym.Infrastructure/Seeding/Data/catalog.json` holds one catalog per remaining
+Bundesland (~123 entries researched 2026-08-31 from the same official chain
 sources; entries with an empty address have a confirmed branch without a
-machine-readable street address). They are compiled but referenced by
-nothing: not seeded, not tested, not exposed. Counts: Niederoesterreich 43,
+machine-readable street address). They are embedded but referenced by nothing:
+not seeded, not tested, not exposed. Counts: Niederoesterreich 44,
 Oberoesterreich 22, Steiermark 17, Salzburg 16, Kaernten 10, Tirol 8,
 Vorarlberg 4, Burgenland 2. Chains not yet covered there (McFIT Graz/Linz,
 Happy Fit, INJOY, Kieser, regional independents) can be appended when

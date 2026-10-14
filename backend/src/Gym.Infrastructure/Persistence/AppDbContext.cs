@@ -66,6 +66,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.Property(c => c.Slug).HasMaxLength(220).IsRequired();
             b.HasIndex(c => c.Slug).IsUnique();
             b.Property(c => c.Website).HasMaxLength(500);
+            b.Property(c => c.TrainingTypes).HasConversion<int>().IsRequired();
+            b.Property(c => c.TargetAudience).HasConversion<string>().HasMaxLength(24).IsRequired();
         });
 
         modelBuilder.Entity<Amenity>(b =>
@@ -95,6 +97,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
             b.Property(g => g.Description).HasMaxLength(2000);
             b.Property(g => g.Status).HasConversion<string>().HasMaxLength(32);
             b.HasIndex(g => g.Status);
+            b.Property(g => g.TrainingTypesOverride).HasConversion<int?>();
+            b.Property(g => g.TargetAudienceOverride).HasConversion<string?>().HasMaxLength(24);
             b.Property(g => g.AmenityIds).HasColumnType("uuid[]");
             b.HasOne(g => g.Chain).WithMany().HasForeignKey(g => g.ChainId).OnDelete(DeleteBehavior.SetNull);
 

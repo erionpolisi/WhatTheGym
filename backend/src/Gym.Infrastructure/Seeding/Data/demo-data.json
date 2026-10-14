@@ -1,0 +1,27 @@
+{
+  "Users": [
+    { "GoogleSubject": "dev-demo-1", "Email": "demo1@example.invalid", "EmailVerified": true, "DisplayName": "Anna Beispiel" },
+    { "GoogleSubject": "dev-demo-2", "Email": "demo2@example.invalid", "EmailVerified": true, "DisplayName": "Ben Muster" },
+    { "GoogleSubject": "dev-demo-3", "Email": "demo3@example.invalid", "EmailVerified": true, "DisplayName": "Clara Test" }
+  ],
+  "Ratings": [
+    { "PriceValue": 4, "ContractTerms": 3, "Billing": 4, "CancellationExperience": 2, "Equipment": 5, "Cleanliness": 4, "Staff": 4, "Crowding": 3, "ChangingRoom": 4, "Showers": 4, "Atmosphere": 5 },
+    { "Equipment": 3, "Cleanliness": 2, "Staff": 4, "Crowding": 2, "Atmosphere": 3 },
+    { "PriceValue": 5, "ContractTerms": 4, "Billing": 5, "CancellationExperience": 4 }
+  ],
+  "Texts": [
+    "Gute Geräteauswahl und faire Preise. Zu Stoßzeiten wird es allerdings eng.",
+    "Sauberkeit könnte besser sein, das Team ist aber sehr freundlich.",
+    "Unkomplizierte Anmeldung und transparente Abrechnung."
+  ],
+  "LegalCase": {
+    "Category": "Other",
+    "ReporterName": "Demo Melder",
+    "ReporterEmail": "melder@example.invalid",
+    "Description": "Demo-Fall für lokale Entwicklung: Diese Meldung dient nur zu Testzwecken.",
+    "ReportTokenHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "EventType": "CaseCreated",
+    "ActorType": "Reporter",
+    "MetadataJson": "{\"seed\":true}"
+  }
+}
