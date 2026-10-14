@@ -10,7 +10,11 @@ public sealed record SeedGym(
     DateOnly? LocationVerifiedOn = null,
     bool? TemporarilyClosed = null);
 
-public sealed record ChainSeed(string Name, string? Website, DateOnly? WebsiteVerifiedOn = null);
+public sealed record ChainSeed(
+    string Name,
+    string? Website,
+    DateOnly? WebsiteVerifiedOn = null,
+    IReadOnlyList<string>? Tags = null);
 
 /// <summary>
 /// Seed entry for a gym outside Vienna. Reference data only: the MVP domain is Vienna-scoped

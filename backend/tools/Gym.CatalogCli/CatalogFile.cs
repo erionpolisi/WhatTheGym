@@ -62,6 +62,13 @@ internal sealed class CatalogFile
             {
                 throw new InvalidOperationException($"Die Website von '{chain.Name}' ist keine gültige HTTP(S)-URL.");
             }
+
+            if (chain.Tags is not null
+                && (chain.Tags.Any(string.IsNullOrWhiteSpace)
+                    || chain.Tags.Distinct(StringComparer.Ordinal).Count() != chain.Tags.Count))
+            {
+                throw new InvalidOperationException($"Die Tags von '{chain.Name}' sind leer oder nicht eindeutig.");
+            }
         }
 
         var gymSlugs = new HashSet<string>(StringComparer.Ordinal);

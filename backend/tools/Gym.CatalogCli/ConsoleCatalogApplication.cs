@@ -33,7 +33,8 @@ internal sealed class ConsoleCatalogApplication(
                 var listedChain = chains[index];
                 var summary = _service.GetLocationVerificationSummary(listedChain, currentDate);
                 output.WriteLine(
-                    $"{index + 1,2}. {listedChain.Name} | {listedChain.Website ?? "-"} | geprüft: {FormatDate(listedChain.WebsiteVerifiedOn, currentDate)}"
+                    $"{index + 1,2}. {listedChain.Name}{FormatChainTags(listedChain)}"
+                    + $" | {listedChain.Website ?? "-"} | geprüft: {FormatDate(listedChain.WebsiteVerifiedOn, currentDate)}"
                     + terminal.VerificationCounts(summary));
             }
 
@@ -71,7 +72,8 @@ internal sealed class ConsoleCatalogApplication(
             var summary = _service.GetLocationVerificationSummary(chain, currentDate);
             output.WriteLine();
             output.WriteLine(
-                $"{chain.Name} | {chain.Website ?? "-"} | Website geprüft: {FormatDate(chain.WebsiteVerifiedOn, currentDate)}"
+                $"{chain.Name}{FormatChainTags(chain)}"
+                + $" | {chain.Website ?? "-"} | Website geprüft: {FormatDate(chain.WebsiteVerifiedOn, currentDate)}"
                 + terminal.VerificationCounts(summary));
             output.WriteLine("Standorte");
 
@@ -377,6 +379,18 @@ internal sealed class ConsoleCatalogApplication(
         gym.TemporarilyClosed == true
             ? $" | {terminal.Orange("vorübergehend geschlossen")}"
             : string.Empty;
+
+    private static string FormatChainTags(CatalogChain chain)
+    {
+        if (chain.Tags is null || chain.Tags.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var labels = chain.Tags.Select(tag =>
+            string.Equals(tag, "WomenOnly", StringComparison.Ordinal) ? "Nur für Frauen" : tag);
+        return $" [{string.Join(", ", labels)}]";
+    }
 
     private static bool TrySelect<T>(string command, IReadOnlyList<T> items, out T item)
     {

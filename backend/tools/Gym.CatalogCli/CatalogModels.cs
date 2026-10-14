@@ -21,6 +21,9 @@ internal sealed class CatalogChain
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateOnly? WebsiteVerifiedOn { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? Tags { get; set; }
 }
 
 internal sealed class CatalogGym
