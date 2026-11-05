@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -40,11 +41,12 @@ public sealed class WtgApiFactory : WebApplicationFactory<Program>, IAsyncLifeti
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Seed:SeedCatalog", "true");
         builder.UseSetting("Seed:SeedDemoData", "false");
-        builder.UseSetting("Auth:EnableDevLogin", "true");
         builder.UseSetting("Auth:BootstrapAdminEmail", "admin@example.invalid");
         builder.UseSetting("RateLimits:PublicWritePerMinute", "1000");
         builder.UseSetting("RateLimits:AuthPerMinute", "1000");
         builder.UseSetting("RateLimits:AnalyticsPerMinute", "1000");
+        builder.ConfigureServices(services =>
+            services.AddControllers().AddApplicationPart(typeof(TestAuthController).Assembly));
     }
 
     // Session-authenticated writes require the CSRF header; set it as a client default.
@@ -60,11 +62,11 @@ public sealed class ApiCollection : ICollectionFixture<WtgApiFactory>;
 
 public static class TestClientExtensions
 {
-    /// <summary>Signs in through the development login and returns the authenticated client.</summary>
+    /// <summary>Signs in through the test-assembly-only endpoint and returns the authenticated client.</summary>
     public static async Task<HttpClient> LoginAsync(this WtgApiFactory factory, string email, string displayName, bool emailVerified = true)
     {
         var client = factory.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/v1/auth/dev-login", new
+        var response = await client.PostAsJsonAsync("/api/v1/test-auth/login", new
         {
             email,
             displayName,

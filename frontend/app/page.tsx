@@ -10,15 +10,14 @@ export default async function HomePage() {
   return (
     <div>
       <section className="hero">
-        <span className="eyebrow">Wien · Verifizierte Bewertungen</span>
+        <span className="eyebrow">WIEN • GYM-FINDER & COMMUNITY</span>
         <h1>
-          Finde das Gym, das <em>hält</em>, was es verspricht.
+          Dein Gym. <em>Deine Wahl.</em> Echte Wiener Insidertipps.
         </h1>
         <p className="lead">
-          WhatTheGym sammelt ehrliche, verifizierte Bewertungen zu Wiener Fitnessstudios - getrennt nach{" "}
-          <strong>Mitgliedschaft</strong> und <strong>Studio</strong>, damit du vor der Unterschrift weißt, worauf du
-          dich einlässt.
-        </p>
+          <strong>WhatTheGym</strong> ist Wiens Community-Forum für <strong>Fitnessstudios</strong>.
+          Stelle spezifische Fragen an aktuelle Mitglieder, tausche Erfahrungen aus und finde das <strong>Gym</strong>, das wirklich zu dir passt.
+       </p>
         <div className="chips" aria-label="Bewertungskategorien">
           <span className="chip accent">Preis-Leistung</span>
           <span className="chip accent">Vertrag &amp; Kündigung</span>
@@ -29,9 +28,16 @@ export default async function HomePage() {
           <span className="chip">Umkleiden &amp; Duschen</span>
           <span className="chip">Atmosphäre</span>
         </div>
-        <Link href="/studios">
-          <button type="button">Alle Studios durchsuchen</button>
-        </Link>
+        <div className="hero-actions">
+          <Link href="/empfehlung">
+            <button type="button">Probier es aus</button>
+          </Link>
+          <Link href="/studios">
+            <button type="button" className="secondary">
+              Studios durchstöbern
+            </button>
+          </Link>
+        </div>
       </section>
 
       <h2>Bestbewertete Studios</h2>

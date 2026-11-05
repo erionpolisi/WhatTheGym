@@ -108,6 +108,36 @@ public sealed class GymsController : ControllerBase
         var result = await handler.Handle(new CreateReviewCommand(userId.Value, slug, request.Ratings, request.Text), cancellationToken);
         return result.ToCreatedResult(this);
     }
+
+    public sealed record RecommendGymsRequest(
+        string? Gender,
+        bool? WomenOnly,
+        IReadOnlyList<int>? Districts,
+        IReadOnlyList<string>? TrainingTypes,
+        IReadOnlyList<string>? Amenities,
+        string? ScoreImportance,
+        int? Limit);
+
+    /// <summary>Rule-based gym recommendation from questionnaire preferences (POST because of the structured payload).</summary>
+    [HttpPost("recommendations")]
+    [EnableRateLimiting("public-write")]
+    public async Task<ActionResult<IReadOnlyList<GymRecommendationDto>>> Recommend(
+        [FromServices] IQueryHandler<RecommendGymsQuery, IReadOnlyList<GymRecommendationDto>> handler,
+        [FromBody] RecommendGymsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(
+            new RecommendGymsQuery(
+                request.Gender,
+                request.WomenOnly ?? false,
+                request.Districts,
+                request.TrainingTypes,
+                request.Amenities,
+                request.ScoreImportance,
+                request.Limit),
+            cancellationToken);
+        return result.ToActionResult(this);
+    }
 }
 
 [ApiController]
@@ -120,6 +150,19 @@ public sealed class ChainsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await handler.Handle(new ListChainsQuery(), cancellationToken);
+        return result.ToActionResult(this);
+    }
+
+    /// <summary>Chain-first directory: chains with the number of gyms matching term/district/score filters.</summary>
+    [HttpGet("search")]
+    public async Task<ActionResult<IReadOnlyList<ChainSearchItemDto>>> Search(
+        [FromServices] IQueryHandler<SearchChainsQuery, IReadOnlyList<ChainSearchItemDto>> handler,
+        [FromQuery] string? term,
+        [FromQuery] int? district,
+        [FromQuery] double? minTotalScore,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.Handle(new SearchChainsQuery(term, district, minTotalScore), cancellationToken);
         return result.ToActionResult(this);
     }
 }

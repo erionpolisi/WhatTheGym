@@ -60,7 +60,8 @@ Google-only login. The API is the backend-for-frontend: it runs the
 Authorization Code Flow with PKCE against Google, then issues its own session
 cookie plus a rotating refresh token (stored hashed server-side, reuse
 detection revokes the whole family). Provider tokens are never persisted and
-never reach the browser. Locally, a Development-only dev-login replaces Google.
+never reach the browser. Local development uses the same Google OAuth client as
+staging, with localhost registered as an additional callback URI.
 See [adr/0003-authentication.md](adr/0003-authentication.md).
 
 Hardening (see [adr/0012-security-hardening.md](adr/0012-security-hardening.md)):

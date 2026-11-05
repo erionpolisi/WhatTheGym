@@ -1,4 +1,4 @@
-# ADR 0003: Google BFF authentication, custom refresh tokens, dev-login fallback
+# ADR 0003: Google BFF authentication and custom refresh tokens
 
 Status: accepted — 2026-08-21
 
@@ -6,8 +6,8 @@ Status: accepted — 2026-08-21
 
 Login is Google-only via a BFF with Authorization Code Flow + PKCE. Tokens must
 never reach the browser beyond HttpOnly cookies, refresh tokens must rotate and
-be revocable server-side, and local development must work without Google
-credentials.
+be revocable server-side, and environment-specific callback URIs must remain
+explicitly allowlisted.
 
 ## Decision
 
@@ -20,10 +20,9 @@ credentials.
   `Secure` on HTTPS). Refresh uses our own opaque 256-bit tokens stored as
   SHA-256 hashes with expiry, rotation chains (`ReplacedByTokenHash`) and
   reuse detection that revokes the whole token family.
-- Development fallback: `POST /api/v1/auth/dev-login` exists only when the
-  environment is Development **and** `Auth:EnableDevLogin=true`. It mimics the
-  Google upsert (subject `dev:<email>`), enabling the full flow locally with
-  zero secrets. It is unreachable in staging/production by construction.
+- Local development reuses the staging Google OAuth client with localhost as
+  an additional authorized callback. Its secret stays only in the ignored
+  local `.env`.
 - First-admin bootstrap: a configured verified Google email becomes Admin on
   login while no admin exists — never via seed data.
 
@@ -31,8 +30,8 @@ credentials.
 
 - No provider tokens are stored anywhere; browser storage holds nothing.
 - Logout and account deletion revoke all refresh tokens.
-- The dev-login is an accepted, documented local-only risk; integration tests
-  cover login, refresh rotation, logout revocation and role enforcement.
+- Integration tests register a test-assembly-only session endpoint; production
+  application assemblies expose no alternative login route.
 
 ## Amendment (2026-08-31): cookie Secure policy hardened
 

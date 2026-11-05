@@ -2,7 +2,8 @@
 
 Fitnessstudio-Bewertungsplattform fuer Wien. Production-ready monolithic MVP:
 .NET 8 Clean Architecture API + PostgreSQL + Next.js frontend, fully runnable
-locally via Docker Compose — no cloud accounts or secrets required.
+locally via Docker Compose. Public browsing needs no cloud credentials; login
+uses the same Google OAuth client as staging.
 
 User-facing content is German (`de-AT`); code and documentation are English.
 
@@ -11,7 +12,7 @@ User-facing content is German (`de-AT`); code and documentation are English.
 Prerequisites: Docker Desktop.
 
 ```bash
-cp .env.example .env       # defaults work out of the box
+cp .env.example .env       # add GOOGLE_CLIENT_SECRET for login
 docker compose up --build
 ```
 
@@ -33,10 +34,15 @@ npm install
 npm run dev                # http://localhost:3000
 ```
 
-Log in locally via the dev login (no Google credentials needed): on
-http://localhost:3000/konto open "Lokaler Dev-Login". Use
-`admin@example.invalid` to become the bootstrap Admin (configurable via
-`BOOTSTRAP_ADMIN_EMAIL`).
+For login, add `http://localhost:7001/api/v1/auth/google/callback` to the
+staging OAuth client's authorized redirect URIs, put its secret in the ignored
+`.env`, and set `BOOTSTRAP_ADMIN_EMAIL` to your verified Google email. Then use
+"Mit Google anmelden" on http://localhost:3000/konto.
+
+Transactional mail uses the persistent outbox and Resend when
+`RESEND_API_KEY` is set; otherwise local mail is logged. Domain verification,
+key isolation, and the delivery smoke test are in
+[docs/onboarding.md](docs/onboarding.md#resend-setup).
 
 ## Running the backend without Docker
 

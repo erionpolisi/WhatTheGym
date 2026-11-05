@@ -12,6 +12,18 @@ public sealed record ChainDto(
     IReadOnlyList<string> TrainingTypes,
     string TargetAudience);
 
+/// <summary>Chain group in the chain-first studio directory, incl. how many gyms match the active filters.</summary>
+public sealed record ChainSearchItemDto(
+    Guid Id,
+    string Name,
+    string Slug,
+    string? Website,
+    IReadOnlyList<string> TrainingTypes,
+    string TargetAudience,
+    int GymCount,
+    int ReviewCount,
+    double? AverageScore);
+
 public sealed record AmenityDto(Guid Id, string Name, string Slug);
 
 public sealed record OpeningHourDto(int IsoDayOfWeek, string OpensAt, string ClosesAt);
@@ -104,6 +116,13 @@ public static class CatalogFacetDtoMapper
             .Select(value => value.ToString())
             .ToArray();
 }
+
+/// <summary>One recommended gym with its rule-based match percentage and German reasons.</summary>
+public sealed record GymRecommendationDto(
+    GymListItemDto Gym,
+    int MatchPercent,
+    IReadOnlyList<string> Reasons,
+    IReadOnlyList<string> Notes);
 
 public sealed record RatingsDto(
     int? PriceValue,

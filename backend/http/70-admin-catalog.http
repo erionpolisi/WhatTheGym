@@ -6,7 +6,7 @@
 # WHY:   Only Admins create gyms (public users go through contact requests);
 #        gym status controls visibility (Draft hidden, closed = no reviews).
 # WHERE: Local freely; staging/production only for real, verified data.
-# AUTH:  Admin session cookie (10-auth.http, dev-login as {{devAdminEmail}}).
+# AUTH:  Google-backed Admin session cookie; use Swagger in the login browser.
 # ---------------------------------------------------------------------------
 
 ### Admin gym search (includes Drafts and closed gyms, unlike the public list)

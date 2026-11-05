@@ -5,6 +5,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = [
     { url: SITE_URL, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/studios`, changeFrequency: "daily", priority: 0.9 },
+    { url: `${SITE_URL}/empfehlung`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE_URL}/ueber-uns`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${SITE_URL}/faq`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${SITE_URL}/kontakt`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${SITE_URL}/rechtliches/impressum`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/rechtliches/datenschutz`, changeFrequency: "yearly", priority: 0.2 },

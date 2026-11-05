@@ -22,8 +22,10 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 # Apply Debian security patches ahead of the base-image rebuild cadence so the
 # blocking Trivy high/critical gate stays green for already-fixed OS CVEs.
+COPY certs/ /usr/local/share/ca-certificates/extra/
 RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
+    && update-ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

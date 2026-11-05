@@ -51,6 +51,8 @@ export interface GymListItem {
   membershipScore: number | null;
   studioScore: number | null;
   scoreBasis: string;
+  trainingTypes: string[];
+  targetAudience: string;
 }
 
 export interface GymDetail {
@@ -65,10 +67,54 @@ export interface GymDetail {
   phone: string | null;
   description: string | null;
   status: string;
-  chain: { id: string; name: string; slug: string; website: string | null } | null;
+  chain: {
+    id: string;
+    name: string;
+    slug: string;
+    website: string | null;
+    trainingTypes: string[];
+    targetAudience: string;
+  } | null;
   amenities: { id: string; name: string; slug: string }[];
   openingHours: { isoDayOfWeek: number; opensAt: string; closesAt: string }[];
   score: ScoreSummary;
+  trainingTypes: string[];
+  targetAudience: string;
+}
+
+export interface ChainSearchItem {
+  id: string;
+  name: string;
+  slug: string;
+  website: string | null;
+  trainingTypes: string[];
+  targetAudience: string;
+  gymCount: number;
+  reviewCount: number;
+  averageScore: number | null;
+}
+
+export interface Amenity {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface GymRecommendation {
+  gym: GymListItem;
+  matchPercent: number;
+  reasons: string[];
+  notes: string[];
+}
+
+export interface RecommendationRequest {
+  gender?: string | null;
+  womenOnly?: boolean;
+  districts?: number[];
+  trainingTypes?: string[];
+  amenitySlugs?: string[];
+  scoreImportance?: string | null;
+  limit?: number;
 }
 
 export interface Ratings {
@@ -154,4 +200,47 @@ export const scoreBasisLabels: Record<string, string> = {
   membershipOnly: "nur Mitgliedschaft",
   studioOnly: "nur Studio",
   none: "noch keine Bewertungen",
+};
+
+export const trainingTypeLabels: Record<string, string> = {
+  Strength: "Krafttraining",
+  Cardio: "Cardio",
+  Functional: "Functional Training",
+  GroupClasses: "Kurse",
+  CrossFit: "CrossFit",
+  CircuitTraining: "Zirkeltraining",
+  PersonalTraining: "Personal Training",
+  Wellness: "Wellness",
+};
+
+export const gymStatusLabels: Record<string, string> = {
+  Active: "Geöffnet",
+  TemporarilyClosed: "Vorübergehend geschlossen",
+  PermanentlyClosed: "Dauerhaft geschlossen",
+};
+
+export const districtNames: Record<number, string> = {
+  1: "Innere Stadt",
+  2: "Leopoldstadt",
+  3: "Landstraße",
+  4: "Wieden",
+  5: "Margareten",
+  6: "Mariahilf",
+  7: "Neubau",
+  8: "Josefstadt",
+  9: "Alsergrund",
+  10: "Favoriten",
+  11: "Simmering",
+  12: "Meidling",
+  13: "Hietzing",
+  14: "Penzing",
+  15: "Rudolfsheim-Fünfhaus",
+  16: "Ottakring",
+  17: "Hernals",
+  18: "Währing",
+  19: "Döbling",
+  20: "Brigittenau",
+  21: "Floridsdorf",
+  22: "Donaustadt",
+  23: "Liesing",
 };

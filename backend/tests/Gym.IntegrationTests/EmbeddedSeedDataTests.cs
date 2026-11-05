@@ -13,7 +13,7 @@ public sealed class EmbeddedSeedDataTests
         Assert.NotEmpty(SeedVocabulary.Chains);
         Assert.NotEmpty(SeedVocabulary.Amenities);
         Assert.NotEmpty(ViennaCatalog.Gyms);
-        Assert.Equal(23, SeedVocabulary.Chains.Count);
+        Assert.Equal(24, SeedVocabulary.Chains.Count);
         Assert.Equal(113, ViennaCatalog.Gyms.Count);
         Assert.Equal(
             SeedVocabulary.Chains.Count,

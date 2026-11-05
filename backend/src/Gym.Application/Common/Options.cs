@@ -11,9 +11,6 @@ public sealed class AuthOptions
     /// <summary>Verified Google email that becomes the first Admin on login while no Admin exists.</summary>
     public string? BootstrapAdminEmail { get; set; }
 
-    /// <summary>Development-only fake login endpoint. Must never be enabled outside Development.</summary>
-    public bool EnableDevLogin { get; set; }
-
     public int RefreshTokenLifetimeDays { get; set; } = 30;
 
     public int SessionCookieMinutes { get; set; } = 60;
@@ -30,7 +27,7 @@ public sealed class MailOptions
 {
     public const string SectionName = "Mail";
 
-    public string FromAddress { get; set; } = "noreply@whatthegym.at";
+    public string FromAddress { get; set; } = "noreply@mail.whatthegym.at";
 
     public string FromName { get; set; } = "WhatTheGym";
 

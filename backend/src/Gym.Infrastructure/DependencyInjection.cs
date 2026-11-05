@@ -36,6 +36,8 @@ public static class DependencyInjection
         services.AddScoped<IPersonalDataQuery, PersonalDataQuery>();
         services.AddScoped<IEmailOutbox, EmailOutbox>();
         services.AddScoped<IGymSearchQuery, GymSearchQuery>();
+        services.AddScoped<IChainSearchQuery, ChainSearchQuery>();
+        services.AddScoped<IRecommendationCatalogQuery, RecommendationCatalogQuery>();
         services.AddScoped<ISearchIndex, PostgresSearchIndex>();
         services.AddScoped<DatabaseSeeder>();
 

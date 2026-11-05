@@ -5,8 +5,8 @@
 #        flow continued in 40-legal-public.http and 80-admin-legal.http.
 # WHY:   Reviews are the core domain; the report endpoint is the single
 #        public entry that creates a LegalCase (no separate ReviewReport).
-# WHERE: Local with dev-login. Do NOT create noise reviews on production.
-# AUTH:  Create/edit/delete require a session cookie (run 10-auth first);
+# WHERE: Local after Google login. Do NOT create noise reviews on production.
+# AUTH:  Create/edit/delete require a Google-backed session cookie;
 #        the report is anonymous-but-identified (name + email required).
 # ---------------------------------------------------------------------------
 

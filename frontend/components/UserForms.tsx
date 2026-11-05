@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import { API_BASE, CSRF_HEADER, type Me } from "@/lib/api";
 import { sendEvent } from "@/components/Analytics";
 
-const GOOGLE_LOGIN_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED === "true";
-const DEV_LOGIN_ENABLED = process.env.NEXT_PUBLIC_ENABLE_DEV_LOGIN === "true";
-
 export function ContactForm({ gymSlug }: { gymSlug?: string }) {
   const [state, setState] = useState({ type: "General", name: "", email: "", message: "" });
   const [honeypot, setHoneypot] = useState("");
@@ -130,9 +127,6 @@ export function useMe(): { me: Me | null; loading: boolean; reload: () => void }
 }
 
 export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }) {
-  const [devEmail, setDevEmail] = useState("");
-  const [devName, setDevName] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [requestedReturnUrl, setRequestedReturnUrl] = useState("/");
 
   useEffect(() => {
@@ -183,55 +177,13 @@ export function LoginPanel({ me, reload }: { me: Me | null; reload: () => void }
     );
   }
 
-  async function devLogin(event: React.FormEvent) {
-    event.preventDefault();
-    setError(null);
-    const response = await fetch(`${API_BASE}/api/v1/auth/dev-login`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json", ...CSRF_HEADER },
-      body: JSON.stringify({ email: devEmail, displayName: devName || devEmail }),
-    });
-    if (response.ok) {
-      if (requestedReturnUrl !== "/") {
-        window.location.assign(requestedReturnUrl);
-      } else {
-        reload();
-      }
-      return;
-    }
-    setError("Dev-Login ist in dieser Umgebung nicht verfügbar.");
-  }
-
   return (
     <div className="card">
-      {GOOGLE_LOGIN_ENABLED ? (
-        <p>
-          <a href={`${API_BASE}/api/v1/auth/google/start?returnUrl=${encodeURIComponent(requestedReturnUrl)}`}>
-            <button type="button">Mit Google anmelden</button>
-          </a>
-        </p>
-      ) : null}
-      {DEV_LOGIN_ENABLED ? (
-        <details>
-          <summary className="muted">Lokaler Dev-Login (nur Entwicklung)</summary>
-          <form className="stack" onSubmit={devLogin} style={{ marginTop: "0.6rem" }}>
-            <label className="field" htmlFor="dev-email">
-              E-Mail
-              <input id="dev-email" type="email" required value={devEmail} onChange={(e) => setDevEmail(e.target.value)} />
-            </label>
-            <label className="field" htmlFor="dev-name">
-              Anzeigename
-              <input id="dev-name" value={devName} onChange={(e) => setDevName(e.target.value)} />
-            </label>
-            {error ? <p className="error">{error}</p> : null}
-            <button type="submit" className="secondary">
-              Dev-Login
-            </button>
-          </form>
-        </details>
-      ) : null}
-      {!GOOGLE_LOGIN_ENABLED && !DEV_LOGIN_ENABLED ? <p>Anmeldung ist derzeit nicht verfügbar.</p> : null}
+      <p>
+        <a href={`${API_BASE}/api/v1/auth/google/start?returnUrl=${encodeURIComponent(requestedReturnUrl)}`}>
+          <button type="button">Mit Google anmelden</button>
+        </a>
+      </p>
     </div>
   );
 }
