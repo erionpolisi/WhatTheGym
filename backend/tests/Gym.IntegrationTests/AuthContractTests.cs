@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Xunit;
 
 namespace Gym.IntegrationTests;
@@ -10,7 +9,7 @@ namespace Gym.IntegrationTests;
 [Collection("api")]
 public sealed class AuthContractTests(WtgApiFactory factory)
 {
-    public static TheoryData<string, bool> DevLoginCases => new()
+    public static TheoryData<string, bool> TestLoginCases => new()
     {
         { "verified", true },
         { "unverified", false },
@@ -19,8 +18,8 @@ public sealed class AuthContractTests(WtgApiFactory factory)
     };
 
     [Theory]
-    [MemberData(nameof(DevLoginCases))]
-    public async Task Dev_login_returns_me_contract(string prefix, bool verified)
+    [MemberData(nameof(TestLoginCases))]
+    public async Task Test_login_returns_me_contract(string prefix, bool verified)
     {
         var email = IntegrationTestSupport.UniqueEmail($"auth-{prefix}");
         var client = await factory.LoginAsync(email, "Auth Nutzerin", verified);
@@ -35,14 +34,9 @@ public sealed class AuthContractTests(WtgApiFactory factory)
     }
 
     [Fact]
-    public async Task Dev_login_is_not_available_outside_development_even_when_enabled()
+    public async Task Dev_login_route_does_not_exist()
     {
-        using var stagingFactory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Staging");
-            builder.UseSetting("Auth:EnableDevLogin", "true");
-        });
-        var client = stagingFactory.CreateClient();
+        var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/api/v1/auth/dev-login", new
         {

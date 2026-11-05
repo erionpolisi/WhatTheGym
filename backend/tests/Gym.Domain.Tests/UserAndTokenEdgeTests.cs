@@ -150,9 +150,8 @@ public sealed class UserAndTokenEdgeTests
         token.ReplacedByTokenHash.Should().Be("new-hash");
     }
 
-    // Layering decision: the only callers are the Google OIDC callback (Google guarantees a
-    // subject) and the dev-login endpoint (validator enforces the email). The entity does not
-    // re-validate identity format. Documented here.
+    // Layering decision: Google OIDC guarantees a subject and the application validator
+    // enforces the email. The entity does not re-validate identity format. Documented here.
     [Fact]
     public void Create_from_google_trusts_upstream_identity_validation_by_design()
     {

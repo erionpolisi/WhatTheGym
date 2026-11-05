@@ -18,8 +18,7 @@ namespace Gym.Api.Controllers;
 public sealed class AuthController(
     IOptions<AuthOptions> authOptions,
     IOptions<CorsOptions> corsOptions,
-    IOptions<MailOptions> mailOptions,
-    IWebHostEnvironment environment) : ControllerBase
+    IOptions<MailOptions> mailOptions) : ControllerBase
 {
     /// <summary>Starts the Google login (Authorization Code Flow with PKCE) and redirects back afterwards.</summary>
     [HttpGet("google/start")]
@@ -70,37 +69,6 @@ public sealed class AuthController(
         await session.RevokeAsync(HttpContext);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
-    }
-
-    public sealed record DevLoginRequest(string Email, string DisplayName, bool EmailVerified = true);
-
-    /// <summary>
-    /// Development-only login without Google credentials. Requires Development environment
-    /// AND Auth:EnableDevLogin=true. Never available in staging or production.
-    /// </summary>
-    [HttpPost("dev-login")]
-    [EnableRateLimiting("auth")]
-    public async Task<ActionResult<MeDto>> DevLogin(
-        [FromServices] ICommandHandler<UpsertGoogleUserCommand, MeDto> upsertHandler,
-        [FromServices] SessionService session,
-        [FromBody] DevLoginRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (!environment.IsDevelopment() || !authOptions.Value.EnableDevLogin)
-        {
-            return NotFound();
-        }
-
-        var result = await upsertHandler.Handle(
-            new UpsertGoogleUserCommand($"dev:{request.Email.ToLowerInvariant()}", request.Email, request.EmailVerified, request.DisplayName),
-            cancellationToken);
-        if (result.IsFailure)
-        {
-            return result.ToActionResult(this);
-        }
-
-        await session.SignInAsync(HttpContext, result.Value);
-        return Ok(result.Value);
     }
 
     private string ValidateReturnUrl(string? returnUrl)

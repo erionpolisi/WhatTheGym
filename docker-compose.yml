@@ -32,11 +32,12 @@ services:
       Database__MigrateOnStartup: "true"
       Seed__SeedCatalog: "true"
       Seed__SeedDemoData: ${SEED_DEMO_DATA:-false}
-      Auth__EnableDevLogin: ${ENABLE_DEV_LOGIN:-true}
       Auth__BootstrapAdminEmail: ${BOOTSTRAP_ADMIN_EMAIL:-admin@example.invalid}
       Auth__GoogleClientId: ${GOOGLE_CLIENT_ID:-}
       Auth__GoogleClientSecret: ${GOOGLE_CLIENT_SECRET:-}
       Mail__ResendApiKey: ${RESEND_API_KEY:-}
+      Mail__FromAddress: ${MAIL_FROM_ADDRESS:-noreply@mail.whatthegym.at}
+      Mail__FromName: ${MAIL_FROM_NAME:-WhatTheGym}
       Mail__PublicBaseUrl: ${PUBLIC_BASE_URL:-http://localhost:3000}
       Analytics__HashSecret: ${ANALYTICS_HASH_SECRET:-local-dev-analytics-secret}
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN:-http://localhost:3000}
@@ -50,8 +51,6 @@ services:
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:7001}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-        NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED: ${NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED:-false}
-        NEXT_PUBLIC_ENABLE_DEV_LOGIN: ${NEXT_PUBLIC_ENABLE_DEV_LOGIN:-true}
     restart: unless-stopped
     depends_on:
       - api
@@ -59,8 +58,6 @@ services:
       API_BASE_URL: http://api:8080
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:7001}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
-      NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED: ${NEXT_PUBLIC_GOOGLE_LOGIN_ENABLED:-false}
-      NEXT_PUBLIC_ENABLE_DEV_LOGIN: ${NEXT_PUBLIC_ENABLE_DEV_LOGIN:-true}
     ports:
       - "3000:3000"
 

@@ -40,7 +40,6 @@ public sealed class DemoSeedApiFactory : WebApplicationFactory<Program>, IAsyncL
         builder.UseSetting("Database:MigrateOnStartup", "true");
         builder.UseSetting("Seed:SeedCatalog", "true");
         builder.UseSetting("Seed:SeedDemoData", "true");
-        builder.UseSetting("Auth:EnableDevLogin", "true");
         builder.UseSetting("Auth:BootstrapAdminEmail", "admin@example.invalid");
         builder.UseSetting("RateLimits:PublicWritePerMinute", "1000");
         builder.UseSetting("RateLimits:AuthPerMinute", "1000");
