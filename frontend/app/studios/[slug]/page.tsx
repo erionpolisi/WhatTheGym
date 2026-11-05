@@ -4,6 +4,8 @@ import {
   apiGet,
   SITE_URL,
   categoryLabels,
+  gymStatusLabels,
+  trainingTypeLabels,
   type GymDetail,
   type PagedResult,
   type Review,
@@ -70,10 +72,15 @@ export default async function GymDetailPage({ params }: { params: { slug: string
         {gym.chain ? ` · ${gym.chain.name}` : ""}
       </span>
       <h1>{gym.name}</h1>
-      <p className="muted">
-        {gym.addressLine}
-        {gym.status !== "Active" ? ` · Status: ${gym.status}` : ""}
-      </p>
+      <p className="muted">{gym.addressLine}</p>
+      {gym.targetAudience === "WomenOnly" || gym.status !== "Active" ? (
+        <div className="chips">
+          {gym.targetAudience === "WomenOnly" ? <span className="badge women">Nur für Frauen</span> : null}
+          {gym.status !== "Active" ? (
+            <span className="badge closed">{gymStatusLabels[gym.status] ?? gym.status}</span>
+          ) : null}
+        </div>
+      ) : null}
       {gym.website ? (
         <p>
           <TrackedExternalLink
@@ -92,31 +99,45 @@ export default async function GymDetailPage({ params }: { params: { slug: string
       <h2>Bewertung</h2>
       <ScoreBreakdown score={gym.score} />
 
-      {gym.amenities.length > 0 ? (
-        <>
-          <h2>Ausstattung</h2>
-          <div className="chips">
-            {gym.amenities.map((a) => (
-              <span className="chip" key={a.id}>
-                {a.name}
-              </span>
-            ))}
+      <h2>Studio-Infos</h2>
+      <div className="info-panel">
+        {gym.trainingTypes.length > 0 ? (
+          <div className="card">
+            <h3>Trainingsarten</h3>
+            <div className="chips">
+              {gym.trainingTypes.map((t) => (
+                <span className="chip" key={t}>
+                  {trainingTypeLabels[t] ?? t}
+                </span>
+              ))}
+            </div>
           </div>
-        </>
-      ) : null}
-
-      {gym.openingHours.length > 0 ? (
-        <>
-          <h2>Öffnungszeiten (offizielle Angaben)</h2>
-          <ul>
-            {gym.openingHours.map((h) => (
-              <li key={h.isoDayOfWeek}>
-                {dayNames[h.isoDayOfWeek]}: {h.opensAt} - {h.closesAt}
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
+        ) : null}
+        {gym.amenities.length > 0 ? (
+          <div className="card">
+            <h3>Ausstattung</h3>
+            <div className="chips">
+              {gym.amenities.map((a) => (
+                <span className="chip" key={a.id}>
+                  {a.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {gym.openingHours.length > 0 ? (
+          <div className="card">
+            <h3>Öffnungszeiten (offizielle Angaben)</h3>
+            <ul>
+              {gym.openingHours.map((h) => (
+                <li key={h.isoDayOfWeek}>
+                  {dayNames[h.isoDayOfWeek]}: {h.opensAt} - {h.closesAt}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
 
       <h2>Bewertungen ({reviews?.totalCount ?? 0})</h2>
       <p className="muted">

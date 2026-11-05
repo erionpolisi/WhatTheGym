@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   categoryLabels,
+  gymStatusLabels,
   membershipCategoryLabels,
   scoreBasisLabels,
   studioCategoryLabels,
@@ -45,6 +46,14 @@ export function GymCard({ gym }: { gym: GymListItem }) {
             ? ` · ${scoreBasisLabels[gym.scoreBasis] ?? gym.scoreBasis}`
             : ""}
         </div>
+        {gym.targetAudience === "WomenOnly" || gym.status === "TemporarilyClosed" ? (
+          <div className="chips">
+            {gym.targetAudience === "WomenOnly" ? <span className="badge women">Nur für Frauen</span> : null}
+            {gym.status === "TemporarilyClosed" ? (
+              <span className="badge closed">{gymStatusLabels.TemporarilyClosed}</span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </Link>
   );

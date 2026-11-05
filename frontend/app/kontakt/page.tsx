@@ -12,7 +12,7 @@ export default function ContactPage() {
       <h1>Kontakt</h1>
       <p>
         Studio nicht gefunden oder falsche Daten entdeckt? Neue Studios werden nach redaktioneller Prüfung
-        aufgenommen; Korrekturen werden mit offiziellen Quellen abgeglichen.
+        aufgenommen. Korrekturen werden mit offiziellen Quellen abgeglichen.
       </p>
       <ContactForm />
     </div>
