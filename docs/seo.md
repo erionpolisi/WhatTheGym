@@ -4,9 +4,10 @@ The Next.js frontend is a thin, SEO-aware consumer of the API.
 
 ## Rendering strategy
 
-- Public pages (home, `/studios`, `/studios/[slug]`, legal pages, transparency)
-  are server-rendered with incremental revalidation (30–3600 s depending on
-  volatility). Forms and account features are client components.
+- Public pages (home, `/studios`, `/studios/[slug]`, `/empfehlung`,
+  `/ueber-uns`, `/faq`, legal pages, transparency) are server-rendered with
+  incremental revalidation (30–3600 s depending on volatility). Forms, the
+  recommendation wizard and account features are client components.
 - When the API is unreachable at build time, pages degrade gracefully and ISR
   fills content on the first request.
 

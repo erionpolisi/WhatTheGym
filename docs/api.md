@@ -13,6 +13,8 @@ Errors are RFC 7807 ProblemDetails with a stable `code` extension.
 | GET | `/gyms/{slug}/summary` | Score summary (see docs/scoring.md) |
 | GET | `/gyms/{slug}/reviews` | Published reviews, paged, never anonymous |
 | GET | `/chains`, `/amenities` | Catalogue lookups; chains include controlled training-type and target-audience defaults |
+| GET | `/chains/search` | Chain-grouped directory: `term`, `district`, `minTotalScore`; returns matching gym count and average score per chain (ADR 0014) |
+| POST | `/gyms/recommendations` | Deterministic rule-based recommendation from preferences (gender, women-only, ranked districts, training types, amenities, score importance); top 3 by default, German reasons (ADR 0014) |
 | POST | `/reviews/{id}/report` | Review report → LegalCase; honeypot `website`; rate limited |
 | GET | `/legal/cases/{caseNumber}/status?token=` | Tokenized case status |
 | POST | `/legal/cases/{caseNumber}/appeal` | Tokenized appeal (≥ 6 months) |
