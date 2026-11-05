@@ -38,7 +38,6 @@ Swagger UI injects it automatically; anonymous requests are unaffected.
 | GET | `/auth/google/start?returnUrl=` | Google Authorization Code Flow with PKCE (503 when unconfigured) |
 | POST | `/auth/refresh` | Rotates the hashed server-side refresh token |
 | POST | `/auth/logout` | Revokes refresh token, clears session |
-| POST | `/auth/dev-login` | Development-only fallback login |
 | GET/PUT | `/me` | Profile |
 | GET | `/me/reviews` | Own reviews incl. status |
 | GET | `/me/export` | Personal data export (JSON) |

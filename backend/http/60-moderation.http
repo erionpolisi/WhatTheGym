@@ -5,12 +5,9 @@
 #        admin UI of the MVP).
 # WHY:   Moderators may remove reviews (reason required, soft delete);
 #        restore and role management are Admin-only - verify both policies.
-# WHERE: Local with dev-login (moderator/admin); staging/production only as
-#        a real staff member via Google session.
-# AUTH:  Session cookie. Log in via 10-auth.http first:
-#        - moderator requests: dev-login as {{devModeratorEmail}} (an Admin
-#          must first assign the Moderator role via "Set user role" below)
-#        - admin requests: dev-login as {{devAdminEmail}} (bootstrap admin)
+# WHERE: Local/staging/production as a real staff member via Google session.
+# AUTH:  Session cookie. An Admin must first assign the Moderator role via
+#        "Set user role" below; bootstrap Admin is configured by verified email.
 # ---------------------------------------------------------------------------
 
 ### Moderation queue - reviews under review (default)

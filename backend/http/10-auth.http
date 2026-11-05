@@ -5,45 +5,12 @@
 # WHY:   The API uses HttpOnly session cookies (BFF pattern) - Rider stores
 #        the cookie from a login response automatically and sends it on all
 #        following requests against the same host.
-# WHERE: Local: use dev-login (Development-only endpoint, returns the session
-#        cookie without Google). Staging/production: dev-login returns 404;
-#        run the Google flow in a browser instead (google/start).
-# AUTH:  dev-login/google create the session; the rest requires the cookie.
+# WHERE: All environments use the Google browser flow. For authenticated
+#        exploratory work, use Swagger in that same browser session.
+# AUTH:  Google creates the session; the remaining requests require its cookie.
 # ---------------------------------------------------------------------------
 
-### Dev login as regular user (LOCAL ONLY - 404 outside Development)
-# Creates/updates the user, sets the session + refresh cookies in Rider's jar.
-POST {{host}}/api/v1/auth/dev-login
-Content-Type: application/json
-
-{
-  "email": "{{devUserEmail}}",
-  "displayName": "Test User",
-  "emailVerified": true
-}
-
-### Dev login as bootstrap Admin (email must match Auth:BootstrapAdminEmail)
-POST {{host}}/api/v1/auth/dev-login
-Content-Type: application/json
-
-{
-  "email": "{{devAdminEmail}}",
-  "displayName": "Local Admin",
-  "emailVerified": true
-}
-
-### Dev login as unverified account (gets NO "Verifiziert ueber Google" badge)
-POST {{host}}/api/v1/auth/dev-login
-Content-Type: application/json
-
-{
-  "email": "unverified@example.invalid",
-  "displayName": "Unverified User",
-  "emailVerified": false
-}
-
-### Google login start (opens the real OAuth flow - use a browser, not Rider)
-# WHEN: only against staging/production once Google OAuth credentials exist.
+### Google login start (open this URL in a browser, not Rider)
 GET {{host}}/api/v1/auth/google/start?returnUrl={{site}}/konto
 
 ### Login-failed landing (what the callback redirects to on OAuth errors)

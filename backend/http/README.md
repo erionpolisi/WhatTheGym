@@ -14,11 +14,12 @@ integration tests: use it to explore, reproduce bugs, administer data
    `production`.
 3. Click the gutter "run" icon next to a request.
 
-Cookies (the BFF session) are stored automatically by Rider per host, so:
-run a login request from `10-auth.http` once, then every authenticated
-request just works. `client.global.set(...)` response handlers capture ids
-and tokens (`reviewId`, `caseNumber`, `statusToken`, ...) so chained flows
-run without copy-pasting.
+Google login is browser-based. Run authenticated exploratory and admin requests
+through Swagger in the same browser session. The Rider suite remains useful for
+public requests and for authenticated debugging when its local cookie jar has
+been populated deliberately; never copy staging or production cookies into
+committed files. `client.global.set(...)` response handlers capture ids and
+public-flow tokens (`reviewId`, `caseNumber`, `statusToken`, ...).
 
 CSRF note: authenticated state-changing requests must send `X-CSRF: 1` or a
 JSON content type. JSON requests in this suite pass automatically; body-less
@@ -30,7 +31,7 @@ header explicitly.
 | File | Scope | Auth |
 | --- | --- | --- |
 | `00-health.http` | Liveness/readiness, Swagger | none |
-| `10-auth.http` | Dev login, Google start, refresh, logout, `/me` (profile, export, deletion, own reviews) | creates session |
+| `10-auth.http` | Google start, refresh, logout, `/me` (profile, export, deletion, own reviews) | browser session |
 | `20-catalog-public.http` | Gym search incl. every filter, detail, summary, review list, chains, amenities, ETag/404 variants | none |
 | `30-reviews.http` | Create/edit/delete reviews, every validation variant, review report (creates LegalCase), honeypot, rate-limit probe | user session |
 | `40-legal-public.http` | Legal documents + versions, processing activities, transparency report, tokenized case status and appeal | none (tokens) |
@@ -48,10 +49,11 @@ header explicitly.
 
 ## Full legal-flow walkthrough (local)
 
-1. `10-auth.http`: dev-login as user → `30-reviews.http`: create review.
+1. Sign in with Google and create a review through the website or Swagger.
 2. `30-reviews.http`: report the review (captures `caseNumber` + `statusToken`).
 3. `40-legal-public.http`: check case status via token.
-4. `10-auth.http`: dev-login as admin → `80-admin-legal.http`:
+4. Sign in as the configured bootstrap Admin and use Swagger or
+  `80-admin-legal.http` with an explicitly populated local cookie jar:
    classify → start-review → decide → close (or appeal in between).
 5. `/transparenz` and the transparency-report endpoint reflect the outcome.
 
