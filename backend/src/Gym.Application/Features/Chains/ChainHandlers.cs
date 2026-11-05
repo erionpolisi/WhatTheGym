@@ -25,6 +25,8 @@ public sealed record DeleteChainCommand(Guid ChainId);
 
 public sealed record ListChainsQuery;
 
+public sealed record SearchChainsQuery(string? Term, int? District, double? MinTotalScore);
+
 public sealed class CreateChainCommandHandler(
     IGymChainRepository chains,
     IUnitOfWork unitOfWork,
@@ -147,5 +149,35 @@ public sealed class ListChainsQueryHandler(IGymChainRepository chains) : IQueryH
                 c.Website,
                 CatalogFacetDtoMapper.TrainingTypes(c.TrainingTypes),
                 c.TargetAudience.ToString())).ToList());
+    }
+}
+
+public sealed class SearchChainsQueryHandler(IChainSearchQuery search) : IQueryHandler<SearchChainsQuery, IReadOnlyList<ChainSearchItemDto>>
+{
+    public async Task<Result<IReadOnlyList<ChainSearchItemDto>>> Handle(SearchChainsQuery query, CancellationToken cancellationToken)
+    {
+        if (query.District is int district && district is < 1 or > 23)
+        {
+            return Result.Failure<IReadOnlyList<ChainSearchItemDto>>(
+                Error.Validation("search.district", "Der Bezirk muss zwischen 1 und 23 liegen."));
+        }
+
+        var criteria = new ChainSearchCriteria(
+            string.IsNullOrWhiteSpace(query.Term) ? null : query.Term.Trim(),
+            query.District,
+            query.MinTotalScore);
+
+        var rows = await search.SearchAsync(criteria, cancellationToken);
+        return Result.Success<IReadOnlyList<ChainSearchItemDto>>(
+            rows.Select(r => new ChainSearchItemDto(
+                r.Id,
+                r.Name,
+                r.Slug,
+                r.Website,
+                CatalogFacetDtoMapper.TrainingTypes(r.TrainingTypes),
+                r.TargetAudience.ToString(),
+                r.GymCount,
+                r.ReviewCount,
+                r.AverageScore is null ? null : Math.Round(r.AverageScore.Value, 2))).ToList());
     }
 }

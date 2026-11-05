@@ -82,6 +82,53 @@ public interface IGymSearchQuery
     Task<PagedResult<GymSearchRow>> SearchAsync(GymSearchCriteria criteria, CancellationToken cancellationToken);
 }
 
+public sealed record ChainSearchCriteria(
+    string? Term,
+    int? District,
+    double? MinTotalScore);
+
+/// <summary>One chain group in the chain-first directory, aggregated over its matching public gyms.</summary>
+public sealed record ChainSearchRow(
+    Guid Id,
+    string Name,
+    string Slug,
+    string? Website,
+    TrainingType TrainingTypes,
+    TargetAudience TargetAudience,
+    int GymCount,
+    int ReviewCount,
+    double? AverageScore);
+
+public interface IChainSearchQuery
+{
+    Task<IReadOnlyList<ChainSearchRow>> SearchAsync(ChainSearchCriteria criteria, CancellationToken cancellationToken);
+}
+
+/// <summary>Catalog projection used by the rule-based gym recommendation (facets, amenities, score).</summary>
+public sealed record RecommendationCatalogRow(
+    Guid Id,
+    string Name,
+    string Slug,
+    int District,
+    string AddressLine,
+    string PostalCode,
+    GymStatus Status,
+    string? ChainName,
+    string? ChainSlug,
+    TrainingType TrainingTypes,
+    TargetAudience TargetAudience,
+    IReadOnlyList<Guid> AmenityIds,
+    int ReviewCount,
+    double? TotalScore,
+    double? MembershipScore,
+    double? StudioScore,
+    ScoreBasis ScoreBasis);
+
+public interface IRecommendationCatalogQuery
+{
+    Task<IReadOnlyList<RecommendationCatalogRow>> ListPublicGymsAsync(CancellationToken cancellationToken);
+}
+
 public interface IGymChainRepository
 {
     void Add(GymChain chain);
