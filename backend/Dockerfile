@@ -18,7 +18,7 @@ RUN dotnet restore src/Gym.Api/Gym.Api.csproj
 COPY src/ src/
 RUN dotnet publish src/Gym.Api/Gym.Api.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 
 # Apply Debian security patches ahead of the base-image rebuild cadence so the
 # blocking Trivy high/critical gate stays green for already-fixed OS CVEs.
